@@ -28,10 +28,14 @@ __DEBUG__ = False
 
 # Log string
 def logmsg(msg):
-    stk    = inspect.stack()
-    f_name = '{}.{}'.format(str(stk[1][0].f_locals['self'].__class__), stk[1][3])
-    msg    = f_name + ' : ' + msg
-    if __DEBUG__ == True:
+    if __DEBUG__:
+        stk = inspect.stack()
+        if 'self' in stk[1][0].f_locals:
+            f_name = '{}.{}'.format(str(stk[1][0].f_locals['self'].__class__), stk[1][3])
+        else:
+            f_name = stk[1][3]
+        # endif
+        msg = f_name + ' : ' + msg
         logging.debug(msg)
     # endif
 # enddef
@@ -200,6 +204,7 @@ class ScreenerCompanyContext(object):
 
     # Members
     def update_bsebhavcopy(self, bhavcopy_dict):
+        logmsg('Entry !!')
         self.__bse_bcopy = {}
         self.__bse_bcopy[self.K_CURR_PRICE]    = bhavcopy_dict["close"]
         self.__curr_price                      = self.__bse_bcopy[self.K_CURR_PRICE]
@@ -208,18 +213,29 @@ class ScreenerCompanyContext(object):
 
         # Updated ratios
         self.__db[self.K_GENERATED_SET].update(self.__bse_bcopy)
+        logmsg('Exit !!')
     # enddef
 
     def set_junk(self, status):
+        logmsg('Entry !!')
         self.__db[self.K_JUNK_STATUS] = status
+        logmsg('Exit !!')
+    # enddef
     def get_junk(self):
+        logmsg('Entry !!')
+        logmsg('Exit !!')
         return self.__db[self.K_JUNK_STATUS]
+    # enddef
 
     #####
     def __sorted(self, d_list):
+        logmsg('Entry !!')
+        logmsg('Exit !!')
         return sorted(d_list, key=lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'))
     # enddef
     def __sign(self, num):
+        logmsg('Entry !!')
+        logmsg('Exit !!')
         return (num > 0) - (num < 0)
     # enddef
 
@@ -281,6 +297,8 @@ class ScreenerCompanyContext(object):
         if self.__quarter_date_list_length == 0:
             self.set_junk(True)
         # endif
+
+        logmsg('Exit !!')
     # enddef
 
     def __populate_company_dbase(self, json_file):
@@ -354,7 +372,9 @@ class ScreenerCompanyContext(object):
     
     ########## ratios 
     def __debt_to_equity(self):
+        logmsg('Entry !!')
         if self.__last_annual_date == '':
+            logmsg('Exit from last_annual_date check !!')
             return ''
         # endif
         try:
@@ -367,12 +387,17 @@ class ScreenerCompanyContext(object):
             logmsg('debt          = {}'.format(debt))
             logmsg('equity        = {}'.format(equity))
 
+            logmsg('Exit !!')
             return debt/equity
         except:
+            logmsg('Exit from except clause !!')
             return ''
         # endtry
+    # enddef
     def __number_of_equity_shares(self):
+        logmsg('Entry !!')
         if self.__last_annual_date == '':
+            logmsg('Exit from last_annual_date check !!')
             return ''
         # endif
         try:
@@ -384,25 +409,34 @@ class ScreenerCompanyContext(object):
             logmsg('equity_cap    = {}'.format(equity_cap))
             logmsg('face_value    = {}'.format(face_value))
 
+            logmsg('Exit !!')
             return equity_cap/face_value
         except:
+            logmsg('Exit from except clause !!')
             return ''
         # endtry
+    # enddef
     def __ttm_earnings_per_share(self):
+        logmsg('Entry !!')
         if len(self.__quarter_date_list) < 4:
+            logmsg('Exit from len check !!')
             return ''
         # endif
         try:
             ttm_earnings = sum([ self.__quarter_net_profit(x) for x in  self.__quarter_date_list[-4:] ])/self.__number_of_equity_shares()
 
             logmsg('ttm_earnings_per_share = {}'.format(ttm_earnings))
-
+            logmsg('Exit !!')
             return ttm_earnings
         except:
+            logmsg('Exit from except clause !!')
             return ''
         # endtry
+    # enddef
     def __annual_param_growth(self, param_key, t_yrs):
+        logmsg('Entry !!')
         if len(self.__annual_date_list) < (t_yrs + 1):
+            logmsg('Exit from len check !!')
             return ''
         # endif
         try:
@@ -412,16 +446,26 @@ class ScreenerCompanyContext(object):
             curr_p = self.__annual_income(param_key)[curr_t]
             sign   = self.__sign(curr_p/prev_p)
             g_per  = sign * (abs(curr_p/prev_p)**(1.0/t_yrs) - 1) * 100.0
-
-            # Log
+            
+            # Logmsg
             logmsg('prev_t  = {}'.format(prev_t))
+            logmsg('curr_t  = {}'.format(curr_t))
+            logmsg('prev_p  = {}'.format(prev_t))
+            logmsg('curr_p  = {}'.format(curr_p))
+            logmsg('sign    = {}'.format(sign))
+            logmsg('g_per   = {}'.format(g_per))
 
+            logmsg('Exit !!')
             return g_per
         except:
+            logmsg('Exit from except clause !!')
             return ''
         # entry
+    # enddef
     def __ttm_param_growth(self, param_key, t_yrs):
+        logmsg('Entry !!')
         if len(self.__annual_date_list) < (t_yrs + 1) or len(self.__quarter_date_list) < 4:
+            logmsg('Exit from len check !!')
             return ''
         # endif
         try:
@@ -430,12 +474,25 @@ class ScreenerCompanyContext(object):
             curr_p = sum([ self.__quarter_income(param_key)[x] for x in  self.__quarter_date_list[-4:] ])
             sign   = self.__sign(curr_p/prev_p)
             g_per  = sign * (abs(curr_p/prev_p)**(1.0/t_yrs) - 1) * 100.0
+
+            # Logmsg
+            logmsg('prev_t  = {}'.format(prev_t))
+            logmsg('prev_p  = {}'.format(prev_t))
+            logmsg('curr_p  = {}'.format(curr_p))
+            logmsg('sign    = {}'.format(sign))
+            logmsg('g_per   = {}'.format(g_per))
+
+            logmsg('Exit !!')
             return g_per
         except:
+            logmsg('Exit from except clause !!')
             return ''
         # entry
+    # enddef
     def __balancesheet_param_growth(self, param_key, t_yrs):
+        logmsg('Entry !!')
         if len(self.__annual_date_list) < (t_yrs + 1):
+            logmsg('Exit from len check !!')
             return ''
         # endif
         try:
@@ -445,10 +502,22 @@ class ScreenerCompanyContext(object):
             curr_p = self.__balancesheet(param_key)[curr_t]
             sign   = self.__sign(curr_p/prev_p)
             g_per  = sign * (abs(curr_p/prev_p)**(1.0/t_yrs) - 1) * 100.0
+
+            # Logmsg
+            logmsg('prev_t  = {}'.format(prev_t))
+            logmsg('curr_t  = {}'.format(curr_t))
+            logmsg('prev_p  = {}'.format(prev_t))
+            logmsg('curr_p  = {}'.format(curr_p))
+            logmsg('sign    = {}'.format(sign))
+            logmsg('g_per   = {}'.format(g_per))
+
+            logmsg('Exit !!')
             return g_per
         except:
+            logmsg('Exit from except clause !!')
             return ''
         # entry
+    # enddef
     def __book_value_growth(self, t_yrs):
         logmsg('Entry !!')
         if len(self.__annual_date_list) < (t_yrs + 1):
@@ -477,6 +546,7 @@ class ScreenerCompanyContext(object):
             logmsg('Exit from except clause !!')
             return ''
         # entry
+    # enddef
     def __cum_param_annual(self, param_key, t_yrs=None):
         logmsg('Entry !!')
         if t_yrs and self.__annual_date_list_length  < (t_yrs + 1):
@@ -500,6 +570,7 @@ class ScreenerCompanyContext(object):
             logmsg('Exit from except clause !!')
             return ''
         # endtry
+    # enddef
     def __cum_cashflow(self, cf_type, t_yrs=None):
         logmsg('Entry !!')
         if t_yrs and self.__annual_date_list_length < (t_yrs + 1):
@@ -523,13 +594,16 @@ class ScreenerCompanyContext(object):
             logmsg('Exit from except clause !!')
             return ''
         # endtry
+    # enddef
 
     ######## helpers
     def __warehouse_data(self, key):
         return self.__db[self.K_WAREHOUSE_SET][key]
+    # enddef
 
     def __select(self, d_this, subkey=None):
         return (d_this if subkey == None else d_this[subkey])
+    # enddef
 
     def __quarter_income(self, subkey=None):
         return self.__select(self.__db[self.K_NSET][self.K_QUARTER], subkey)
@@ -553,6 +627,7 @@ class ScreenerCompanyContext(object):
         return self.__select(self.__quarter_income(self.K_TAX), d_date)
     def __quarter_net_profit(self, d_date=None):
         return self.__select(self.__quarter_income(self.K_NET_PROFIT), d_date)
+    # enddefs
 
     def __annual_income(self, subkey=None):
         return self.__select(self.__db[self.K_NSET][self.K_ANNUAL], subkey)
@@ -580,6 +655,7 @@ class ScreenerCompanyContext(object):
         return self.__select(self.__annual_income(self.K_EPS_UNADJ), d_date)
     def __annual_dividend_payout(self, d_date=None):
         return self.__select(self.__annual_income(self.K_DIVIDEND_PAYOUT), d_date)
+    # enddefs
 
     def __cf(self, subkey=None):
         return self.__select(self.__db[self.K_NSET][self.K_CASHFLOW], subkey)
@@ -591,7 +667,7 @@ class ScreenerCompanyContext(object):
         return self.__select(self.__cf(self.K_CFF), d_date)
     def __ncf(self, d_date=None):
         return self.__select(self.__cf(self.K_NET_CASHFLOW), d_date)
-
+    # enddefs
    
     def __balancesheet(self, subkey=None):
         return self.__select(self.__db[self.K_NSET][self.K_BALANCE_SHEET], subkey)
@@ -615,6 +691,7 @@ class ScreenerCompanyContext(object):
         return self.__select(self.__balancesheet(self.K_OTHER_ASSETS), d_date)
     def __balancesheet_total_assets(self, d_date=None):
         return self.__select(self.__balancesheet(self.K_TOTAL_ASSETS), d_date)
+    # enddefs
 
     ##########
 
@@ -628,6 +705,7 @@ class ScreenerCompanyContext(object):
 # endclass
 
 def populate_screener_dbase(dir_name):
+    logmsg('Entry !!')
     files_list    = glob.glob(dir_name + "/*.json")
     #mongo_client  = MongoClient()
     #db            = mongo_client.fscreener
@@ -639,6 +717,7 @@ def populate_screener_dbase(dir_name):
         inf_dbase = ctxt.database()
         co_ctxt_d[inf_dbase['bse_code']] = ctxt
     # endfor
+    logmsg('Exit !!')
     return co_ctxt_d
 # enddef
 
