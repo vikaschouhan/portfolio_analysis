@@ -36,22 +36,36 @@ def assertm(cond, msg):
 # enddef
 
 # Populate proxy list
-def populate_proxy_list(proxy_file):
+def populate_proxy_list(proxy_file, max_proxies=20):
     proxy_list    = []
     f_in          = open(proxy_file, "r")
     for line_this in f_in:
         proxy_list.append(line_this[0:-1])  # Removing '\n'
     # endfor
-    return proxy_list
+    # shuffle list
+    random.shuffle(proxy_list)
+    # Select first n elements
+    if len(proxy_list) > max_proxies:
+        return proxy_list[0:max_proxies]
+    else:
+        return proxy_list
+    # endif
 # enddef
 
-def populate_proxy_list1(proxy_file):
+def populate_proxy_list1(proxy_file, max_proxies=20):
     proxy_list    = []
     f_in          = open(proxy_file, "r")
     for line_this in f_in:
         proxy_list.append(":".join(line_this.rstrip("\n").rstrip(" ").replace("\t", " ").split(" ")[0:2]))
     # endfor
-    return proxy_list
+    # shuffle list
+    random.shuffle(proxy_list)
+    # Select first n elements
+    if len(proxy_list) > max_proxies:
+        return proxy_list[0:max_proxies]
+    else:
+        return proxy_list
+    # endif
 # enddef
 
 # Populate proxy list
@@ -177,6 +191,7 @@ def main_thread(companydb, proxy_this, out_dir):
 if __name__ == "__main__":
     parser  = argparse.ArgumentParser()
     parser.add_argument("--proxyfile", help="file containing list of proxy servers to use", type=str, default=None)
+    parser.add_argument("--maxproxies", help="Maximum proxies to use", type=int, default=20)
     parser.add_argument("--outdir", help="output directory for downloaded data", type=str, default=None)
     args    = parser.parse_args()
 
@@ -191,11 +206,12 @@ if __name__ == "__main__":
 
     # Vars
     proxy_file        = args.__dict__["proxyfile"]
+    max_proxies       = args.__dict__["maxproxies"]
     out_dir           = args.__dict__["outdir"]
     bse_bhavcopy      = filter_bse_bhavcopy_by_groups(bse_latest_bhavcopy_info())
 
     # Initialize proxy list
-    proxy_list        = populate_proxy_list1(proxy_file)
+    proxy_list        = populate_proxy_list(proxy_file, max_proxies)
     # Shuffle proxy list
     random.shuffle(proxy_list)
     proxy_count       = len(proxy_list)
