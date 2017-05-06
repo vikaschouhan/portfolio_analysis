@@ -139,14 +139,16 @@ if __name__ == '__main__':
 
     # Iterate over all keys
     for sec_name in nse_cl:
-        print "Querying info for {}".format(sec_name)
         sec_data = scan_securities(sec_name)
         if len(sec_data) > 0:
             invs_l.append(scan_securities(sec_name)[0])
         # endif
-        print "{} / {}".format(cn_indx, nse_cn)
+        sys.stdout.write('\r>> Querying..  {}/{}'.format(cn_indx, nse_cn))
+        sys.stdout.flush()
         cn_indx = cn_indx + 1
     # endfor
+
+    print "Done !!"
 
     # write to file
     with open(output_f, "w") as fout:
