@@ -177,7 +177,7 @@ if __name__ == '__main__':
     invs_l   = []
     output_f = os.path.expandvars('$HOME') + '/investing_dot_com_security_dict.py'
     fetch_nse = True
-    fetch_bse = True
+    fetch_bse = False
 
     # get socket
     sock = g_sock()
@@ -193,13 +193,17 @@ if __name__ == '__main__':
         for sec_name in nse_cl:
             sec_data = scan_securities(sec_name, 'NS')
             if len(sec_data) > 0:
-                invs_l.append(sec_data[0])
-                fn_indx = fn_indx + 1
+                sec_data_this              = sec_data[0]
+                sec_data_this[u'nse_code'] = sec_name
+                fn_indx                    = fn_indx + 1
+                invs_l.append(sec_data_this)
             # endif
             sys.stdout.write('\r>> Querying NSE ..  {}/{}/{}'.format(cn_indx, nse_cn, fn_indx))
             sys.stdout.flush()
             cn_indx = cn_indx + 1
         # endfor
+        sys.stdout.write("\n")
+        sys.stdout.flush()
     # endif
 
     # Iterate over all keys of bse
@@ -212,13 +216,17 @@ if __name__ == '__main__':
         for sec_code in bse_cl:
             sec_data = scan_securities(sec_code, 'BO')
             if len(sec_data) > 0:
-                invs_l.append(sec_data[0])
-                fn_indx = fn_indx + 1
+                sec_data_this              = sec_data[0]
+                sec_data_this[u'bse_code'] = sec_code
+                fn_indx                    = fn_indx + 1
+                invs_l.append(sec_data_this)
             # endif
             sys.stdout.write('\r>> Querying BSE ..  {}/{}/{}'.format(cn_indx, bse_cn, fn_indx))
             sys.stdout.flush()
             cn_indx = cn_indx + 1
         # endfor
+        sys.stdout.write("\n")
+        sys.stdout.flush()
     # endif
 
     print "Done !!"
