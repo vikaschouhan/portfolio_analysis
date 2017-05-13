@@ -71,12 +71,12 @@ def strdate_now():
     return datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
 # BSE bhavcopy data
-def bse_latest_bhavcopy_info():
+def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'XC', 'XT', 'XD']):
     l_file = None
     date_y   = datetime.datetime.today() - datetime.timedelta(days=1)    # yesterday date
     shift    = datetime.timedelta(max(1,(date_y.weekday() + 6) % 7 - 3))
     date_y   = date_y - shift
-    url_this = "http://www.bseindia.com/download/BhavCopy/Equity/EQ{:02d}{:02d}{:02d}_CSV.ZIP".format(date_y.day, date_y.month, date_y.year % 2000)
+    url_this = "http://www.bseindia.com/download/BhavCopy/Equity/EQ_ISINCODE_{:02d}{:02d}{:02d}.ZIP".format(date_y.day, date_y.month, date_y.year % 2000)
     print "Fetching BSE Bhavcopy from {}".format(url_this)
     d_data   = urllib.urlopen(url_this)
     l_file   = StringIO(d_data.read())
@@ -104,9 +104,13 @@ def bse_latest_bhavcopy_info():
                 "no_trades"       : int(item_this[10]),
                 "no_shares"       : int(item_this[11]),
                 "net_turnover"    : float(item_this[12]),
+                "isin"            : item_this[14].rstrip(),
             }
-            bse_dict[cc_dict['bse_code']] = cc_dict
-            #db.screener_in.update({ 'bse_code' : cc_dict['bse_code'] }, { '$set' : { 'bse_bhavcopy' : cc_dict } })
+
+            # Check if the security is in incl_groups
+            if cc_dict['bse_group'] in incl_groups:
+                bse_dict[cc_dict['bse_code']] = cc_dict
+            # endif
         # endif
         ctr = ctr + 1
     # endfor
@@ -115,7 +119,7 @@ def bse_latest_bhavcopy_info():
 
 
 # NSE bhavcopy data
-def nse_latest_bhavcopy_info():
+def nse_latest_bhavcopy_info(incl_series=['EQ']):
     l_file = None
     date_y   = datetime.datetime.today() - datetime.timedelta(days=1)    # yesterday date
     shift    = datetime.timedelta(max(1,(date_y.weekday() + 6) % 7 - 3))
@@ -140,9 +144,21 @@ def nse_latest_bhavcopy_info():
 
     for item_this in csv_f:
         if ctr != 0:
-            if item_this[1] == 'EQ':
-                # Convert strings to integers/floats
-                nse_dict[item_this[0]] = item_this
+            # Convert strings to integers/floats
+            cc_dict = {
+                "nse_code"        : item_this[0],
+                "nse_group"       : item_this[1].rstrip(),
+                "open"            : float(item_this[2]),
+                "high"            : float(item_this[3]),
+                "low"             : float(item_this[4]),
+                "close"           : float(item_this[5]),
+                "last"            : float(item_this[6]),
+                "prev_close"      : float(item_this[7]),
+                "no_trades"       : int(item_this[11]),
+                "isin"            : item_this[12].rstrip(),
+            }
+            if item_this[1] in incl_series:
+                nse_dict[cc_dict['nse_code']] = cc_dict 
             # endif
         # endif
         ctr = ctr + 1
@@ -168,20 +184,52 @@ def scan_securities(name, exchange):
     return j_data
 # enddef
 
+# Function to parse checkpoint file
+def parse_ckpt_file(file_name=None):
+    if file_name == None:
+        return {}
+    else:
+        return eval(open(file_name, 'r').read())
+    # endif
+# endif
+
 
 # Main func
 if __name__ == '__main__':
     # ignore warnings
     warnings.filterwarnings("ignore")
 
-    invs_l   = []
-    output_f = os.path.expandvars('$HOME') + '/investing_dot_com_security_dict.py'
-    fetch_nse = True
-    fetch_bse = False
+    parser  = argparse.ArgumentParser()
+    parser.add_argument("--ckpt", help="Checkpoint file", type=str, default=None)
+    parser.add_argument("--query", help="Query Exchange (bse, nse etc)", type=str, default='bse,nse')
+    args    = parser.parse_args()
 
+    # Output file
+    output_f = os.path.expandvars('$HOME') + '/investing_dot_com_security_dict.py'
+
+    # Vars
+    ckpt_f    = args.__dict__['ckpt']
+    qe_excg   = args.__dict__['query'].replace(' ', '').split(',')
+
+    # Exchange enable/disable
+    fetch_nse = False
+    fetch_bse = False
+    if 'bse' in qe_excg:
+        fetch_bse = True
+    # endif
+    if 'nse' in qe_excg:
+        fetch_nse = True
+    # endif
+    
     # get socket
     sock = g_sock()
+    # Get checkpoint list
+    invs_d    = parse_ckpt_file(ckpt_f)
+    isin_list = invs_d.keys()
+
+    # Info
     print "sock = {}".format(sock)
+    print "Found {} ISINs in checkpoint file.".format(len(isin_list))
 
     # Iterate over all keys of nse
     if fetch_nse:
@@ -191,12 +239,18 @@ if __name__ == '__main__':
         nse_cl  = nse_bvc.keys()
         nse_cn  = len(nse_cl)
         for sec_name in nse_cl:
-            sec_data = scan_securities(sec_name, 'NS')
-            if len(sec_data) > 0:
-                sec_data_this              = sec_data[0]
-                sec_data_this[u'nse_code'] = sec_name
-                fn_indx                    = fn_indx + 1
-                invs_l.append(sec_data_this)
+            isin_this = nse_bvc[sec_name]['isin']
+            # if this isin is not in ckpt file, add it to the list
+            if isin_this not in isin_list:
+                sec_data = scan_securities(sec_name, 'NS')
+                if len(sec_data) > 0:
+                    sec_data_this                  = sec_data[0]
+                    sec_data_this[u'nse_code']     = sec_name
+                    sec_data_this[u'isin']         = nse_bvc[sec_name]['isin']
+                    fn_indx                        = fn_indx + 1
+                    invs_d[sec_data_this[u'isin']] = sec_data_this
+                    isin_list.append(sec_data_this[u'isin'])
+                # endif
             # endif
             sys.stdout.write('\r>> Querying NSE ..  {}/{}/{}'.format(cn_indx, nse_cn, fn_indx))
             sys.stdout.flush()
@@ -214,12 +268,17 @@ if __name__ == '__main__':
         bse_cl  = bse_bvc.keys()
         bse_cn  = len(bse_cl)
         for sec_code in bse_cl:
-            sec_data = scan_securities(sec_code, 'BO')
-            if len(sec_data) > 0:
-                sec_data_this              = sec_data[0]
-                sec_data_this[u'bse_code'] = sec_code
-                fn_indx                    = fn_indx + 1
-                invs_l.append(sec_data_this)
+            isin_this = bse_bvc[sec_code]['isin']
+            # If this isin not in isin_list, add it to the list
+            if isin_this not in isin_list:
+                sec_data = scan_securities(sec_code, 'BO')
+                if len(sec_data) > 0:
+                    sec_data_this                  = sec_data[0]
+                    sec_data_this[u'bse_code']     = sec_code
+                    sec_data_this[u'isin']         = bse_bvc[sec_code]['isin']
+                    fn_indx                        = fn_indx + 1
+                    invs_d[sec_data_this[u'isin']] = sec_data_this
+                # endif
             # endif
             sys.stdout.write('\r>> Querying BSE ..  {}/{}/{}'.format(cn_indx, bse_cn, fn_indx))
             sys.stdout.flush()
@@ -233,6 +292,6 @@ if __name__ == '__main__':
 
     # write to file
     with open(output_f, "w") as fout:
-        pprint.pprint(invs_l, fout)
+        pprint.pprint(invs_d, fout)
     # endwith
 # enddef
