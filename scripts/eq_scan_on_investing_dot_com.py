@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+#
+# Author   : Vikas Chouhan
+# email    : presentisgood@gmail.com
+# License  : GPLv2
+# NOTE     : This script pulls ticker information for all nse &/or bse stocks from http://www.investing.com.
+
 import urllib, urllib2, json
 import datetime
 import pandas
