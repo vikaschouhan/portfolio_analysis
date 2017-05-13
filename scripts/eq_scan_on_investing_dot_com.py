@@ -97,7 +97,7 @@ def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'XC', 'XT', 'XD']):
         # Convert strings to integers/floats
         if ctr != 0:
             cc_dict = {
-                "bse_code"        : int(item_this[0]),
+                "bse_code"        : item_this[0].rstrip(),
                 "bse_name"        : item_this[1].rstrip(),
                 "bse_group"       : item_this[2].rstrip(),
                 "bse_type"        : item_this[3].rstrip(),
@@ -294,10 +294,11 @@ if __name__ == '__main__':
         sys.stdout.flush()
     # endif
 
-    print "Done !!"
-
     # write to file
+    print "Writing to file {}".format(output_f)
     with open(output_f, "w") as fout:
         pprint.pprint(invs_d, fout)
     # endwith
+
+    print "Done !!"
 # enddef
