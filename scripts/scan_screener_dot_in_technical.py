@@ -292,6 +292,9 @@ def v_i(s, indx):
 
 # Comparator functions
 def c_f_0(ma_p0, ma_p1, ma_p2, lag=30):
+    if ma_p0.shape[0] <= lag or ma_p1.shape[0] <= lag or ma_p2.shape[0] <= lag:
+        return False
+    # endif
     if (v_i(ma_p0, -1) >= v_i(ma_p1, -1) >= v_i(ma_p2, -1)) and \
             (v_i(ma_p0, -1-lag) <= v_i(ma_p1, -1-lag) <= v_i(ma_p2, -1-lag)):
         return True
@@ -299,6 +302,9 @@ def c_f_0(ma_p0, ma_p1, ma_p2, lag=30):
     return False
 # endif
 def c_f_1(ma_p0, ma_p1, lag=30):
+    if ma_p0.shape[0] <= lag or ma_p1.shape[0] <= lag:
+        return False
+    # endif
     if (v_i(ma_p0, -1) >= v_i(ma_p1, -1)) and \
             (v_i(ma_p0, -1-lag) <= v_i(ma_p1, -1-lag)):
         return True
@@ -312,11 +318,11 @@ def run_ema(o_frame, mode='c', lag=30):
     rmean   = g_rmean_f(type='e')
 
     ## Get values
-    ma_p0   = rmean(d_s, 9)
-    ma_p1   = rmean(d_s, 14)
-    ma_p2   = rmean(d_s, 21)
+    ma_p0   = rmean(d_s, 14)
+    ma_p1   = rmean(d_s, 21)
+    #ma_p2   = rmean(d_s, 21)
 
-    return c_f_0(ma_p0, ma_p1, ma_p2, lag=lag)
+    return c_f_1(ma_p0, ma_p1, lag=lag)
 # enddef
 
 #########################################################
@@ -352,8 +358,8 @@ if __name__ == '__main__':
     for sec_code in sec_tick_d.keys():
         #sys.stdout.write('.')
         #sys.stdout.flush()
-        d_this = fetch_data(sec_tick_d[sec_code], '1D')
-        status = run_ema(d_this, lag=20)
+        d_this = fetch_data(sec_tick_d[sec_code], '1W')
+        status = run_ema(d_this, lag=12)
         if (status==True):
             sys.stdout.write('{}, '.format(sec_code))
             sys.stdout.flush()
