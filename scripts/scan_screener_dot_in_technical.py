@@ -313,14 +313,17 @@ def c_f_1(ma_p0, ma_p1, lag=30):
 # endif
 
 # Strategy
-def run_ema(o_frame, mode='c', lag=30):
+def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
+    if len(period_list) != 2:
+        print 'period_list should have only two elements (p0, p1). p0 is smaller time-period & p1 is larger one.'
+        sys.exit(-1)
+    # endif
     d_s     = s_mode(o_frame, mode)
     rmean   = g_rmean_f(type='e')
 
     ## Get values
-    ma_p0   = rmean(d_s, 14)
-    ma_p1   = rmean(d_s, 21)
-    #ma_p2   = rmean(d_s, 21)
+    ma_p0   = rmean(d_s, period_list[0])
+    ma_p1   = rmean(d_s, period_list[1])
 
     return c_f_1(ma_p0, ma_p1, lag=lag)
 # enddef
@@ -332,6 +335,7 @@ if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument("--auth", help="Screener.in authentication in form user:passwd", type=str, default=None)
     parser.add_argument("--invs", help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
+    parser.add_argument("--lag",  help="Ema/Sma Crossover lag (in periods)", type=int, default=10)
     args    = parser.parse_args()
 
     if not args.__dict__["auth"]:
@@ -346,6 +350,8 @@ if __name__ == '__main__':
     # Vars
     auth_info  = args.__dict__["auth"].replace(' ', '').split(',')
     invs_db_f  = os.path.expanduser(args.__dict__["invs"])
+    ma_lag     = args.__dict__["lag"]
+    period_l   = [14, 21]
 
     # Get security list from screener.in using default screen_no=17942
     sec_list   = screener_dot_in_pull_screener_codes(auth_info[0], auth_info[1], screen_no=17942)
@@ -355,11 +361,12 @@ if __name__ == '__main__':
     #pprint.pprint(sec_tick_d)
     # Start scan
     #sec_list   = []
+    print 'Running EMA strategy using period_list={} & lag={}'.format(period_l, ma_lag)
     for sec_code in sec_tick_d.keys():
         #sys.stdout.write('.')
         #sys.stdout.flush()
         d_this = fetch_data(sec_tick_d[sec_code], '1W')
-        status = run_ema(d_this, lag=12)
+        status = run_ema(d_this, period_list=period_l, lag=ma_lag)
         if (status==True):
             sys.stdout.write('{}, '.format(sec_code))
             sys.stdout.flush()
