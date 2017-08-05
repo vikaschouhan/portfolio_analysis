@@ -290,6 +290,58 @@ def populate_sym_list(invs_dict_file, sec_list):
 # enddef
 
 ####################################################
+# PLOTTING FUNCTIONS
+#
+def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None, plot_period=None):
+    d_frame_c = d_frame.copy()
+
+    # Slice the frame which needs to be plotted
+    #d_frame_c = d_frame_c[-plot_period:]
+
+    xdate     = [datetime.datetime.fromtimestamp(t) for t in d_frame_c['T']]
+    rmean     = g_rmean_f(type='e')
+
+    def mydate(x,pos):
+        try:
+            return xdate[int(x)]
+        except IndexError:
+            return ''
+        # endtry
+    # enddef
+
+    # Plot
+    fig, ax = plt.subplots()
+    plt.xticks(rotation = 45)
+    plt.xlabel("Date")
+    plt.ylabel("Price")
+    plt.title(title)
+    plt.grid()
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(6))
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(mydate))
+
+    # Plot candlestick
+    candlestick2_ohlc(ax, d_frame_c['o'], d_frame_c['h'], d_frame_c['l'], d_frame_c['c'], width=0.6)
+    # Plot mas
+    for period_this in period_list:
+        label = 'ema_' + str(period_this)
+        d_s   = s_mode(d_frame_c, mode)
+        d_frame_c[label] = rmean(d_s, period_this)
+        d_frame_c[label].plot(ax=ax)
+    # endfor
+
+    fig.autofmt_xdate()
+    fig.tight_layout()
+
+    # Check if file_name was passed. If passed, save the plot to this file
+    # else just plot the figure right now
+    if file_name:
+        plt.savefig(os.path.expanduser(file_name))
+    else:
+        plt.show()
+    # endif
+# enddef
+
+####################################################
 # SCANNERS
 #
 # Get mean generating f
