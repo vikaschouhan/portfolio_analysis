@@ -371,6 +371,72 @@ def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
     return c_f_1(ma_p0, ma_p1, lag=lag)
 # enddef
 
+# A ema crossover strategy for detecting crossovers on the frame passed
+def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21]):
+    d_s     = s_mode(o_frame, mode)
+    rmean   = g_rmean_f(type='e')
+    o_copy  = o_frame.copy()   # Make a copy
+    status  = False
+    trend_switch = None
+
+    ## Get values for diff emas
+    o_copy['s_ema']   = rmean(d_s, period_list[0])
+    o_copy['m_ema']   = rmean(d_s, period_list[1])
+    o_copy['l_ema']   = rmean(d_s, period_list[2])
+
+    ## Compare
+    o_copy['sm_c']    = (o_copy['s_ema'] > o_copy['m_ema']).astype('int').diff()
+    o_copy['ml_c']    = (o_copy['m_ema'] > o_copy['l_ema']).astype('int').diff()
+    o_copy['sl_c']    = (o_copy['s_ema'] > o_copy['l_ema']).astype('int').diff()
+
+    ## Drop zero rows
+    o_copy  = o_copy[(o_copy['sm_c'] != 0.0) | (o_copy['ml_c'] != 0.0)]
+
+    # ORR all three rows and select the final one only
+    o_copy['pos']     = o_copy['sm_c'].dropna().astype('int') | o_copy['ml_c'].dropna().astype('int')
+
+    # Get time different between last position switch and now
+    tdelta = pandas.Timestamp(datetime.datetime.now()) - o_copy.iloc[-1]['t']
+
+    # Last trend switch
+    if o_copy.iloc[-1]['pos'] == 1.0:
+        trend_switch = "Down to Up"
+    else:
+        trend_switch = "Up to Down"
+    # endif
+
+    # Check if lag > tdelta
+    if lag > tdelta.days:
+        status = True
+    # endif
+
+    # Return only date/time, close price and position switches
+    return status, tdelta.days, trend_switch, o_copy[['t', 'c', 'pos']][-10:]
+# enddef
+
+# Common Wrapper over all strategies
+def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
+    # Start scan
+    if strategy_name == "em2_x":
+        sec_list    = []
+        ctr         = 0
+        period_list = [9, 14, 21]
+        print 'Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list)
+        print '--------------------- GENERATING REPORT --------------------------------'
+        for sec_code in sec_dict.keys():
+            d_this = fetch_data(sec_dict[sec_code]['ticker'], '1W')
+            status, tdelta, trend_switch, _ = run_ema2(d_this, lag=lag, period_list=period_list)
+            if (status==True):
+                sys.stdout.write('{}. {} switched trend from {}, {} days ago\n'.format(ctr, sec_dict[sec_code]['name'], trend_switch, tdelta))
+                sys.stdout.flush()
+                ctr = ctr + 1
+            # endif
+        # endfor
+    else:
+        print "Strategy : {}, not implemented yet !!".format(strategy_name)
+    # endif
+# enddef
+
 #########################################################
 # Main
 
@@ -403,35 +469,12 @@ if __name__ == '__main__':
     auth_info  = args.__dict__["auth"].replace(' ', '').split(',')
     invs_db_f  = os.path.expanduser(args.__dict__["invs"])
     ma_lag     = args.__dict__["lag"]
-    period_l   = [14, 21]
 
     # Get security list from screener.in using default screen_no=17942
     sec_list   = screener_dot_in_pull_screener_codes(auth_info[0], auth_info[1], screen_info=screen_info)
     print 'Found {} securities from Screener.in matching criteria.'.format(len(sec_list))
     sec_tick_d = populate_sym_list(invs_db_f, sec_list)
 
-    #pprint.pprint(sec_tick_d)
-    # Start scan
-    #sec_list   = []
-    print 'Running EMA strategy using period_list={} & lag={}'.format(period_l, ma_lag)
-    for sec_code in sec_tick_d.keys():
-        #sys.stdout.write('.')
-        #sys.stdout.flush()
-        d_this = fetch_data(sec_tick_d[sec_code]['ticker'], '1W')
-        status = run_ema(d_this, period_list=period_l, lag=ma_lag)
-        if (status==True):
-            sys.stdout.write('{}, '.format(sec_tick_d[sec_code]['name']))
-            sys.stdout.flush()
-            #sec_list.append(sec_code)
-        # endif
-    # endfor
-
-    # Newline
-    sys.stdout.write('None\n')
-    sys.stdout.flush()
-
-    # Print scan results
-    #if len(sec_list) > 0:
-    #    print 'Passed criteria : {}'.format(sec_list)
-    ## endif
+    # Run strategy function
+    run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, strategy_name="em2_x")
 # endif
