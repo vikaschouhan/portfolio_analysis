@@ -205,15 +205,22 @@ def screener_pull_screener_results(user, passwd, screen_info=17942):
     return sec_dict
 # endif
 
+## Return only list of company codes
 def get_sec_name_list(sec_dict):
     sec_list = sec_dict["results"]
     sec_list = [ re.search(r'/company/([\d\w\-]+)/*', x[0]).groups()[0] for x in sec_list]
     return sec_list
 # enddef
+## Return list of company codes along with their names
+def get_sec_info_list(sec_dict):
+    sec_list = sec_dict["results"]
+    sec_list = [ { 'code' : re.search(r'/company/([\d\w\-]+)/*', x[0]).groups()[0], 'name' : x[1]} for x in sec_list]
+    return sec_list
+# enddef
 
 def screener_dot_in_pull_screener_codes(user, passwd, screen_info=17942):
     sec_dict = screener_pull_screener_results(user, passwd, screen_info)
-    return get_sec_name_list(sec_dict)
+    return get_sec_info_list(sec_dict)
 # enddef
 
 ################################################
@@ -254,11 +261,19 @@ def populate_sym_list(invs_dict_file, sec_list):
     sec_dict = {}
     not_f_l  = []
     for sec_this in sec_list:
+        sec_code = sec_this['code']
+        sec_name = sec_this['name']
         # Search
-        if sec_this in nse_keys:
-            sec_dict[sec_this] = nse_dict[sec_this][u'ticker']
-        elif sec_this in bse_keys:
-            sec_dict[sec_this] = bse_dict[sec_this][u'ticker']
+        if sec_code in nse_keys:
+            sec_dict[sec_code] = {
+                                     'ticker' : nse_dict[sec_code][u'ticker'],
+                                     'name'   : nse_dict[sec_code][u'description'],
+                                 }
+        elif sec_code in bse_keys:
+            sec_dict[sec_code] = {
+                                     'ticker' : bse_dict[sec_code][u'ticker'],
+                                     'name'   : bse_dict[sec_code][u'description'],
+                                 }
         else:
             not_f_l.append(sec_this)
         # endif
@@ -399,10 +414,10 @@ if __name__ == '__main__':
     for sec_code in sec_tick_d.keys():
         #sys.stdout.write('.')
         #sys.stdout.flush()
-        d_this = fetch_data(sec_tick_d[sec_code], '1W')
+        d_this = fetch_data(sec_tick_d[sec_code]['ticker'], '1W')
         status = run_ema(d_this, period_list=period_l, lag=ma_lag)
         if (status==True):
-            sys.stdout.write('{}, '.format(sec_code))
+            sys.stdout.write('{}, '.format(sec_tick_d[sec_code]['name']))
             sys.stdout.flush()
             #sec_list.append(sec_code)
         # endif
