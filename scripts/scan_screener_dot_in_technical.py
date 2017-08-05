@@ -31,6 +31,7 @@ import os
 import math
 import contextlib, warnings
 import pprint
+import shutil
 
 ##################################################################
 # INVESTING.COM FUNCTIONS
@@ -441,6 +442,14 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
 # Main
 
 if __name__ == '__main__':
+    dot_invs_py = '~/.investing_dot_com_security_dict.py'
+    dot_invs_py_exists = False
+
+    # Check if above file exists
+    if os.path.exists(os.path.expanduser(dot_invs_py)) and os.path.isfile(os.path.expanduser(dot_invs_py)):
+        dot_invs_py_exists = True
+    # endif
+
     parser  = argparse.ArgumentParser()
     parser.add_argument("--auth",    help="Screener.in authentication in form user,passwd", type=str, default=None)
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
@@ -453,8 +462,20 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
     if not args.__dict__["invs"]:
-        print "--invs is required !!"
-        sys.exit(-1)
+        if dot_invs_py_exists:
+            print 'Using {} as Investing.com database file.'.format(dot_invs_py)
+            invs_db_file = dot_invs_py
+        else:
+            print "--invs is required !!"
+            sys.exit(-1)
+        # endif
+    else:
+        print 'Using {} as Investing.com database file.'.format(args.__dict__["invs"])
+        invs_db_file = args.__dict__["invs"]
+
+        # Copy the passed file to dot_invs_py
+        print 'Copying {} to {} ..'.format(invs_db_file, dot_invs_py)
+        shutil.copyfile(os.path.expanduser(invs_db_file), os.path.expanduser(dot_invs_py))
     # endif
 
     # Check for query string and set the screen_info to appropriate value
@@ -467,7 +488,7 @@ if __name__ == '__main__':
 
     # Vars
     auth_info  = args.__dict__["auth"].replace(' ', '').split(',')
-    invs_db_f  = os.path.expanduser(args.__dict__["invs"])
+    invs_db_f  = os.path.expanduser(invs_db_file)
     ma_lag     = args.__dict__["lag"]
 
     # Get security list from screener.in using default screen_no=17942
