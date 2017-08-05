@@ -134,10 +134,35 @@ def fetch_data(ticker, resl, t_from=None):
 #     user      : screener.in username
 #     passwd    : screener.in password
 #     screen_no : screen no
-def screener_pull_screener_results(user, passwd, screen_no=17942):
-    def screener_screener_page(page_this, screen_no=screen_no):
+def screener_pull_screener_results(user, passwd, screen_info=17942):
+    screen_info_type = None # 0 for no, 1 for query
+
+    # Check for Appropriate screen_info passed
+    if isinstance(screen_info, int):
+        print 'screen_info = {} is of type int. Assuming it to be a screen no.'.format(screen_info)
+        screen_info_type = 0
+    else:
+        try:
+            screen_info = int(screen_info)
+            print 'screen_info = {} is of type int passed via string. Assuming it to be a screen no.'.format(screen_info)
+            screen_info_type = 0
+        except ValueError:
+            print 'screen_info = {} is of type string. Assuming it to be query string.'.format(screen_info)
+            screen_info_type = 1
+        # endtry
+    # endif
+
+    # Screener.in API builders
+    def screener_screener_page(page_this, screen_no=17942):
         return 'https://www.screener.in/api/screens/{}/?page={}'.format(screen_no, curr_page)
     # enddef
+    def screener_screener_page_query(page_this, query_string):
+        q_str = query_string.replace('\n', ' ').replace(' ', '+')
+        return 'https://www.screener.in/api/screens/query/?query={}&&page={}'.format(q_str, curr_page)
+    # enddef
+
+    # Screener function to run
+    screener_info_fun = (screener_screener_page if screen_info_type == 0 else screener_screener_page_query)
     
     sec_list = []
     ratios_l = []
@@ -156,7 +181,7 @@ def screener_pull_screener_results(user, passwd, screen_no=17942):
     while True:
         sys.stdout.write('\r>> Querying page {:03}'.format(curr_page))
         sys.stdout.flush()
-        sdict_this = json.loads(browser.download(screener_screener_page(curr_page)))
+        sdict_this = json.loads(browser.download(screener_info_fun(curr_page, screen_info)))
         n_pages    = sdict_this['page']['total']
         ratios_l   = sdict_this['page']['ratios']
         sec_list   = sec_list + sdict_this['page']['results']
@@ -186,8 +211,8 @@ def get_sec_name_list(sec_dict):
     return sec_list
 # enddef
 
-def screener_dot_in_pull_screener_codes(user, passwd, screen_no=17942):
-    sec_dict = screener_pull_screener_results(user, passwd, screen_no)
+def screener_dot_in_pull_screener_codes(user, passwd, screen_info=17942):
+    sec_dict = screener_pull_screener_results(user, passwd, screen_info)
     return get_sec_name_list(sec_dict)
 # enddef
 
@@ -333,9 +358,10 @@ def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
 
 if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
-    parser.add_argument("--auth", help="Screener.in authentication in form user:passwd", type=str, default=None)
-    parser.add_argument("--invs", help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
-    parser.add_argument("--lag",  help="Ema/Sma Crossover lag (in periods)", type=int, default=10)
+    parser.add_argument("--auth",    help="Screener.in authentication in form user,passwd", type=str, default=None)
+    parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
+    parser.add_argument("--query",   help="Query string for Screener.in (Just paste from Query Builder Box from screener.in)", type=str, default=None)
+    parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in periods)", type=int, default=10)
     args    = parser.parse_args()
 
     if not args.__dict__["auth"]:
@@ -347,6 +373,14 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
 
+    # Check for query string and set the screen_info to appropriate value
+    # If no query string was passed, just use a default screen no = 17942
+    if args.__dict__["query"]:
+        screen_info = args.__dict__["query"]
+    else:
+        screen_info = 17942
+    # endif
+
     # Vars
     auth_info  = args.__dict__["auth"].replace(' ', '').split(',')
     invs_db_f  = os.path.expanduser(args.__dict__["invs"])
@@ -354,7 +388,7 @@ if __name__ == '__main__':
     period_l   = [14, 21]
 
     # Get security list from screener.in using default screen_no=17942
-    sec_list   = screener_dot_in_pull_screener_codes(auth_info[0], auth_info[1], screen_no=17942)
+    sec_list   = screener_dot_in_pull_screener_codes(auth_info[0], auth_info[1], screen_info=screen_info)
     print 'Found {} securities from Screener.in matching criteria.'.format(len(sec_list))
     sec_tick_d = populate_sym_list(invs_db_f, sec_list)
 
