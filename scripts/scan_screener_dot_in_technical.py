@@ -430,7 +430,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
             status, tdelta, trend_switch, _ = run_ema2(d_this, lag=lag, period_list=period_list)
             if (status==True):
                 if trend_switch:
-                    t_swtich = Fore.GREEN + "Down to Up" + Fore.RESET
+                    t_switch = Fore.GREEN + "Down to Up" + Fore.RESET
                 else:
                     t_switch = Fore.RED + "Up to Down" + Fore.RESET
                 # endif
