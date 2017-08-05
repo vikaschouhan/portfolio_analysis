@@ -32,6 +32,7 @@ import math
 import contextlib, warnings
 import pprint
 import shutil
+from   colorama import Fore, Back, Style
 
 ##################################################################
 # INVESTING.COM FUNCTIONS
@@ -282,7 +283,7 @@ def populate_sym_list(invs_dict_file, sec_list):
             not_f_l.append(sec_this)
         # endif
     # endfor
-    print '{} not found in investing.com db'.format(not_f_l)
+    print Back.RED + '{} not found in investing.com db'.format(not_f_l) + Back.RESET
 
     return sec_dict
 # enddef
@@ -401,9 +402,9 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21]):
 
     # Last trend switch
     if o_copy.iloc[-1]['pos'] == 1.0:
-        trend_switch = "Down to Up"
+        trend_switch = 1
     else:
-        trend_switch = "Up to Down"
+        trend_switch = 0
     # endif
 
     # Check if lag > tdelta
@@ -423,12 +424,18 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
         ctr         = 0
         period_list = [9, 14, 21]
         print 'Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list)
-        print '--------------------- GENERATING REPORT --------------------------------'
+        print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
         for sec_code in sec_dict.keys():
             d_this = fetch_data(sec_dict[sec_code]['ticker'], '1W')
             status, tdelta, trend_switch, _ = run_ema2(d_this, lag=lag, period_list=period_list)
             if (status==True):
-                sys.stdout.write('{}. {} switched trend from {}, {} days ago\n'.format(ctr, sec_dict[sec_code]['name'], trend_switch, tdelta))
+                if trend_switch:
+                    t_swtich = Fore.GREEN + "Down to Up" + Fore.RESET
+                else:
+                    t_switch = Fore.RED + "Up to Down" + Fore.RESET
+                # endif
+                sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
+                sys.stdout.write('{}. {} switched trend from {}, {} days ago\n'.format(ctr, sec_name, t_switch, tdelta))
                 sys.stdout.flush()
                 ctr = ctr + 1
             # endif
