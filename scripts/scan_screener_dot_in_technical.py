@@ -425,18 +425,35 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
         ctr         = 0
         period_list = [9, 14, 21]
         print 'Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list)
+        print Fore.MAGENTA + 'Peak to trough percentage has meaning only when trend is down to up !!' + Fore.RESET
         print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
         for sec_code in sec_dict.keys():
+            # NOTE: Don't know what the hell I am calculating using these.
+            #       They need to be reviewed
+            def _c_up(d):
+                return (d['c'].max() - d.iloc[-1]['c'])/d.iloc[-1]['c']
+            # enddef
+            def _c_dwn(d):
+                return (d.iloc[-1]['c'] - d['c'].min())/d.iloc[-1]['c']
+            # enddef
+            # Fetch data
             d_this = fetch_data(sec_dict[sec_code]['ticker'], '1W')
-            status, tdelta, trend_switch, _ = run_ema2(d_this, lag=lag, period_list=period_list)
+            # Run strategy
+            status, tdelta, trend_switch, d_new = run_ema2(d_this, lag=lag, period_list=period_list)
+            # Analyse data
+            p2t_up   = _c_up(d_new)
+            p2t_down = _c_dwn(d_new)
+            # Print reports
             if (status==True):
                 if trend_switch:
                     t_switch = Fore.GREEN + "Down to Up" + Fore.RESET
+                    p2t      = int(p2t_up * 100)
                 else:
                     t_switch = Fore.RED + "Up to Down" + Fore.RESET
+                    p2t      = int(p2t_down * 100)
                 # endif
                 sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
-                sys.stdout.write('{}. {} switched trend from {}, {} days ago\n'.format(ctr, sec_name, t_switch, tdelta))
+                sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
                 sys.stdout.flush()
                 ctr = ctr + 1
             # endif
