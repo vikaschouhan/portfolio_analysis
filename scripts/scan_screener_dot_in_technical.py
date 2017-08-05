@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-# Author  : Vikas Chouhan (presentisgood@gmail.com)
-# License : GPLv2
+# Author    : Vikas Chouhan (presentisgood@gmail.com)
+# Copyright : Vikas Chouhan (presentisgood@gmail.com)
+# License   : GPLv2
+# NOTE      : Please respect the license and copyright.
 #
 # This script pulls data from screener.in using one of the user's screen or any
-# other public screen & using screened companies to scan for techincal analysis.
+# other public screen or just the query string itself & using screened companies to
+# scan for techincal analysis.
 # Right now it uses ema crossover but anything can be applied.
 #
 # The goal is to find out the right timings for entry in the stocks selected via
