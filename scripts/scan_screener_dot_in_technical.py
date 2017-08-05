@@ -375,7 +375,7 @@ def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
 # enddef
 
 # A ema crossover strategy for detecting crossovers on the frame passed
-def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21]):
+def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
     d_s     = s_mode(o_frame, mode)
     rmean   = g_rmean_f(type='e')
     o_copy  = o_frame.copy()   # Make a copy
@@ -387,17 +387,26 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21]):
     o_copy['m_ema']   = rmean(d_s, period_list[1])
     o_copy['l_ema']   = rmean(d_s, period_list[2])
 
-    ## Compare
-    o_copy['sm_c']    = (o_copy['s_ema'] > o_copy['m_ema']).astype('int').diff()
-    o_copy['ml_c']    = (o_copy['m_ema'] > o_copy['l_ema']).astype('int').diff()
-    o_copy['sl_c']    = (o_copy['s_ema'] > o_copy['l_ema']).astype('int').diff()
+    # Generate signals according to chosen indicator mode
+    def _g_signal(df, s_mode="12_or_23"):
+        if s_mode == "12":
+            df['pos'] = (df['s_ema'] > df['m_ema']).astype(int).diff()
+            return df[df['pos'] != 0]
+        elif s_mode == "12_or_23":
+            df['pos'] = ((df['s_ema'] > df['m_ema']) | (df['m_ema'] > df['l_ema'])).astype(int).diff()
+            return df[df['pos'] != 0]
+        elif s_mode == "12_and_23":
+            df['pos'] = ((df['s_ema'] > df['m_ema']) & (df['m_ema'] > df['l_ema'])).astype(int).diff()
+            return df[df['pos'] != 0]
+        else:
+            print 'Unknown mode {} in _g_signal().'.format(s_mode)
+            sys.exit(-1)
+        # endif
+    # enddef
 
-    ## Drop zero rows
-    o_copy  = o_copy[(o_copy['sm_c'] != 0.0) | (o_copy['ml_c'] != 0.0)]
-
-    # ORR all three rows and select the final one only
-    o_copy['pos']     = o_copy['sm_c'].dropna().astype('int') | o_copy['ml_c'].dropna().astype('int')
-
+    # Generate signals
+    o_copy = _g_signal(o_copy, sig_mode)
+    
     # Get time different between last position switch and now
     tdelta = pandas.Timestamp(datetime.datetime.now()) - o_copy.iloc[-1]['t']
 
@@ -423,10 +432,16 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
     if strategy_name == "em2_x":
         sec_list    = []
         ctr         = 0
+
+        # Hyper parameters
         period_list = [9, 14, 21]
-        print 'Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list)
+        sig_mode    = "12"
+
+        print 'Running {} strategy using lag={}, sig_mode={} & period_list={}'.format(strategy_name, lag, sig_mode, period_list)
         print Fore.MAGENTA + 'Peak to trough percentage has meaning only when trend is down to up !!' + Fore.RESET
         print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+        # Iterate over all security dict
         for sec_code in sec_dict.keys():
             # NOTE: Don't know what the hell I am calculating using these.
             #       They need to be reviewed
@@ -439,7 +454,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
             # Fetch data
             d_this = fetch_data(sec_dict[sec_code]['ticker'], '1W')
             # Run strategy
-            status, tdelta, trend_switch, d_new = run_ema2(d_this, lag=lag, period_list=period_list)
+            status, tdelta, trend_switch, d_new = run_ema2(d_this, lag=lag, period_list=period_list, sig_mode=sig_mode)
             # Analyse data
             p2t_up   = _c_up(d_new)
             p2t_down = _c_dwn(d_new)
@@ -523,4 +538,7 @@ if __name__ == '__main__':
 
     # Run strategy function
     run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, strategy_name="em2_x")
+
+    # DEBUG
+    #d_this = fetch_data(sec_tick_d[sec_tick_d.keys()[0]]['ticker'], '1W')
 # endif
