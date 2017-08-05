@@ -141,18 +141,19 @@ def fetch_data(ticker, resl, t_from=None):
 #     screen_no : screen no
 def screener_pull_screener_results(user, passwd, screen_info=17942):
     screen_info_type = None # 0 for no, 1 for query
+    sinfo_color = Fore.MAGENTA + str(screen_info) + Fore.RESET
 
     # Check for Appropriate screen_info passed
     if isinstance(screen_info, int):
-        print 'screen_info = {} is of type int. Assuming it to be a screen no.'.format(screen_info)
+        print 'screen_info = {} is of type int. Assuming it to be a screen no.'.format(sinfo_color)
         screen_info_type = 0
     else:
         try:
             screen_info = int(screen_info)
-            print 'screen_info = {} is of type int passed via string. Assuming it to be a screen no.'.format(screen_info)
+            print 'screen_info = {} is of type int passed via string. Assuming it to be a screen no.'.format(sinfo_color)
             screen_info_type = 0
         except ValueError:
-            print 'screen_info = {} is of type string. Assuming it to be query string.'.format(screen_info)
+            print 'screen_info = {} is of type string. Assuming it to be query string.'.format(sinfo_color)
             screen_info_type = 1
         # endtry
     # endif
