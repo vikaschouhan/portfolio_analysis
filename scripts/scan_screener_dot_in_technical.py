@@ -317,7 +317,8 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     # enddef
 
     # Pre-processing
-    fig, ax = plt.subplots()
+    fig = plt.figure()
+    ax  = fig.add_subplot(111)
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
     plt.ylabel("Price")
@@ -333,6 +334,10 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
         d_frame_c.reset_index(inplace=True, drop=True)
         d_frame_c[label].plot(ax=ax)
     # endfor
+    # Plot volume
+    ax2 = ax.twinx()
+    bc = volume_overlay(ax2, d_frame_c['o'], d_frame_c['c'], d_frame_c['v'], colorup='g', alpha=0.2, width=0.6)
+    ax2.add_collection(bc)
 
     # Post-processing
     plt.grid()
