@@ -33,6 +33,12 @@ import contextlib, warnings
 import pprint
 import shutil
 from   colorama import Fore, Back, Style
+from   matplotlib.finance import candlestick2_ohlc
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import matplotlib.dates as mdates
+import datetime as datetime
+import numpy as np
 
 ##################################################################
 # INVESTING.COM FUNCTIONS
@@ -293,11 +299,12 @@ def populate_sym_list(invs_dict_file, sec_list):
 # PLOTTING FUNCTIONS
 #
 def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None, plot_period=None):
-    d_frame_c = d_frame.copy()
+    d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
-    #d_frame_c = d_frame_c[-plot_period:]
+    d_frame_c = d_frame_c_c[-plot_period:].copy()
 
+    # Get date list and rmean function
     xdate     = [datetime.datetime.fromtimestamp(t) for t in d_frame_c['T']]
     rmean     = g_rmean_f(type='e')
 
@@ -309,28 +316,30 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
         # endtry
     # enddef
 
-    # Plot
+    # Pre-processing
     fig, ax = plt.subplots()
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
     plt.ylabel("Price")
     plt.title(title)
-    plt.grid()
-    ax.xaxis.set_major_locator(ticker.MaxNLocator(6))
-    ax.xaxis.set_major_formatter(ticker.FuncFormatter(mydate))
 
     # Plot candlestick
     candlestick2_ohlc(ax, d_frame_c['o'], d_frame_c['h'], d_frame_c['l'], d_frame_c['c'], width=0.6)
-    # Plot mas
+    ## Plot mas
     for period_this in period_list:
         label = 'ema_' + str(period_this)
         d_s   = s_mode(d_frame_c, mode)
         d_frame_c[label] = rmean(d_s, period_this)
+        d_frame_c.reset_index(inplace=True, drop=True)
         d_frame_c[label].plot(ax=ax)
     # endfor
 
+    # Post-processing
+    plt.grid()
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(6))
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(mydate))
     fig.autofmt_xdate()
-    fig.tight_layout()
+    #fig.tight_layout()
 
     # Check if file_name was passed. If passed, save the plot to this file
     # else just plot the figure right now
