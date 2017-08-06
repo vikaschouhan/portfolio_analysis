@@ -33,7 +33,7 @@ import contextlib, warnings
 import pprint
 import shutil
 from   colorama import Fore, Back, Style
-from   matplotlib.finance import candlestick2_ohlc
+from   matplotlib.finance import candlestick2_ohlc, volume_overlay
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
@@ -493,7 +493,15 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 # enddef
 
 # Common Wrapper over all strategies
-def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
+def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x", plots_dir=None):
+    if plots_dir:
+        plots_dir = os.path.expanduser(plots_dir)
+        if not os.path.isdir(plots_dir):
+            print "{} doesn't exist. Creating it now !!".format(plots_dir)
+            os.makedirs(plots_dir)
+        # endif
+        print 'Plots dir = {}'.format(plots_dir)
+    # endif
     # Start scan
     if strategy_name == "em2_x":
         sec_list    = []
@@ -537,6 +545,12 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x"):
                 sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
                 sys.stdout.flush()
                 ctr = ctr + 1
+
+                # Save plot
+                if plots_dir:
+                    pic_name = plots_dir + '/' + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
+                    gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'], plot_period=100, file_name=pic_name)
+                # endif
             # endif
         # endfor
     else:
@@ -561,6 +575,8 @@ if __name__ == '__main__':
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--query",   help="Query string for Screener.in (Just paste from Query Builder Box from screener.in)", type=str, default=None)
     parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in periods)", type=int, default=10)
+    parser.add_argument("--plots_dir", \
+            help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     args    = parser.parse_args()
 
     if not args.__dict__["auth"]:
@@ -603,7 +619,7 @@ if __name__ == '__main__':
     sec_tick_d = populate_sym_list(invs_db_f, sec_list)
 
     # Run strategy function
-    run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, strategy_name="em2_x")
+    run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, strategy_name="em2_x", plots_dir=args.__dict__["plots_dir"])
 
     # DEBUG
     #d_this = fetch_data(sec_tick_d[sec_tick_d.keys()[0]]['ticker'], '1W')
