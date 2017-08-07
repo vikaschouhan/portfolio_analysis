@@ -22,6 +22,7 @@ import pprint
 import sys
 import re
 import urllib, urllib2, json
+import socket
 import datetime
 import pandas
 import argparse
@@ -39,6 +40,11 @@ import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import datetime as datetime
 import numpy as np
+
+#################################################################
+# GLOBALS
+headers = {'User-agent' : 'Mozilla/5.0'}
+sleep_time = 4
 
 ##################################################################
 # INVESTING.COM FUNCTIONS
@@ -95,18 +101,26 @@ def fetch_data(ticker, resl, t_from=None):
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(ticker, res_tbl[resl], t_from, t_to)
 
         #print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
-        j_data   = json.loads(response.read())
-        if not bool(j_data):
-            print "{} : Not able to fetch.".format(strdate_now())
-        else:
-            break
+        try:
+            this_req = urllib2.Request(this_url, None, headers)
+            response = urllib2.urlopen(this_req)
+            j_data   = json.loads(response.read())
+            if not bool(j_data):
+                print "{} : Not able to fetch.".format(strdate_now())
+                print "{} : Returned {}".format(strdate_now(), j_data)
+            else:
+                break
+            # endif
+        except socket.error:
+            # Just try again after a pause if encountered an 104 error
+            print 'Encountered socket error. Retrying after {} seconds..'.format(sleep_time)
+            time.sleep(sleep_time)
         # endif
         t_indx   = t_indx + 1
     # endwhile
 
     if (t_indx >= ftch_tout):
-        #print "{} : Retries exceeded !!".format(strdate_now())
+        print "{} : Retries exceeded !!".format(strdate_now())
         # Exit
         sys.exit(-1)
     # endif
@@ -335,8 +349,9 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
         d_frame_c[label].plot(ax=ax)
     # endfor
     # Plot volume
+    v_data = [ 0 if j == 'n/a' else j for j in d_frame_c['v'] ]
     ax2 = ax.twinx()
-    bc = volume_overlay(ax2, d_frame_c['o'], d_frame_c['c'], d_frame_c['v'], colorup='g', alpha=0.2, width=0.6)
+    bc = volume_overlay(ax2, d_frame_c['o'], d_frame_c['c'], v_data, colorup='g', alpha=0.2, width=0.6)
     ax2.add_collection(bc)
 
     # Post-processing
