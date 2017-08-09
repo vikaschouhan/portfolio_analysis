@@ -35,6 +35,8 @@ sym_tbl = {
               "dji"            : 169,
               "indvix"         : 17942,
               "nifmdcp100"     : 17946,
+              "cwti"           : 49774,
+              "gmini"          : 49778,
           }
 res_tbl = {
               "1m"     : 1,
@@ -118,7 +120,7 @@ def fetch_data(sym, resl, t_from=None):
         t_to     = unixdate_now()
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym_tbl[sym], res_tbl[resl], t_from, t_to)
 
-        print "{} : Fetching {}".format(strdate_now(), this_url)
+        #print "{} : Fetching {}".format(strdate_now(), this_url)
         response = urllib.urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
@@ -160,7 +162,7 @@ def fetch_data(sym, resl, t_from=None):
         return d_frame
     # enddef
 
-    print "{} : Fetched data. done !!".format(strdate_now())
+    #print "{} : Fetched data. done !!".format(strdate_now())
     return g_pdbase(j_data)
 # enddef
 
@@ -272,10 +274,12 @@ if __name__ == '__main__':
     warnings.filterwarnings("ignore")
 
     prsr = argparse.ArgumentParser()
-    prsr.add_argument("--sym",     help="symbol",               type=str, default=None)
-    prsr.add_argument("--res",     help="resolution",           type=str, default=None)
-    prsr.add_argument("--pfile",   help="plot file",            type=str, default=None)
+    prsr.add_argument("--sym",     help="symbol",                 type=str, default=None)
+    prsr.add_argument("--res",     help="resolution",             type=str, default=None)
+    prsr.add_argument("--pfile",   help="plot file",              type=str, default=None)
     prsr.add_argument("--nbars",   help="no of candles to print", type=int, default=40)
+    prsr.add_argument("--stime",   help="Sleep time. Default=4s", type=int, default=4)
+    prsr.add_argument("--loop",    help="loop mode",              action="store_true")
     args = prsr.parse_args()
 
     if args.__dict__["sym"] == None:
@@ -301,8 +305,15 @@ if __name__ == '__main__':
     sock = g_sock()
     print "sock = {}".format(sock)
 
-    # Fetch data and generate plot file
-    j_data = fetch_data(sym, res)
-    print 'Plotting {} for resolution {} to {}. Using {} bars.'.format(sym, res, pfile, args.__dict__["nbars"])
-    gen_candlestick(j_data, period_list=[9, 14, 21], title=sym, file_name=pfile, plot_period=args.__dict__["nbars"])
+    print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym, res, pfile, \
+            args.__dict__["nbars"], args.__dict__["stime"])
+    while True:
+        # Fetch data and generate plot file
+        j_data = fetch_data(sym, res)
+        gen_candlestick(j_data, period_list=[9, 14, 21], title=sym, file_name=pfile, plot_period=args.__dict__["nbars"])
+        if not args.__dict__["loop"]:
+            break
+        # endif
+        time.sleep(args.__dict__["stime"])
+    # endwhile
 # enddef
