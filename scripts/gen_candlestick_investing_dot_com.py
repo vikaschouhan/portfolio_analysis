@@ -27,17 +27,6 @@ import numpy as np
 ##############################################################
 # Glb ds
 sock = "bcbf3d08f70aaf07b860dc2f481beee5/1473605026"
-sym_tbl = {
-              "nifc1"          : 101817,
-              "ind50"          : 8985,
-              "nsei"           : 17940,
-              "sinq6"          : 101810,
-              "dji"            : 169,
-              "indvix"         : 17942,
-              "nifmdcp100"     : 17946,
-              "cwti"           : 49774,
-              "gmini"          : 49778,
-          }
 res_tbl = {
               "1m"     : 1,
               "5m"     : 5,
@@ -123,12 +112,6 @@ def scan_security_by_symbol(sym):
 # enddef
 
 def fetch_data(sym, resl, t_from=None, sym_name=None):
-    # Symbol
-    if sym in sym_tbl:
-        #print '{} found in symbol table. Redirecting to the associated value.'.format(sym)
-        sym = sym_tbl[sym]
-    # endif 
-
     # Scan for the security with symbol 'sym'. Get it's name.
     # This acts as second level check
     if sym_name == None:
@@ -313,7 +296,7 @@ if __name__ == '__main__':
     args = prsr.parse_args()
 
     if args.__dict__["sym"] == None:
-        print '--sym is required !! It can be any of the following {}'.format(sym_tbl.keys())
+        print '--sym is required !!'
         sys.exit(-1)
     else:
         sym = args.__dict__["sym"]
