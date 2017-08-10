@@ -113,18 +113,23 @@ def fetch_data(sym, resl, t_from=None):
     ftch_tout = 5
     t_indx    = 0
 
-    assert(sym in sym_tbl.keys())
+    # Assert resolution check
     assert(resl in res_tbl.keys())
+    # Symbol
+    if sym in sym_tbl:
+        #print '{} found in symbol table. Redirecting to the associated value.'.format(sym)
+        sym = sym_tbl[sym]
+    # endif
 
     while t_indx < ftch_tout:
         t_to     = unixdate_now()
-        this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym_tbl[sym], res_tbl[resl], t_from, t_to)
+        this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
 
         #print "{} : Fetching {}".format(strdate_now(), this_url)
         response = urllib.urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
-            print "{} : Not able to fetch.".format(strdate_now())
+            print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
         else:
             break
         # endif
@@ -134,7 +139,7 @@ def fetch_data(sym, resl, t_from=None):
     if (t_indx >= ftch_tout):
         print "{} : Retries exceeded !!".format(strdate_now())
         # Alert user by sending mail
-        send_email(gm_sender, gm_passwd, gm_receiver, "Unable to fetch sym info. Killing process !!")
+        #send_email(gm_sender, gm_passwd, gm_receiver, "Unable to fetch sym info. Killing process !!")
         # Exit
         sys.exit(-1)
     # endif
