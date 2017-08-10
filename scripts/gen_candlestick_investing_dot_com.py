@@ -95,6 +95,8 @@ def g_burlb():
     return "http://tvc4.forexpros.com"
 def g_burl(soc_idf):
     return g_burlb() + "/{}/1/1/8/history?".format(soc_idf)
+def g_bsurl(soc_idf):
+    return g_burlb() + "/{}/1/1/8/symbols?".format(soc_idf)
 
 def strdate_to_unixdate(str_date):
     return int(time.mktime(datetime.datetime.strptime(str_date, '%d/%m/%Y').timetuple()))
@@ -106,7 +108,34 @@ def unixdate_now():
 def strdate_now():
     return datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
-def fetch_data(sym, resl, t_from=None):
+def scan_security_by_symbol(sym):
+    this_url = g_bsurl(sock) + "symbol={}".format(sym)
+
+    #print "{} : Fetching {}".format(strdate_now(), this_url)
+    response = urllib.urlopen(this_url)
+    j_data   = json.loads(response.read())
+    if not bool(j_data):
+        print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
+        sys.exit(-1)
+    else:
+        return j_data["description"]
+    # endif
+# enddef
+
+def fetch_data(sym, resl, t_from=None, sym_name=None):
+    # Symbol
+    if sym in sym_tbl:
+        #print '{} found in symbol table. Redirecting to the associated value.'.format(sym)
+        sym = sym_tbl[sym]
+    # endif 
+
+    # Scan for the security with symbol 'sym'. Get it's name.
+    # This acts as second level check
+    if sym_name == None:
+        sym_name = scan_security_by_symbol(sym)
+    # endif
+    #print 'Security with sym_name={} found with description={}'.format(sym, sym_name)
+
     if t_from == None:
         t_from = strdate_to_unixdate("01/01/1992")
     # endif
@@ -115,11 +144,7 @@ def fetch_data(sym, resl, t_from=None):
 
     # Assert resolution check
     assert(resl in res_tbl.keys())
-    # Symbol
-    if sym in sym_tbl:
-        #print '{} found in symbol table. Redirecting to the associated value.'.format(sym)
-        sym = sym_tbl[sym]
-    # endif
+    
 
     while t_indx < ftch_tout:
         t_to     = unixdate_now()
@@ -168,7 +193,7 @@ def fetch_data(sym, resl, t_from=None):
     # enddef
 
     #print "{} : Fetched data. done !!".format(strdate_now())
-    return g_pdbase(j_data)
+    return g_pdbase(j_data), sym_name
 # enddef
 
 ####################################################
@@ -310,12 +335,13 @@ if __name__ == '__main__':
     sock = g_sock()
     print "sock = {}".format(sock)
 
-    print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym, res, pfile, \
+    sym_name = scan_security_by_symbol(sym)
+    print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, \
             args.__dict__["nbars"], args.__dict__["stime"])
     while True:
         # Fetch data and generate plot file
-        j_data = fetch_data(sym, res)
-        gen_candlestick(j_data, period_list=[9, 14, 21], title=sym, file_name=pfile, plot_period=args.__dict__["nbars"])
+        j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
+        gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=args.__dict__["nbars"])
         if not args.__dict__["loop"]:
             break
         # endif
