@@ -40,6 +40,7 @@ import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import datetime as datetime
 import numpy as np
+import logging
 
 #################################################################
 # GLOBALS
@@ -100,7 +101,7 @@ def fetch_data(ticker, resl, t_from=None):
         t_to     = unixdate_now()
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(ticker, res_tbl[resl], t_from, t_to)
 
-        #print "{} : Fetching {}".format(strdate_now(), this_url)
+        logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
         try:
             this_req = urllib2.Request(this_url, None, headers)
             response = urllib2.urlopen(this_req)
@@ -313,6 +314,9 @@ def populate_sym_list(invs_dict_file, sec_list):
 # PLOTTING FUNCTIONS
 #
 def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None, plot_period=None):
+    logging.debug('Generating candlestick chart for {}'.format(title))
+
+    # Make a clone
     d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
@@ -532,6 +536,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x", pl
 
         # Iterate over all security dict
         for sec_code in sec_dict.keys():
+            logging.debug("Running {} strategy over {}".format(strategy_name, sec_code))
             # NOTE: Don't know what the hell I am calculating using these.
             #       They need to be reviewed
             def _c_up(d):
@@ -543,6 +548,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x", pl
             # Fetch data
             d_this = fetch_data(sec_dict[sec_code]['ticker'], '1W')
             # Run strategy
+            logging.debug("Running ema croosover function over {}".format(sec_code))
             status, tdelta, trend_switch, d_new = run_ema2(d_this, lag=lag, period_list=period_list, sig_mode=sig_mode)
             # Analyse data
             p2t_up   = _c_up(d_new)
@@ -577,6 +583,9 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, strategy_name="em2_x", pl
 # Main
 
 if __name__ == '__main__':
+    # Logging init
+    logging.basicConfig(filename='/tmp/scan_screener_dot_in_technical.py.log', filemode='w', level=logging.DEBUG)
+
     dot_invs_py = '~/.investing_dot_com_security_dict.py'
     dot_invs_py_exists = False
 
