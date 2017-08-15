@@ -17,6 +17,7 @@ import math
 import contextlib, warnings
 from   email.mime.multipart import MIMEMultipart
 from   email.mime.text import MIMEText
+from   email.mime.application import MIMEApplication
 from   matplotlib.finance import candlestick2_ohlc, volume_overlay
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -44,7 +45,7 @@ intr_dy = [ "1m", "5m", "15m", "30m", "1h" ]
 
 ########################################################
 # For EMAIL
-def send_email(user, pwd, recipient, body, subject="Sent from sim_stk_ind.py"):
+def send_email(user, pwd, recipient, body='', subject="Sent from sim_stk_ind.py", attachments=[]):
     gmail_user = user
     gmail_pwd = pwd
     FROM = user
@@ -57,6 +58,15 @@ def send_email(user, pwd, recipient, body, subject="Sent from sim_stk_ind.py"):
     msg['From']    = user
     msg['To']      = recipient
     msg.attach(MIMEText(TEXT, 'plain'))
+
+    # Add all attachments 
+    for a_this in attachments:
+        with open(a_this,'rb') as fp:
+            att = MIMEApplication(fp.read())
+            att.add_header('Content-Disposition', 'attachment', filename=a_this)
+            msg.attach(att)
+        # endwith
+    # endfor
     
     try:
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
@@ -285,6 +295,7 @@ def s_mode(f_frame, mode='c'):
 if __name__ == '__main__':
     # ignore warnings
     warnings.filterwarnings("ignore")
+    send_mail = False
 
     prsr = argparse.ArgumentParser()
     prsr.add_argument("--sym",     help="symbol",                 type=str, default=None)
@@ -293,14 +304,17 @@ if __name__ == '__main__':
     prsr.add_argument("--nbars",   help="no of candles to print", type=int, default=40)
     prsr.add_argument("--stime",   help="Sleep time. Default=4s", type=int, default=4)
     prsr.add_argument("--loop",    help="loop mode",              action="store_true")
+    prsr.add_argument("--eauth",   help="email authentication",   type=str, default=None)
     args = prsr.parse_args()
 
+    ### Symbol
     if args.__dict__["sym"] == None:
         print '--sym is required !!'
         sys.exit(-1)
     else:
         sym = args.__dict__["sym"]
     # endif
+    ### Resolution
     if args.__dict__["res"] == None:
         print '--res is required !! It can be any of the following {}'.format(res_tbl.keys())
         sys.exit(-1)
@@ -308,10 +322,21 @@ if __name__ == '__main__':
         assert(args.__dict__["res"] in res_tbl.keys())
         res = args.__dict__["res"]
     # endif
+    ### Candle stick chart file
     if args.__dict__["pfile"] == None:
         pfile = '~/candlestick.png'
     else:
         pfile = args.__dict__["pfile"]
+    # endif
+    pfile = os.path.expanduser(pfile)
+    ### Auth info
+    if args.__dict__["eauth"]:
+        eargs = args.__dict__["eauth"].split(",")
+        if len(eargs) != 2:
+            print "--eauth should be in form username,password"
+            sys.exit(-1)
+        # endif
+        send_mail = True
     # endif
 
     # get socket
@@ -325,6 +350,12 @@ if __name__ == '__main__':
         # Fetch data and generate plot file
         j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
         gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=args.__dict__["nbars"])
+        if send_mail:
+            if os.path.exists(pfile) and os.path.isfile(pfile):
+                print 'Sending email..'
+                send_email(eargs[0], eargs[1], eargs[0], attachments=[pfile])
+            # endif
+        # endif
         if not args.__dict__["loop"]:
             break
         # endif
