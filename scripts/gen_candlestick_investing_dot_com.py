@@ -323,12 +323,7 @@ if __name__ == '__main__':
         res = args.__dict__["res"]
     # endif
     ### Candle stick chart file
-    if args.__dict__["pfile"] == None:
-        pfile = '~/candlestick.png'
-    else:
-        pfile = args.__dict__["pfile"]
-    # endif
-    pfile = os.path.expanduser(pfile)
+    pfile = args.__dict__["pfile"]
     ### Auth info
     if args.__dict__["eauth"]:
         eargs = args.__dict__["eauth"].split(",")
@@ -344,8 +339,10 @@ if __name__ == '__main__':
     print "sock = {}".format(sock)
 
     sym_name = scan_security_by_symbol(sym)
-    print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, \
-            args.__dict__["nbars"], args.__dict__["stime"])
+    if pfile:
+        print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, \
+                args.__dict__["nbars"], args.__dict__["stime"])
+    # endif
     while True:
         # Fetch data and generate plot file
         j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
