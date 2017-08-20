@@ -192,7 +192,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
 ####################################################
 # PLOTTING FUNCTIONS
 #
-def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None, plot_period=None):
+def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None, plot_period=None, time_out=None):
     d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
@@ -201,6 +201,10 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     # Get date list and rmean function
     xdate     = [datetime.datetime.fromtimestamp(t) for t in d_frame_c['T']]
     rmean     = g_rmean_f(type='e')
+
+    def close_event():
+        plt.close()
+    # endif
 
     def mydate(x,pos):
         try:
@@ -212,6 +216,10 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
 
     # Pre-processing
     fig = plt.figure()
+    if time_out:
+        timer = fig.canvas.new_timer(interval=time_out*1000)  # time_out is in seconds
+        timer.add_callback(close_event)
+    # endif
     ax  = fig.add_subplot(111)
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
@@ -244,8 +252,14 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     # Check if file_name was passed. If passed, save the plot to this file
     # else just plot the figure right now
     if file_name:
+        if time_out:
+            time.sleep(time_out)
+        # endif
         plt.savefig(os.path.expanduser(file_name))
     else:
+        if time_out:
+            timer.start()
+        # endif
         plt.show()
     # endif
 # enddef
@@ -302,8 +316,7 @@ if __name__ == '__main__':
     prsr.add_argument("--res",     help="resolution",             type=str, default=None)
     prsr.add_argument("--pfile",   help="plot file",              type=str, default=None)
     prsr.add_argument("--nbars",   help="no of candles to print", type=int, default=40)
-    prsr.add_argument("--stime",   help="Sleep time. Default=4s", type=int, default=4)
-    prsr.add_argument("--loop",    help="loop mode",              action="store_true")
+    prsr.add_argument("--stime",   help="Sleep time. Default=None", type=int, default=None)
     prsr.add_argument("--eauth",   help="email authentication",   type=str, default=None)
     args = prsr.parse_args()
 
@@ -346,16 +359,16 @@ if __name__ == '__main__':
     while True:
         # Fetch data and generate plot file
         j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
-        gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=args.__dict__["nbars"])
+        gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, \
+            plot_period=args.__dict__["nbars"], time_out=args.__dict__["stime"])
         if send_mail:
             if os.path.exists(pfile) and os.path.isfile(pfile):
                 print 'Sending email..'
                 send_email(eargs[0], eargs[1], eargs[0], attachments=[pfile])
             # endif
         # endif
-        if not args.__dict__["loop"]:
+        if args.__dict__["stime"] == None:
             break
         # endif
-        time.sleep(args.__dict__["stime"])
     # endwhile
 # enddef
