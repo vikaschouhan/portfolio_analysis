@@ -598,7 +598,7 @@ if __name__ == '__main__':
     parser.add_argument("--auth",    help="Screener.in authentication in form user,passwd", type=str, default=None)
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--query",   help="Query string for Screener.in (Just paste from Query Builder Box from screener.in)", type=str, default=None)
-    parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in periods)", type=int, default=10)
+    parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     args    = parser.parse_args()

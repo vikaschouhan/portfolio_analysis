@@ -514,7 +514,7 @@ if __name__ == '__main__':
 
     parser  = argparse.ArgumentParser()
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
-    parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in periods)", type=int, default=10)
+    parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
     parser.add_argument("--res",     help="Resolution", type=str, default='1W')
     parser.add_argument("--sfile",     \
             help="Security csv file. Format should be in 'Company,Name,Industry,Symbol,Series,ISIN Code'", type=str, default=None)
