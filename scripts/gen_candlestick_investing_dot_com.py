@@ -75,7 +75,7 @@ def send_email(user, pwd, recipient, body='', subject="Sent from sim_stk_ind.py"
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, msg.as_string())
         server.close()
-        print "Mail sent to {}".format(recipient)
+        print "Mail sent to {} at {}".format(recipient, datetime.datetime.now())
     except:
         print "Failed to send the mail !!"
 # enddef
@@ -363,8 +363,8 @@ if __name__ == '__main__':
             plot_period=args.__dict__["nbars"], time_out=args.__dict__["stime"])
         if send_mail:
             if os.path.exists(pfile) and os.path.isfile(pfile):
-                print 'Sending email..'
-                send_email(eargs[0], eargs[1], eargs[0], attachments=[pfile])
+                #print 'Sending email..'
+                send_email(eargs[0], eargs[1], eargs[0], attachments=[pfile], subject='{} at {}'.format(sec_name, datetime.datetime.now()))
             # endif
         # endif
         if args.__dict__["stime"] == None:
