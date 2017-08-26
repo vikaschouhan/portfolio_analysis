@@ -18,12 +18,16 @@ import contextlib, warnings
 from   email.mime.multipart import MIMEMultipart
 from   email.mime.text import MIMEText
 from   email.mime.application import MIMEApplication
+import matplotlib
 from   matplotlib.finance import candlestick2_ohlc, volume_overlay
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import datetime as datetime
 import numpy as np
+
+# Switch matplotlib backend
+matplotlib.pyplot.switch_backend('agg')
 
 ##############################################################
 # Glb ds
