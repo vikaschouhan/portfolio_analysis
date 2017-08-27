@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+# Author   : Vikas Chouhan (presentisgood@gmail.com)
+# License  : GPLv2
+# @@@
+#
+# Tornado server interface for investing.com
+
 import tornado.ioloop
 import tornado.web
 from   tornado.web import RequestHandler, Application, url
