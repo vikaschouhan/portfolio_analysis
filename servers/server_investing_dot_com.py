@@ -13,6 +13,15 @@ from   scan_investing_dot_com_by_name import *
 # Plots directory
 plot_dir = 'output'
 
+def check_plot_dir():
+    # If directory already exists, do nothing
+    if os.path.isdir(plot_dir):
+        return
+    # enddef
+    # Create directory
+    os.mkdir(plot_dir)
+# enddef
+
 # Json List to HTML Table
 def json_list_2_html_table(json_list):
     j_keys = json_list[0].keys()
@@ -77,6 +86,7 @@ class SearchHandler(RequestHandler):
     # enddef
 # endclass
 
+# App routing control
 def make_app():
     return Application([
             url(r'/', MainHandler),
@@ -85,8 +95,10 @@ def make_app():
         ])
 # enddef
 
+# Main function
 if __name__ == '__main__':
+    check_plot_dir()
     app = make_app()
     app.listen(8888)
     tornado.ioloop.IOLoop.current().start()
-
+# endif
