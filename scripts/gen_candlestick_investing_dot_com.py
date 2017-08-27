@@ -159,11 +159,12 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
     # endwhile
 
     if (t_indx >= ftch_tout):
-        print "{} : Retries exceeded !!".format(strdate_now())
+        msg_err = "{} : Retries exceeded !!".format(strdate_now())
+        print msg_err
         # Alert user by sending mail
         #send_email(gm_sender, gm_passwd, gm_receiver, "Unable to fetch sym info. Killing process !!")
         # Exit
-        sys.exit(-1)
+        return None, msg_err
     # endif
 
     # Get basic pb_frame
@@ -268,6 +269,21 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     # endif
 # enddef
 
+# For use by external server
+def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_period=40, plot_dir='~/outputs/'):
+    if res not in res_tbl:
+        return "Resolution should be one of {}".format(res_tbl.keys())
+    # endif
+    sym_name = scan_security_by_symbol(sym)
+    j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
+    if j_data is None:
+        return sec_name
+    # endif
+    file_name = '{}/{}.png'.format(plot_dir, sym)
+    gen_candlestick(j_data, period_list=period_list, title=sec_name, file_name=file_name, plot_period=plot_period)
+    return file_name
+# enddef
+
 ################################################################
 # For EMA calculations
 # Get mean generating f
@@ -363,6 +379,11 @@ if __name__ == '__main__':
     while True:
         # Fetch data and generate plot file
         j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
+        # Check for any error
+        if j_data is None:
+            print sec_name
+            sys.exit(-1)
+        # endif
         gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, \
             plot_period=args.__dict__["nbars"], time_out=args.__dict__["stime"])
         if send_mail:

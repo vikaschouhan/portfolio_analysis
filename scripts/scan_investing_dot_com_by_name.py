@@ -76,8 +76,7 @@ def strdate_now():
 # Scan for securities
 def scan_securities(name, itype='', exchange='', limit=60):
     if exchange not in exchg_l:
-        print 'Exchange not in {}'.format(exchg_l)
-        exchange = ''
+        return 'Exchange not in {}'.format(exchg_l)
     # endif
     if itype not in itype_l:
         print 'Type not in {}'.format(itype_l)
