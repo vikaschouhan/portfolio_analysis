@@ -197,7 +197,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
 ####################################################
 # PLOTTING FUNCTIONS
 #
-def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None, plot_period=None, time_out=None):
+def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None):
     d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
@@ -206,10 +206,6 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     # Get date list and rmean function
     xdate     = [datetime.datetime.fromtimestamp(t) for t in d_frame_c['T']]
     rmean     = g_rmean_f(type='e')
-
-    def close_event():
-        plt.close()
-    # endif
 
     def mydate(x,pos):
         try:
@@ -221,10 +217,6 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
 
     # Pre-processing
     fig = plt.figure()
-    if time_out:
-        timer = fig.canvas.new_timer(interval=time_out*1000)  # time_out is in seconds
-        timer.add_callback(close_event)
-    # endif
     ax  = fig.add_subplot(111)
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
@@ -254,19 +246,8 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     fig.autofmt_xdate()
     #fig.tight_layout()
 
-    # Check if file_name was passed. If passed, save the plot to this file
-    # else just plot the figure right now
-    if file_name:
-        if time_out:
-            time.sleep(time_out)
-        # endif
-        plt.savefig(os.path.expanduser(file_name))
-    else:
-        if time_out:
-            timer.start()
-        # endif
-        plt.show()
-    # endif
+    # Plot figure
+    plt.savefig(os.path.expanduser(file_name))
 # enddef
 
 # For use by external server
@@ -355,8 +336,6 @@ if __name__ == '__main__':
         assert(args.__dict__["res"] in res_tbl.keys())
         res = args.__dict__["res"]
     # endif
-    ### Candle stick chart file
-    pfile = args.__dict__["pfile"]
     ### Auth info
     if args.__dict__["eauth"]:
         eargs = args.__dict__["eauth"].split(",")
@@ -372,10 +351,11 @@ if __name__ == '__main__':
     print "sock = {}".format(sock)
 
     sym_name = scan_security_by_symbol(sym)
-    if pfile:
-        print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, \
-                args.__dict__["nbars"], args.__dict__["stime"])
-    # endif
+    pfile    = '~/tmp_candles.png' if not args.__dict__["pfile"] else args.__dict__["pfile"]
+    nbars    = args.__dict__["nbars"]
+    stime    = args.__dict__["stime"]
+
+    print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, nbars, stime)
     while True:
         # Fetch data and generate plot file
         j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
@@ -384,16 +364,18 @@ if __name__ == '__main__':
             print sec_name
             sys.exit(-1)
         # endif
-        gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, \
-            plot_period=args.__dict__["nbars"], time_out=args.__dict__["stime"])
+        gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=nbars)
         if send_mail:
             if os.path.exists(pfile) and os.path.isfile(pfile):
                 #print 'Sending email..'
                 send_email(eargs[0], eargs[1], eargs[0], attachments=[pfile], subject='{} at {}'.format(sec_name, datetime.datetime.now()))
             # endif
         # endif
-        if args.__dict__["stime"] == None:
+        if stime == None:
             break
+        else:
+            # Sleep for some time
+            time.sleep(stime)
         # endif
     # endwhile
 # enddef
