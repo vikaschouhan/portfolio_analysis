@@ -100,6 +100,8 @@ def g_burl(soc_idf):
     return g_burlb() + "/{}/1/1/8/history?".format(soc_idf)
 def g_bsurl(soc_idf):
     return g_burlb() + "/{}/1/1/8/symbols?".format(soc_idf)
+def g_surl(soc_idf):
+    return g_burlb() + "/{}/1/1/8/search?".format(soc_idf)
 
 def strdate_to_unixdate(str_date):
     return int(time.mktime(datetime.datetime.strptime(str_date, '%d/%m/%Y').timetuple()))
@@ -112,7 +114,7 @@ def strdate_now():
     return datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
 def scan_security_by_symbol(sym):
-    this_url = g_bsurl(sock) + "symbol={}".format(sym)
+    this_url = g_surl(sock) + "query={}".format(sym)
 
     #print "{} : Fetching {}".format(strdate_now(), this_url)
     response = urllib.urlopen(this_url)
@@ -121,7 +123,7 @@ def scan_security_by_symbol(sym):
         print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
         sys.exit(-1)
     else:
-        return j_data["description"]
+        return j_data[0]["description"]
     # endif
 # enddef
 
