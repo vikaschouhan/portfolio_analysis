@@ -46,6 +46,8 @@ res_tbl = {
               "1M"     : "M",
           }
 intr_dy = [ "1m", "5m", "15m", "30m", "1h" ]
+# 20 seconds timeout for urllib
+f_timeout = 20
 
 ########################################################
 # For EMAIL
@@ -146,7 +148,10 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
     
 
     while t_indx < ftch_tout:
-        t_to     = unixdate_now()
+        # 1st pass
+        #t_to     = unixdate_now()
+        t_to     = strdate_to_unixdate("01/01/2037")
+        t_now    = unixdate_now()
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
 
         #print "{} : Fetching {}".format(strdate_now(), this_url)
@@ -154,10 +159,20 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
         j_data   = json.loads(response.read())
         if not bool(j_data):
             print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
-        else:
-            break
+            t_indx   = t_indx + 1
+            continue
         # endif
-        t_indx   = t_indx + 1
+
+        # 2nd pass
+        t_to_r   = j_data['t'][-1]
+        t_lag    = t_now - t_to_r
+        t_from   = j_data['t'][0] + t_lag
+        this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
+
+        #print "{} : Fetching {}".format(strdate_now(), this_url)
+        response = urllib.urlopen(this_url)
+        j_data   = json.loads(response.read())
+        break
     # endwhile
 
     if (t_indx >= ftch_tout):
