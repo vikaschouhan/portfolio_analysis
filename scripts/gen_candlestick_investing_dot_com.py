@@ -214,7 +214,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
 ####################################################
 # PLOTTING FUNCTIONS
 #
-def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None):
+def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True):
     d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
@@ -250,11 +250,13 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
         d_frame_c.reset_index(inplace=True, drop=True)
         d_frame_c[label].plot(ax=ax)
     # endfor
-    # Plot volume
-    v_data = [ 0 if j == 'n/a' else j for j in d_frame_c['v'] ]
-    ax2 = ax.twinx()
-    bc = volume_overlay(ax2, d_frame_c['o'], d_frame_c['c'], v_data, colorup='g', alpha=0.2, width=0.6)
-    ax2.add_collection(bc)
+    if plot_volume:
+        # Plot volume
+        v_data = [ 0 if j == 'n/a' else j for j in d_frame_c['v'] ]
+        ax2 = ax.twinx()
+        bc = volume_overlay(ax2, d_frame_c['o'], d_frame_c['c'], v_data, colorup='g', alpha=0.2, width=0.6)
+        ax2.add_collection(bc)
+    # endif
 
     # Post-processing
     plt.grid()
