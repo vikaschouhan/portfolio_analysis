@@ -53,8 +53,12 @@ class MainHandler(RequestHandler):
     def get(self):
         buf = '<table border=1>'
         buf = buf + '<tr><td> /                                                 </td><td> Help                                    </td></tr>'
-        buf = buf + '<tr><td> /symbol/{symbol}/{resolution}/{nbars}             </td><td> symbol_name,resolution,nbars            </td></tr>'
-        buf = buf + '<tr><td> /search/{pattern}/{exchange}                      </td><td> search_pattern,exchange                 </td></tr>'
+        buf = buf + '<tr><td> /symbol/{symbol}/{resolution}/{nbars}             </td><td> Plot candlestick chart with only price. </td></tr>'
+        buf = buf + '<tr><td> /plot/{symbol}/{resolution}/{nbars}               </td><td> Same as above !!                        </td></tr>'
+        buf = buf + '<tr><td> /plotfull/{symbol}/{resolution}/{nbars}           </td><td> Plot both price and volume.             </td></tr>'
+        buf = buf + '<tr><td> /search/{pattern}/{exchange}                      </td><td> Search symbols with pattern & exchange. </td></tr>'
+        buf = buf + '<br>'
+        buf = buf + '<header><h5> Copyright Vikas Chouhan (presentisgood@gmail.com) 2017-2018. </h5></header>'
         self.write(buf)
     # enddef
 # endclass
@@ -70,7 +74,27 @@ class SymbolHandler(RequestHandler):
             return
         # endtry
         
-        file_name = gen_candlestick_wrap(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars)
+        file_name = gen_candlestick_wrap(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars, plot_volume=False)
+        if os.path.isfile(file_name):
+            with open(file_name, 'rb') as im_out:
+                self.set_header('Content-type', 'image/png')
+                self.write(im_out.read())    
+        else:
+            self.write('Error message = {}'.format(file_name))
+    # enddef
+# endclass
+
+class SymbolHandler2(RequestHandler):
+    def get(self, **db):
+        resolution = db['resolution'] if db['resolution'] else '1D'
+        try:
+            nbars      = int(db['nbars']) if db['nbars'] else 40
+        except ValueError as e:
+            self.write('Error message = {}'.format(e.message))
+            return
+        # endtry
+        
+        file_name = gen_candlestick_wrap(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars, plot_volume=True)
         if os.path.isfile(file_name):
             with open(file_name, 'rb') as im_out:
                 self.set_header('Content-type', 'image/png')
@@ -98,6 +122,8 @@ def make_app():
     return Application([
             url(r'/', MainHandler),
             url(r'/symbol/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?', SymbolHandler),
+            url(r'/plot/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?', SymbolHandler),
+            url(r'/plotfull/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?', SymbolHandler2),
             url(r'/search/(?P<name>[^\/]+)/?(?P<exchange>[^\/]+)?', SearchHandler),
         ])
 # enddef

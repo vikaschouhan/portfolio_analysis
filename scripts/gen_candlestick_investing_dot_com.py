@@ -270,7 +270,7 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
 # enddef
 
 # For use by external server
-def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_period=40, plot_dir='~/outputs/'):
+def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_period=40, plot_dir='~/outputs/', plot_volume=True):
     if res not in res_tbl:
         return "Resolution should be one of {}".format(res_tbl.keys())
     # endif
@@ -280,7 +280,7 @@ def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_
         return sec_name
     # endif
     file_name = '{}/{}.png'.format(plot_dir, sym)
-    gen_candlestick(j_data, period_list=period_list, title=sec_name, file_name=file_name, plot_period=plot_period)
+    gen_candlestick(j_data, period_list=period_list, title=sec_name, file_name=file_name, plot_period=plot_period, plot_volume=plot_volume)
     return file_name
 # enddef
 
