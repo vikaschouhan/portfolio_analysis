@@ -274,6 +274,8 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
 
     # Plot figure
     plt.savefig(os.path.expanduser(file_name))
+    # Clear plot to save memory
+    plt.close()
 # enddef
 
 # For use by external server
