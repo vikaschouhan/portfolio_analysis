@@ -162,6 +162,54 @@ def parse_dict_file(file_name=None):
     # endif
 # endif
 
+def detect_csv_type(csv_file):
+    def and_patt_l(string, patt_list=['high', 'low', 'open', 'close']):
+        for p_this in patt_list:
+            if not re.search(p_this, string.lower()):
+                return False
+            # endif
+        # endfor
+        return True
+    # enddef
+
+    l_ctr = 0
+    with open(csv_file, 'r') as file_h:
+        for l_this in file_h:
+            l_ctr = l_ctr + 1
+            if l_ctr == 1:
+                f_type = None
+
+                # This of type nse
+                if and_patt_l(l_this):
+                    f_type = 'bhavcopy'       # This is bhavopy
+                else:
+                    f_type = 'other'          # Some other file type
+                # endif
+                if f_type == 'bhavcopy':
+                    if re.search('ISIN', l_this):
+                        print Fore.MAGENTA + 'File type seems to be nse bhavcopy !!' + Fore.RESET
+                        return 'nse_bhavopy'
+                    else:
+                        print Fore.MAGENTA + 'File type seems to be nse group file !!' + Fore.RESET
+                        return 'bse_bhavcopy'
+                    # endif
+                # endif
+            elif l_ctr == 2:
+                if re.search('^\s*5(\d)+,' ,l_this):
+                    print Fore.MAGENTA + 'File type seems to be bse csv !!' + Fore.RESET
+                    return 'bse_grp'
+                elif re.search('INE', l_this):
+                    print Fore.MAGENTA + 'File type seems to be nse csv !!' + Fore.RESET
+                    return 'nse_grp'
+                else:
+                    print Fore.MAGENTA + 'Unknown File type !! Please specify it explicitly.' + Fore.RESET
+                    return None
+                # endif
+            # endif
+        # endfor
+    # endwith
+# enddef
+
 # Function to populate sec csv file in mentioned format to symbol list
 def populate_sec_list(sfile):
     sec_list = []
