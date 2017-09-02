@@ -13,6 +13,7 @@ import copy
 import time
 import sys
 import smtplib
+import socket
 import re
 import os
 import math
@@ -173,7 +174,7 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
 # enddef
 
 # Scan for securities
-def scan_securities(name, exchange):
+def scan_securities(name, exchange, n_sleep=4, n_timeout=4, n_tryouts=5):
     if exchange not in ['NS', 'BO']:
         print "Exchange could only be {}".format(['NS', 'BO'])
         sys.exit(-1)
@@ -181,7 +182,24 @@ def scan_securities(name, exchange):
     this_url = g_bsurl(sock) + "query={}&type=Stock&exchange={}".format(name, exchange)
 
     #print "{} : Fetching {}".format(strdate_now(), this_url)
-    response = urllib.urlopen(this_url)
+    for to_this in range(n_tryouts):   # n tryouts
+        try:
+            response = urllib2.urlopen(this_url, timeout=n_timeout)
+            break
+        except socket.timeout:
+            print ' >>Request timed out !! Sleeping for {} seconds.'.format(n_sleep)
+            time.sleep(n_sleep)
+            to_this = to_this + 1
+            continue
+        # endtry
+    # endfor
+
+    # Check for timeouts
+    if to_this == n_tryouts:
+        print 'Retried timed out. Skipping !!'
+        return None
+    # endif
+
     j_data   = json.loads(response.read())
     if not bool(j_data):
         #print "\n{} : Not able to fetch.".format(strdate_now())
