@@ -227,6 +227,27 @@ def populate_sec_list(sfile):
     # endwith
     return sec_list
 # enddef
+def populate_sec_list_bse(sfile):
+    sec_list = []
+    l_ctr    = 0
+    with open(sfile, 'r') as file_h:
+        for l_this in file_h:
+            l_ctr = l_ctr + 1
+            if l_ctr == 1:
+                continue
+            # endif
+            if re.match('^\s*#', l_this):
+                continue
+            # endif
+            s_arr = l_this.replace('\n', '').split(',')
+            sec_list.append({
+                                'code' : s_arr[0],
+                                'name' : s_arr[2],
+                           })
+        # endfor
+    # endwith
+    return sec_list
+# enddef
 
 def populate_sym_list(invs_dict_file, sec_list):
     # Convert inv_dot_com_db_list to dict:
@@ -254,7 +275,7 @@ def populate_sym_list(invs_dict_file, sec_list):
     sec_dict = {}
     not_f_l  = []
     for sec_this in sec_list:
-        sec_code = sec_this['code']
+        sec_code = unicode(sec_this['code'], 'utf-8')
         sec_name = sec_this['name']
         # Search
         if sec_code in nse_keys:
@@ -598,7 +619,16 @@ if __name__ == '__main__':
     res        = args.__dict__["res"]
 
     # Get security list from screener.in using default screen_no=17942
-    sec_list   = populate_sec_list(sfile=sec_file)
+    csv_type   = detect_csv_type(sec_file)
+    if csv_type == 'nse_grp':
+        sec_list   = populate_sec_list(sfile=sec_file)
+    elif csv_type == 'bse_grp':
+        sec_list   = populate_sec_list_bse(sfile=sec_file)
+    else:
+        print 'csv_type = {} not supported for now !!'.format(csv_type)
+        sys.exit(-1)
+    # endif
+
     print 'Found {} securities.'.format(len(sec_list))
     sec_tick_d = populate_sym_list(invs_db_f, sec_list)
     print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
