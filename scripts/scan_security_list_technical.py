@@ -499,7 +499,7 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 # enddef
 
 # Common Wrapper over all strategies
-def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", plots_dir=None):
+def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", plots_dir=None, only_down2up=False):
     if plots_dir:
         plots_dir = os.path.expanduser(plots_dir)
         if not os.path.isdir(plots_dir):
@@ -512,6 +512,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
     if strategy_name == "em2_x":
         sec_list    = []
         ctr         = 0
+        ctr2        = 0
 
         # Hyper parameters
         period_list = [9, 14, 21]
@@ -523,7 +524,8 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
 
         # Iterate over all security dict
         for sec_code in sec_dict.keys():
-            logging.debug("Running {} strategy over {}".format(strategy_name, sec_code))
+            ctr2    = ctr2 + 1
+            logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
             # NOTE: Don't know what the hell I am calculating using these.
             #       They need to be reviewed
             def _c_up(d):
@@ -535,7 +537,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             # Fetch data
             d_this = fetch_data(sec_dict[sec_code]['ticker'], res)
             # Run strategy
-            logging.debug("Running ema croosover function over {}".format(sec_code))
+            logging.debug("{} : Running ema crossover function over {}".format(ctr2, sec_code))
             status, tdelta, trend_switch, d_new = run_ema2(d_this, lag=lag, period_list=period_list, sig_mode=sig_mode)
             # Analyse data
             p2t_up   = _c_up(d_new)
@@ -549,10 +551,16 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                     t_switch = Fore.RED + "Up to Down" + Fore.RESET
                     p2t      = int(p2t_down * 100)
                 # endif
-                sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
-                sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
-                sys.stdout.flush()
-                ctr = ctr + 1
+                # If only down2up is to be shown and trend_switch is up to down, just continue
+                # and don't show anything
+                if only_down2up and not trend_switch:
+                    continue
+                else:
+                    sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
+                    sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
+                    sys.stdout.flush()
+                    ctr = ctr + 1
+                # endif
 
                 # Save plot
                 if plots_dir:
@@ -585,8 +593,8 @@ if __name__ == '__main__':
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
     parser.add_argument("--res",     help="Resolution", type=str, default='1W')
-    parser.add_argument("--sfile",     \
-            help="Security csv file. Format should be in 'Company,Name,Industry,Symbol,Series,ISIN Code'", type=str, default=None)
+    parser.add_argument("--sfile",   help="Security csv file. Can be group file or bhavcopy file.", type=str, default=None)
+    parser.add_argument("--down2up", help="Only should securities with down to up trend switch.", action="store_true")
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     args    = parser.parse_args()
@@ -617,6 +625,7 @@ if __name__ == '__main__':
     sec_file   = args.__dict__["sfile"]
     ma_lag     = args.__dict__["lag"]
     res        = args.__dict__["res"]
+    down2up    = args.__dict__["down2up"]
 
     # Get security list from screener.in using default screen_no=17942
     csv_type   = detect_csv_type(sec_file)
@@ -634,7 +643,7 @@ if __name__ == '__main__':
     print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
 
     # Run strategy function
-    run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", plots_dir=args.__dict__["plots_dir"])
+    run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", plots_dir=args.__dict__["plots_dir"], only_down2up=down2up)
 
     # DEBUG
     #d_this = fetch_data(sec_tick_d[sec_tick_d.keys()[0]]['ticker'], '1W')
