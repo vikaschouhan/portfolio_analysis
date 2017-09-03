@@ -26,6 +26,7 @@ import copy
 import time
 import os
 import math
+import csv
 import contextlib, warnings
 import pprint
 import shutil
@@ -500,6 +501,9 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", plots_dir=None, only_down2up=False):
+    csv_report_file = '~/csv_report_security_list.csv'
+    csv_rep_list    = []
+
     if plots_dir:
         plots_dir = os.path.expanduser(plots_dir)
         if not os.path.isdir(plots_dir):
@@ -513,6 +517,8 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
         sec_list    = []
         ctr         = 0
         ctr2        = 0
+        # Add csv headers
+        csv_rep_list.append(['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %'])
 
         # Hyper parameters
         period_list = [9, 14, 21]
@@ -545,9 +551,11 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             # Print reports
             if (status==True):
                 if trend_switch:
+                    t_swt    = "Down2Up"
                     t_switch = Fore.GREEN + "Down to Up" + Fore.RESET
                     p2t      = int(p2t_up * 100)
                 else:
+                    t_swt    = "Up2Down"
                     t_switch = Fore.RED + "Up to Down" + Fore.RESET
                     p2t      = int(p2t_down * 100)
                 # endif
@@ -556,6 +564,9 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                 if only_down2up and not trend_switch:
                     continue
                 else:
+                    # Add rep list entry
+                    csv_rep_list.append([sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t)])
+                    # Print
                     sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
                     sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
                     sys.stdout.flush()
@@ -572,6 +583,16 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
     else:
         print "Strategy : {}, not implemented yet !!".format(strategy_name)
     # endif
+
+    # Write to csv file
+    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
+    print 'Writing report file to {}'.format(csv_report_file)
+    with open(os.path.expanduser(csv_report_file), 'w') as f_out:
+        csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for item_this in csv_rep_list:
+            csv_writer.writerow(item_this)
+        # endfor
+    # endwith
 # enddef
 
 #########################################################
