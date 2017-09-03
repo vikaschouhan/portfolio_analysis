@@ -84,7 +84,7 @@ def strdate_now():
 # enddef
 
 # Fetch from investing.com
-def fetch_data(ticker, resl, t_from=None):
+def fetch_data(ticker, resl, t_from=None, t_timeout=4):
     if t_from == None:
         t_from = strdate_to_unixdate("01/01/1992")
     # endif
@@ -100,24 +100,24 @@ def fetch_data(ticker, resl, t_from=None):
         logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
         try:
             this_req = urllib2.Request(this_url, None, headers)
-            response = urllib2.urlopen(this_req)
+            response = urllib2.urlopen(this_req, timeout=t_timeout)
             j_data   = json.loads(response.read())
             if not bool(j_data):
-                print "{} : Not able to fetch.".format(strdate_now())
-                print "{} : Returned {}".format(strdate_now(), j_data)
+                logging.debug("{} : Not able to fetch.".format(strdate_now()))
+                logging.debug("{} : Returned {}".format(strdate_now(), j_data))
             else:
                 break
             # endif
         except socket.error:
             # Just try again after a pause if encountered an 104 error
-            print 'Encountered socket error. Retrying after {} seconds..'.format(sleep_time)
+            logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
             time.sleep(sleep_time)
         # endif
         t_indx   = t_indx + 1
     # endwhile
 
     if (t_indx >= ftch_tout):
-        print "{} : Retries exceeded !!".format(strdate_now())
+        logging.debug("{} : Retries exceeded !!".format(strdate_now()))
         # Exit
         sys.exit(-1)
     # endif
