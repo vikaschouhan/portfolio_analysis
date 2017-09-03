@@ -263,19 +263,40 @@ if __name__ == '__main__':
         nse_cl  = nse_bvc.keys()
         nse_cn  = len(nse_cl)
         for sec_name in nse_cl:
+            ## Fetch from nse
+            ## Only fetch when isin_this is not present in invs_d or
+            ## 'nse_code' is not present in invs_d[isin_this] otherwise
             isin_this = nse_bvc[sec_name]['isin']
-            # if this isin is not in ckpt file, add it to the list
-            if isin_this not in isin_list:
-                sec_data = scan_securities(sec_name, 'NS')
-                if len(sec_data) > 0:
+            if (isin_this not in isin_list) or (u'nse_code' not in invs_d[isin_this]):
+                sec_data  = scan_securities(sec_name, 'NS')
+                if sec_data == None:
+                    cn_indx = cn_indx + 1
+                    continue
+                elif len(sec_data) > 0:
                     sec_data_this                  = sec_data[0]
                     sec_data_this[u'nse_code']     = sec_name
                     sec_data_this[u'isin']         = nse_bvc[sec_name]['isin']
+                else:
+                    cn_indx = cn_indx + 1
+                    continue
+                # endif
+            else:
+                cn_indx = cn_indx + 1
+                continue
+            # endif
+            ## Check if isin is already there. If not present add the full entry into the dictionary
+            ## else check if nse code is there. If not, just add the nse_code
+            if isin_this not in isin_list:
+                invs_d[isin_this]     = sec_data_this
+                fn_indx               = fn_indx + 1
+                isin_list.append(isin_this)
+            else:
+                if u'nse_code' not in invs_d[isin_this]:
+                    invs_d[isin_this][u'nse_code'] = sec_name
                     fn_indx                        = fn_indx + 1
-                    invs_d[sec_data_this[u'isin']] = sec_data_this
-                    isin_list.append(sec_data_this[u'isin'])
                 # endif
             # endif
+            ## Print
             sys.stdout.write('\r>> Querying NSE ..  {}/{}/{}'.format(cn_indx, nse_cn, fn_indx))
             sys.stdout.flush()
             cn_indx = cn_indx + 1
@@ -292,18 +313,39 @@ if __name__ == '__main__':
         bse_cl  = bse_bvc.keys()
         bse_cn  = len(bse_cl)
         for sec_code in bse_cl:
+            ## Fetch data from bse
+            ## Check if isin is already there. If not present add the full entry into the dictionary
+            ## else check if bse_code is there. If not, just add the bse_code
             isin_this = bse_bvc[sec_code]['isin']
-            # If this isin not in isin_list, add it to the list
-            if isin_this not in isin_list:
+            if (isin_this not in isin_list) or (u'bse_code' not in invs_d[isin_this]):
                 sec_data = scan_securities(sec_code, 'BO')
-                if len(sec_data) > 0:
+                if sec_data == None:
+                    cn_indx = cn_indx + 1
+                    continue
+                elif len(sec_data) > 0:
                     sec_data_this                  = sec_data[0]
                     sec_data_this[u'bse_code']     = sec_code
                     sec_data_this[u'isin']         = bse_bvc[sec_code]['isin']
-                    fn_indx                        = fn_indx + 1
-                    invs_d[sec_data_this[u'isin']] = sec_data_this
+                else:
+                    cn_indx = cn_indx + 1
+                    continue
                 # endif
+            else:
+                cn_indx = cn_indx + 1
+                continue
             # endif
+            ## Check if isin is already there. If not present add the full entry into the dictionary
+            ## else check if bse code is there. If not, just add the bse_code
+            if isin_this not in isin_list:
+                invs_d[isin_this]     = sec_data_this
+                fn_indx               = fn_indx + 1
+                isin_list.append(isin_this)
+            else:
+                if u'bse_code' not in invs_d[isin_this]:
+                    invs_d[isin_this][u'bse_code'] = sec_code
+                    fn_indx                        = fn_indx + 1
+                # endif
+            # endif 
             sys.stdout.write('\r>> Querying BSE ..  {}/{}/{}'.format(cn_indx, bse_cn, fn_indx))
             sys.stdout.flush()
             cn_indx = cn_indx + 1
