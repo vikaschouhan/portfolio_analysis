@@ -232,8 +232,15 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
         # endtry
     # enddef
 
+    # Process n_bars
+    def_bars       = 50
+    def_n_locs     = 6
+    fig_ratio      = int(plot_period * 1.0/def_bars) + 1
+    def_fig_dim    = plt.rcParams['figure.figsize']
+    new_fig_dim    = [ fig_ratio * x for x in def_fig_dim ]
+
     # Pre-processing
-    fig = plt.figure()
+    fig = plt.figure(figsize=new_fig_dim)
     ax  = fig.add_subplot(111)
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
@@ -260,13 +267,15 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
 
     # Post-processing
     plt.grid()
-    ax.xaxis.set_major_locator(ticker.MaxNLocator(6))
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(def_n_locs * fig_ratio))
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(mydate))
     fig.autofmt_xdate()
     #fig.tight_layout()
 
     # Plot figure
     plt.savefig(os.path.expanduser(file_name))
+    # Clear plot to save memory
+    plt.close()
 # enddef
 
 # For use by external server
