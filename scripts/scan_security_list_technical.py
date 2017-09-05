@@ -500,8 +500,9 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 # enddef
 
 # Common Wrapper over all strategies
-def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", plots_dir=None, only_down2up=False):
-    csv_report_file = '~/csv_report_security_list.csv'
+def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x",
+                                     plots_dir=None, only_down2up=False, rep_file=None):
+    csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
 
     if plots_dir:
