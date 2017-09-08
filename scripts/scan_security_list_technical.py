@@ -360,6 +360,9 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name=None,
     else:
         plt.show()
     # endif
+
+    # Close figure to save memory
+    plt.close()
 # enddef
 
 ####################################################

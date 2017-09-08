@@ -25,6 +25,7 @@ import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import datetime as datetime
 import numpy as np
+from   textwrap import wrap
 
 # Switch matplotlib backend
 matplotlib.pyplot.switch_backend('agg')
@@ -215,6 +216,12 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
 # PLOTTING FUNCTIONS
 #
 def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True):
+    # Vars
+    l_bar          = ''.join(['-']*60)
+    def_fig_dim    = plt.rcParams['figure.figsize']
+    def_font_size  = plt.rcParams['font.size']
+
+    # Make a copy
     d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
@@ -231,12 +238,14 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
             return ''
         # endtry
     # enddef
+    def r_ns_tr(p_f, indx=-1, rnd=2):
+        return str(round(p_f.iloc[indx], rnd))
+    # enddef
 
     # Process n_bars
     def_bars       = 50
     def_n_locs     = 6
     fig_ratio      = int(plot_period * 1.0/def_bars) + 1
-    def_fig_dim    = plt.rcParams['figure.figsize']
     new_fig_dim    = [ fig_ratio * x for x in def_fig_dim ]
 
     # Pre-processing
@@ -245,7 +254,10 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
     plt.ylabel("Price")
-    plt.title(title)
+    #plt.title(title)
+
+    # Title for close
+    title2 = '{}:{}'.format('C', r_ns_tr(d_frame_c['c']))
 
     # Plot candlestick
     candlestick2_ohlc(ax, d_frame_c['o'], d_frame_c['h'], d_frame_c['l'], d_frame_c['c'], width=0.6)
@@ -256,6 +268,7 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
         d_frame_c[label] = rmean(d_s, period_this)
         d_frame_c.reset_index(inplace=True, drop=True)
         d_frame_c[label].plot(ax=ax)
+        title2 = title2 + ' {}:{}'.format(label, r_ns_tr(d_frame_c[label]))
     # endfor
     if plot_volume:
         # Plot volume
@@ -266,7 +279,14 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
     # endif
 
     # Post-processing
+    # Set grid
     plt.grid()
+
+    # Set titles
+    font_size = int(fig_ratio*def_font_size*0.7)
+    plt.title(title + '\n{}\n'.format(l_bar) + '\n'.join(wrap(title2, 60)), fontsize=font_size)
+
+    # Set axes
     ax.xaxis.set_major_locator(ticker.MaxNLocator(def_n_locs * fig_ratio))
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(mydate))
     fig.autofmt_xdate()
