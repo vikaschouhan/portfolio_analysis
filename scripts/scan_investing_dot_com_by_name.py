@@ -85,7 +85,7 @@ def scan_securities(name, itype='', exchange='', limit=60):
 
     this_url = g_bsurl(sock) + "limit={}&query={}&type={}&exchange={}".format(limit, name, itype, exchange)
 
-    print "{} : Fetching {}".format(strdate_now(), this_url)
+    #print "{} : Fetching {}".format(strdate_now(), this_url)
     response = urllib.urlopen(this_url)
     j_data   = json.loads(response.read())
     return j_data
