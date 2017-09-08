@@ -17,7 +17,7 @@ import os
 from   PIL import Image
 import cStringIO as StringIO
 
-sys.path.append("../scripts")
+sys.path.append("../../scripts")
 from   gen_candlestick_investing_dot_com import *
 from   scan_investing_dot_com_by_name import *
 
@@ -36,7 +36,7 @@ def check_plot_dir():
 # enddef
 
 # Json List to HTML Table
-def json_list_2_html_table(json_list):
+def json_list_2_html_table(json_list, url_prot, url_host):
     if (len(json_list) == 0):
         return 'Error message = Nothing found !!'
     # endif
@@ -50,7 +50,14 @@ def json_list_2_html_table(json_list):
     for i_this in json_list:
         buf = buf + '<tr>'
         for j_this in j_keys:
-            buf = buf + '<td> {} </td>'.format(i_this[j_this])
+            # Add hyperlink
+            if j_this == 'symbol':
+                sym = i_this[j_this].split(':')[0]
+                bufl = '<td><a href="{}://{}/plota/{}/1W/80"> {} </a></td>'.format(url_prot, url_host, sym, sym)
+            else:
+                bufl = '<td> {} </td>'.format(i_this[j_this])
+            # endif
+            buf = buf + bufl
         # endfor
         buf = buf + '</tr>'
     # endfor
@@ -138,7 +145,7 @@ class SearchHandler(RequestHandlerDerv):
         if isinstance(j_data, str):
             self.write('Message = {}'.format(j_data))
         else:
-            self.write(json_list_2_html_table(j_data))
+            self.write(json_list_2_html_table(j_data, self.request.protocol, self.request.host))
         # endif
     # enddef
 # endclass
