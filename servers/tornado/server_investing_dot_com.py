@@ -161,7 +161,7 @@ class SearchHandler(RequestHandlerDerv):
         if isinstance(j_data, str):
             self.write('Message = {}'.format(j_data))
         else:
-            header = '<header><h3>Total Search Results Found = {} in {}</h3></header>'.format(len(j_data), exchg_l)
+            header = '<header><h3>Total Search Results Found = {} <br>Exchanges Supported = {}</h3></header>'.format(len(j_data), exchg_l)
             self.write(header + '<br>' + json_list_2_html_table(j_data, self.request.protocol, self.request.host))
         # endif
     # enddef
