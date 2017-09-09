@@ -55,7 +55,7 @@ def json_list_2_html_table(json_list, url_prot, url_host):
                 sym = i_this[j_this].split(':')[0]
                 bufl = '<td><a href="{}://{}/plota/{}/1W/80"> {} </a></td>'.format(url_prot, url_host, sym, sym)
             else:
-                bufl = '<td> {} </td>'.format(i_this[j_this])
+                bufl = '<td> {} </td>'.format(i_this[j_this].encode('utf-8').strip())
             # endif
             buf = buf + bufl
         # endfor
@@ -69,12 +69,15 @@ class RequestHandlerDerv(RequestHandler):
     executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
     @run_on_executor
-    def bg_task_plot(self, sym, res, plot_dir, plot_period, plot_volume):
-        return gen_candlestick_wrap(sym, res=res, plot_dir=plot_dir, plot_period=plot_period, plot_volume=plot_volume)
+    def bg_task_plot(self, sym, res, plot_dir, plot_period, plot_volume, period_list=None):
+        if period_list == None:
+            period_list = [9, 14, 21]
+        # endif
+        return gen_candlestick_wrap(sym, res=res, plot_dir=plot_dir, plot_period=plot_period, plot_volume=plot_volume, period_list=period_list)
     # enddef
     @run_on_executor
     def bg_task_search(self, name, exchg):
-        return scan_securities(name=name, exchange=exchg)
+        return scan_securities(name=name, exchange=exchg, limit=600)
     # enddef
 # endclass
 
@@ -83,10 +86,11 @@ class MainHandler(RequestHandlerDerv):
     def get(self):
         buf = '<table border=1>'
         buf = buf + '<tr><td> /                                                 </td><td> Help                                    </td></tr>'
-        buf = buf + '<tr><td> /symbol/{symbol}/{resolution}/{nbars}             </td><td> Plot candlestick chart with only price. </td></tr>'
-        buf = buf + '<tr><td> /plot/{symbol}/{resolution}/{nbars}               </td><td> Same as above !!                        </td></tr>'
-        buf = buf + '<tr><td> /plota/{symbol}/{resolution}/{nbars}              </td><td> Plot both price and volume.             </td></tr>'
+        buf = buf + '<tr><td> /symbol/{symbol}/{resolution}/{nbars}/{preriods}  </td><td> Plot candlestick chart with only price. </td></tr>'
+        buf = buf + '<tr><td> /plot/{symbol}/{resolution}/{nbars}/{periods}     </td><td> Same as above !!                        </td></tr>'
+        buf = buf + '<tr><td> /plota/{symbol}/{resolution}/{nbars}/{periods}    </td><td> Plot both price and volume.             </td></tr>'
         buf = buf + '<tr><td> /search/{pattern}/{exchange}                      </td><td> Search symbols with pattern & exchange. </td></tr>'
+        buf = buf + '<tr><td> /info                                             </td><td> Diagnostic info.                        </td></tr>'
         buf = buf + '<br>'
         buf = buf + '<header><h5> Copyright Vikas Chouhan (presentisgood@gmail.com) 2017-2018. </h5></header>'
         self.write(buf)
@@ -99,13 +103,19 @@ class SymbolHandler(RequestHandlerDerv):
     def get(self, **db):
         resolution = db['resolution'] if db['resolution'] else '1D'
         try:
+            periods    = [ int(x) for x in db['periods'].split(',') ] if db['periods'] else None
+        except ValueError as e:
+            self.write('Error message = {}'.format(e.message))
+            return
+        # endtry
+        try:
             nbars      = int(db['nbars']) if db['nbars'] else 40
         except ValueError as e:
             self.write('Error message = {}'.format(e.message))
             return
         # endtry
         
-        file_name = yield self.bg_task_plot(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars, plot_volume=False)
+        file_name = yield self.bg_task_plot(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars, plot_volume=False, period_list=periods)
         if os.path.isfile(file_name):
             with open(file_name, 'rb') as im_out:
                 self.set_header('Content-type', 'image/png')
@@ -120,13 +130,19 @@ class SymbolHandler2(RequestHandlerDerv):
     def get(self, **db):
         resolution = db['resolution'] if db['resolution'] else '1D'
         try:
+            periods    = [ int(x) for x in db['periods'].split(',') ] if db['periods'] else None
+        except ValueError as e:
+            self.write('Error message = {}'.format(e.message))
+            return
+        # endtry
+        try:
             nbars      = int(db['nbars']) if db['nbars'] else 40
         except ValueError as e:
             self.write('Error message = {}'.format(e.message))
             return
         # endtry
         
-        file_name = yield self.bg_task_plot(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars, plot_volume=True)
+        file_name = yield self.bg_task_plot(db['symbol'], res=resolution, plot_dir=plot_dir, plot_period=nbars, plot_volume=True, period_list=periods)
         if os.path.isfile(file_name):
             with open(file_name, 'rb') as im_out:
                 self.set_header('Content-type', 'image/png')
@@ -145,8 +161,18 @@ class SearchHandler(RequestHandlerDerv):
         if isinstance(j_data, str):
             self.write('Message = {}'.format(j_data))
         else:
-            self.write(json_list_2_html_table(j_data, self.request.protocol, self.request.host))
+            header = '<header><h3>Total Search Results Found = {} in {}</h3></header>'.format(len(j_data), exchg_l)
+            self.write(header + '<br>' + json_list_2_html_table(j_data, self.request.protocol, self.request.host))
         # endif
+    # enddef
+# endclass
+
+# Info Handler
+class InfoHandler(RequestHandlerDerv):
+    @gen.coroutine
+    def get(self):
+        self.write('<br>Supported Exchanges         = {}'.format(exchg_l))
+        self.write('<br>Supported Instruments       = {}'.format(itype_l))
     # enddef
 # endclass
 
@@ -154,10 +180,11 @@ class SearchHandler(RequestHandlerDerv):
 def make_app():
     return Application([
             url(r'/', MainHandler),
-            url(r'/symbol/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?', SymbolHandler),
-            url(r'/plot/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?', SymbolHandler),
-            url(r'/plota/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?', SymbolHandler2),
+            url(r'/symbol/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?/?(?P<periods>[^\/]+)?', SymbolHandler),
+            url(r'/plot/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?/?(?P<periods>[^\/]+)?', SymbolHandler),
+            url(r'/plota/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?/?(?P<periods>[^\/]+)?', SymbolHandler2),
             url(r'/search/(?P<name>[^\/]+)/?(?P<exchange>[^\/]+)?', SearchHandler),
+            url(r'/info', InfoHandler),
         ])
 # enddef
 

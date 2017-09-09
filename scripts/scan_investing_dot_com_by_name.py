@@ -26,7 +26,7 @@ sock = "bcbf3d08f70aaf07b860dc2f481beee5/1473605026"
 
 # List
 itype_l = ['Stock', 'Commodity']
-exchg_l = ['NS', 'BO', 'MCX']
+exchg_l = ['NS', 'BO', 'MCX', 'NCDEX']
 
 def assertm(cond, msg):
     if not cond:
@@ -75,19 +75,38 @@ def strdate_now():
 
 # Scan for securities
 def scan_securities(name, itype='', exchange='', limit=60):
+    # Vars
+    j_data = []
+
+    # Check for exchange
     if exchange not in exchg_l:
-        return 'Exchange not in {}'.format(exchg_l)
+        if exchange != '':
+            return 'Exchange not in {}'.format(exchg_l)
+        else:
+            exchange = exchg_l
+        # endif
     # endif
+
+    # Convert to list
+    if not isinstance(exchange, list):
+        exchange = [ exchange ]
+    # endif
+
+    # Search for instrument type
     if itype not in itype_l:
         print 'Type not in {}'.format(itype_l)
         itype = ''
     # endif
 
-    this_url = g_bsurl(sock) + "limit={}&query={}&type={}&exchange={}".format(limit, name, itype, exchange)
+    # Search in all exchanges
+    for exchg in exchange:
+        this_url = g_bsurl(sock) + "limit={}&query={}&type={}&exchange={}".format(limit, name, itype, exchg)
 
-    #print "{} : Fetching {}".format(strdate_now(), this_url)
-    response = urllib.urlopen(this_url)
-    j_data   = json.loads(response.read())
+        #print "{} : Fetching {}".format(strdate_now(), this_url)
+        response = urllib.urlopen(this_url)
+        j_data   = j_data + json.loads(response.read())
+    # endfor
+
     return j_data
 # enddef
 

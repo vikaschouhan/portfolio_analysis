@@ -221,6 +221,11 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
     def_fig_dim    = plt.rcParams['figure.figsize']
     def_font_size  = plt.rcParams['font.size']
 
+    # Check period list
+    if period_list == None:
+        period_list = []
+    # endif
+
     # Make a copy
     d_frame_c_c = d_frame.copy()
 
