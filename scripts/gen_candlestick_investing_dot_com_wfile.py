@@ -462,9 +462,14 @@ if __name__ == '__main__':
     # Print all symbols found
     pprint.pprint('Symbols found = {}'.format([ '{} -> {}'.format(x['full_name'], x['description']) for x in sec_full_l ]))
 
+    # Create directory if not present
+    if not os.path.isdir(os.path.expanduser(pdir)):
+        os.mkdir(os.path.expanduser(pdir))
+    # endif
+
     ## Iterate over all symbols
     for i_this in sec_full_l:
-        sym_desc = i_this['description'].replace(' ', '_')
+        sym_desc = i_this['description'].replace(' ', '_') + '_{}_{}'.format(i_this['resolution'], i_this['num_bars'])
         pfile = pdir + '/' + sym_desc + '.png'
         print 'Plotting {} for resolution {} to {}. Using {} bars'.format(i_this['description'], i_this['resolution'], pfile, i_this['num_bars'])
         # Fetch data and generate plot file
