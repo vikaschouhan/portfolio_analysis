@@ -130,6 +130,79 @@ def scan_security_by_symbol(sym):
     # endif
 # enddef
 
+def scan_security_by_name(name, exchg_list=['NS', 'BO', 'MCX', 'NCDEX']):
+    this_url_fmt = g_surl(sock) + "query={}&exchange={}"
+    j_data_f     = []
+
+    # Iterate over all exchanges
+    for exchg_this in exchg_list:
+        this_url = this_url_fmt.format(name, exchg_this)
+        #print "{} : Fetching {}".format(strdate_now(), this_url)
+        response = urllib.urlopen(this_url)
+        j_data   = json.loads(response.read())
+        if not bool(j_data):
+            continue
+        else:
+            j_data_f = j_data_f + j_data
+        # endif
+    # endfor
+    return j_data_f
+# enddef
+
+# Process watchlist
+def process_watchlist_file(wfile):
+    w_list = []
+    with open(os.path.expanduser(wfile), 'r') as f_in:
+        for l_this in f_in:
+            e_a = l_this.replace('\n', '').split(':')
+            sym_name = e_a[0]
+            sym_res  = e_a[1].replace(' ', '')
+            try:
+                ma_list =  [ int(x) for x in e_a[2].split(',') ]
+            except:
+                print '{} does not look like a period list seperated by commas.'.format(e_a[2].split(','))
+                sys.exit(-1)
+            # endtry
+            try:
+                num_bars = int(e_a[3])
+            except:
+                print '{} does not look like an integer.'.format(e_a[3].replace(' ', ''))
+                sys.exit(-1)
+            # endtry
+            w_list.append({
+                              'name'      : sym_name,
+                              'res'       : sym_res,
+                              'ma_l'      : ma_list,
+                              'nbars'     : num_bars,
+                         })
+        # endfor
+    # endwith
+    return w_list
+# enddef
+
+# Process watchlist file by name
+def process_watchlist_file_by_name(wfile):
+    wlist_l  = process_watchlist_file(wfile)
+
+    # Generate a list of all securities
+    sec_full_l = []
+    for item_this in wlist_l:
+        sec_l  = scan_security_by_name(item_this['name'])
+        for i_this in sec_l:
+            # Modify this node
+            i_this_tmp = copy.copy(i_this)
+            i_this_tmp['symbol']               = i_this_tmp['symbol'].split(':')[0]
+            i_this_tmp['resolution']           = item_this['res']
+            i_this_tmp['ema_period_list']      = item_this['ma_l']
+            i_this_tmp['num_bars']             = item_this['nbars']
+            # Add node to main dict
+            sec_full_l.append(i_this_tmp)
+        # endfor
+    # endfor
+
+    return sec_full_l
+# enddef
+
 def fetch_data(sym, resl, t_from=None, sym_name=None):
     # Scan for the security with symbol 'sym'. Get it's name.
     # This acts as second level check
