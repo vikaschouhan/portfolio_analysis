@@ -364,7 +364,7 @@ def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_
     if j_data is None:
         return sec_name
     # endif
-    file_name = '{}/{}.png'.format(plot_dir, sym)
+    file_name = '{}/{}_{}_{}_{}.png'.format(plot_dir, sym, res, plot_period, '-'.join([str(x) for x in period_list]))
     gen_candlestick(j_data, period_list=period_list, title=sec_name, file_name=file_name, plot_period=plot_period, plot_volume=plot_volume)
     return file_name
 # enddef
