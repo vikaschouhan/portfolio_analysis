@@ -1,0 +1,8 @@
+Crude Oil WTI Futures      : 5h : 9,   14,  21 : 180 
+Crude Oil WTI Futures      : 5m : 50, 100, 200 : 180
+Gold Mini Futures          : 5h : 9,   14,  21 : 180
+Nickel Mini Futures        : 5h : 21,  35      : 180
+Zinc Mini Futures          : 1D : 14,  21      : 180
+Copper Mini Futures        : 5h : 14,  21,  28 : 180
+Silver Micro Futures       : 5h : 9,   14,  21 : 180
+Crude Palm Oil Futures     : 1D : 9,   14,  21 : 180
