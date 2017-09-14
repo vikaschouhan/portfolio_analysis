@@ -113,7 +113,10 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
             # Just try again after a pause if encountered an 104 error
             logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
             time.sleep(sleep_time)
-        # endif
+        except urllib2.URLError:
+            logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
+            time.sleep(sleep_time)
+        # endtry
         t_indx   = t_indx + 1
     # endwhile
 
