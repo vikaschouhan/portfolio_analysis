@@ -25,6 +25,9 @@ from   scan_investing_dot_com_by_name import *
 plot_dir = 'output'
 # Max workers
 MAX_WORKERS = 16
+db_path  = '../../scripts/db'
+
+##################################################################
 
 def check_plot_dir():
     # If directory already exists, do nothing
@@ -63,6 +66,43 @@ def json_list_2_html_table(json_list, url_prot, url_host):
     # endfor
     return buf
 # enddef
+
+# Json List to HTML Table
+def json_list_2_html_table_2(json_list, url_prot, url_host):
+    if (len(json_list) == 0):
+        return 'Error message = Nothing found !!'
+    # endif
+    j_keys = ['description', 'symbol']
+    buf = '<table border=1>'
+    # Add headers
+    for i_this in j_keys:
+        buf = buf + '<th> {} </th>'.format(i_this)
+    # endfor
+    # Add data
+    for i_this in json_list:
+        # key variables
+        res_t    = i_this['resolution']
+        n_bars   = i_this['num_bars']
+        ema_str  = ','.join([str(x) for x in i_this['ema_period_list']])
+        #
+        buf = buf + '<tr>'
+        for j_this in j_keys:
+            # Add hyperlink
+            if j_this == 'symbol':
+                sym = i_this[j_this].split(':')[0]
+                bufl = '<td><a href="{}://{}/plot/{}/{}/{}/{}"> {} </a></td>'.format(url_prot,
+                           url_host, sym, res_t, n_bars, ema_str, sym)
+            else:
+                bufl = '<td> {} </td>'.format(str(i_this[j_this]).encode('utf-8').strip())
+            # endif
+            buf = buf + bufl
+        # endfor
+        buf = buf + '</tr>'
+    # endfor
+    return buf
+# enddef
+
+##############################################################
 
 # Derived class for worker tasks
 class RequestHandlerDerv(RequestHandler):
@@ -176,6 +216,29 @@ class InfoHandler(RequestHandlerDerv):
     # enddef
 # endclass
 
+#####################################################3
+# Watch List Handlers
+class WatchListHandler(RequestHandler):
+    watchlist_file    = None
+    watchlist_list    = None
+
+    @gen.coroutine
+    def get(self):
+        self.write(json_list_2_html_table_2(self.watchlist_list, self.request.protocol, self.request.host))
+    # enddef
+# enddef
+
+class WatchList0Handler(WatchListHandler):
+    watchlist_file    = os.path.join(db_path, 'wfile_my0_sym.txt')
+    watchlist_list    = process_watchlist_file_by_name(watchlist_file)
+
+    @gen.coroutine
+    def get(self):
+        self.write(json_list_2_html_table_2(self.watchlist_list, self.request.protocol, self.request.host))
+    # enddef
+# enddef
+
+#######################################################
 # App routing control
 def make_app():
     return Application([
@@ -185,13 +248,18 @@ def make_app():
             url(r'/plota/(?P<symbol>[^\/]+)/?(?P<resolution>[^\/]+)?/?(?P<nbars>[^\/]+)?/?(?P<periods>[^\/]+)?', SymbolHandler2),
             url(r'/search/(?P<name>[^\/]+)/?(?P<exchange>[^\/]+)?', SearchHandler),
             url(r'/info', InfoHandler),
+            # Custom urls
+            url(r'/w0', WatchList0Handler),
         ])
 # enddef
 
+######################################################
 # Main function
 if __name__ == '__main__':
+    port_num = 8888
     check_plot_dir()
     app = make_app()
-    app.listen(8888)
+    print 'Starting to listen on port {}'.format(port_num)
+    app.listen(port_num)
     tornado.ioloop.IOLoop.current().start()
 # endif
