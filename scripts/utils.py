@@ -25,3 +25,14 @@ def merge_images(file_list, out_file):
 
     result.save(os.path.expanduser(out_file))
 # enddef
+
+###################################################
+# @Decorators
+
+def static(varname, value):
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    # enddef
+    return decorate
+# enddef
