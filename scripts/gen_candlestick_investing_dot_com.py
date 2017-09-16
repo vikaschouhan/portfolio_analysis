@@ -156,21 +156,23 @@ def process_watchlist_file(wfile):
         for l_this in f_in:
             e_a = l_this.replace('\n', '').split(':')
             sym_name = e_a[0]
-            sym_res  = e_a[1].replace(' ', '')
+            exchg    = e_a[1]
+            sym_res  = e_a[2].replace(' ', '')
             try:
-                ma_list =  [ int(x) for x in e_a[2].split(',') ]
+                ma_list =  [ int(x) for x in e_a[3].split(',') ]
             except:
-                print '{} does not look like a period list seperated by commas.'.format(e_a[2].split(','))
+                print '{} does not look like a period list seperated by commas.'.format(e_a[3].split(','))
                 sys.exit(-1)
             # endtry
             try:
-                num_bars = int(e_a[3])
+                num_bars = int(e_a[4])
             except:
-                print '{} does not look like an integer.'.format(e_a[3].replace(' ', ''))
+                print '{} does not look like an integer.'.format(e_a[4].replace(' ', ''))
                 sys.exit(-1)
             # endtry
             w_list.append({
                               'name'      : sym_name,
+                              'exchg'     : exchg,
                               'res'       : sym_res,
                               'ma_l'      : ma_list,
                               'nbars'     : num_bars,
@@ -182,6 +184,30 @@ def process_watchlist_file(wfile):
 
 # Process watchlist file by name
 def process_watchlist_file_by_name(wfile):
+    wlist_l  = process_watchlist_file(wfile)
+
+    # Generate a list of all securities
+    sec_full_l = []
+    for item_this in wlist_l:
+        exchg_l = item_this['exchg'].split(',')
+        sec_l  = scan_security_by_name(item_this['name'], exchg_list=exchg_l)
+        for i_this in sec_l:
+            # Modify this node
+            i_this_tmp = copy.copy(i_this)
+            i_this_tmp['symbol']               = i_this_tmp['symbol'].split(':')[0]
+            i_this_tmp['resolution']           = item_this['res']
+            i_this_tmp['ema_period_list']      = item_this['ma_l']
+            i_this_tmp['num_bars']             = item_this['nbars']
+            # Add node to main dict
+            sec_full_l.append(i_this_tmp)
+        # endfor
+    # endfor
+
+    return sec_full_l
+# enddef
+
+# Same as above but using local database
+def process_watchlist_file_by_name_local_db(wfile, invs_db):
     wlist_l  = process_watchlist_file(wfile)
 
     # Generate a list of all securities

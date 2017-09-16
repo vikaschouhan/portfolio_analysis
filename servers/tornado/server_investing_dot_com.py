@@ -16,16 +16,20 @@ import sys
 import os
 from   PIL import Image
 import cStringIO as StringIO
+import uuid
 
 sys.path.append("../../scripts")
 from   gen_candlestick_investing_dot_com import *
 from   scan_investing_dot_com_by_name import *
 
-# Plots directory
-plot_dir = 'output'
-# Max workers
+# Global vars
 MAX_WORKERS = 16
-db_path  = '../../scripts/db'
+
+# Local directories
+db_path        = '../../scripts/db'
+template_dir   = './templates'
+upload_dir     = './uploads'
+plot_dir       = './output'
 
 ##################################################################
 
@@ -72,7 +76,7 @@ def json_list_2_html_table_2(json_list, url_prot, url_host):
     if (len(json_list) == 0):
         return 'Error message = Nothing found !!'
     # endif
-    j_keys = ['description', 'symbol']
+    j_keys = ['description', 'symbol', 'resolution', 'exchange']
     buf = '<table border=1>'
     # Add headers
     for i_this in j_keys:
