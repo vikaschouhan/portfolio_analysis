@@ -9,7 +9,7 @@ Lead Mini Futures          : MCX     : 5h : 9,   14      : 280
 Cotton 29mm Futures        : MCX     : 5h : 9,   14,  21 : 280
 Cardamom Futures           : MCX     : 5h : 9,   14,  21 : 280
 Crude Palm Oil Futures     : MCX     : 1D : 9,   14,  21 : 280
-Natural Gas Futures        : MCX     : 5m : 50, 100,     : 280
+Natural Gas Futures        : MCX     : 5m : 50, 100      : 280
 Natural Gas Futures        : MCX     : 1h : 9,   14,  21 : 280
 IND50 NIFTY 50 Futures     :         : 1D : 9,   14,  21 : 280
 NSEI                       : NS      : 1D : 9,   14,  21 : 280
