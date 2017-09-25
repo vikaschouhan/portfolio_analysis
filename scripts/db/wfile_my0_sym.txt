@@ -1,10 +1,14 @@
-Crude Oil WTI Futures      : MCX     : 5h : 9,   14,  21 : 280 
-Crude Oil WTI Futures      : MCX     : 5m : 50, 100, 200 : 280
-Gold Mini Futures          : MCX     : 5h : 9,   14,  21 : 280
-Nickel Mini Futures        : MCX     : 5h : 21,  35      : 280
-Zinc Mini Futures          : MCX     : 1D : 14,  21      : 280
-Copper Mini Futures        : MCX     : 5h : 14,  21,  28 : 280
-Silver Micro Futures       : MCX     : 5h : 9,   14,  21 : 280
-Crude Palm Oil Futures     : MCX     : 1D : 9,   14,  21 : 280
-IND50 NIFTY 50 Futures     :         : 1D : 9,   14,  21 : 280
-NSEI                       : NS      : 1D : 9,   14,  21 : 280
+Crude Oil WTI Futures      : MCX     : 5h : 9,   14,  21 : 300 
+Crude Oil WTI Futures      : MCX     : 5m : 50, 100, 200 : 300
+Gold Mini Futures          : MCX     : 5h : 9,   14,  21 : 300
+Nickel Mini Futures        : MCX     : 5h : 21,  35      : 300
+Zinc Mini Futures          : MCX     : 1D : 14,  21      : 300
+Copper Mini Futures        : MCX     : 5h : 14,  21,  28 : 300
+Silver Micro Futures       : MCX     : 5h : 9,   14,  21 : 300
+Lead Mini Futures          : MCX     : 5h : 9,   14      : 300
+Cotton 29mm Futures        : MCX     : 5h : 9,   14,  21 : 300
+Cardamom Futures           : MCX     : 5h : 9,   14,  21 : 300
+Crude Palm Oil Futures     : MCX     : 1D : 9,   14,  21 : 300
+Natural Gas Futures        : MCX     : 5h : 9,   14,  21 : 300
+IND50 NIFTY 50 Futures     :         : 1D : 9,   14,  21 : 300
+NSEI                       : NS      : 1D : 9,   14,  21 : 300
