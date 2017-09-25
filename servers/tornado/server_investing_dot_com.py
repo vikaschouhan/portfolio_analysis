@@ -237,7 +237,11 @@ class WatchList0Handler(WatchListHandler):
     watchlist_list    = process_watchlist_file_by_name(watchlist_file)
 
     @gen.coroutine
-    def get(self):
+    def get(self, **db):
+        # Reset the database if reset was passed as optional argument
+        if db['reset']:
+            self.watchlist_list = process_watchlist_file_by_name(self.watchlist_file)
+        # endif
         self.write(json_list_2_html_table_2(self.watchlist_list, self.request.protocol, self.request.host))
     # enddef
 # enddef
@@ -253,7 +257,7 @@ def make_app():
             url(r'/search/(?P<name>[^\/]+)/?(?P<exchange>[^\/]+)?', SearchHandler),
             url(r'/info', InfoHandler),
             # Custom urls
-            url(r'/w0', WatchList0Handler),
+            url(r'/w0/?(?P<reset>[^\/]+)?', WatchList0Handler),
         ])
 # enddef
 
