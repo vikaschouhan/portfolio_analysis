@@ -6,8 +6,9 @@ Zinc Mini Futures          : MCX     : 1D : 14,  21      : 280
 Copper Mini Futures        : MCX     : 5h : 14,  21,  28 : 280
 Silver Micro Futures       : MCX     : 5h : 9,   14,  21 : 280
 Lead Mini Futures          : MCX     : 5h : 9,   14      : 280
-Cotton 29mm Futures        : MCX     : 5h : 9,   14,  21 : 280
 Cardamom Futures           : MCX     : 1D : 9,   14,  21 : 280
+Aluminium Futures          : MCX     : 1D : 50, 100      : 280
+Cotton 29mm Futures        : MCX     : 5h : 9,   14,  21 : 280
 Aluminium Futures          : MCX     : 1D : 50, 100      : 280
 Crude Palm Oil Futures     : MCX     : 1D : 9,   14,  21 : 280
 Natural Gas Futures        : MCX     : 5m : 50, 100, 200 : 280
