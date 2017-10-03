@@ -76,7 +76,7 @@ def json_list_2_html_table_2(json_list, url_prot, url_host):
     if (len(json_list) == 0):
         return 'Error message = Nothing found !!'
     # endif
-    j_keys = ['description', 'symbol', 'resolution', 'exchange']
+    j_keys = ['description', 'symbol', 'resolution', 'exchange', 'ema_period_list']
     buf = '<table border=1>'
     # Add headers
     for i_this in j_keys:
@@ -96,6 +96,8 @@ def json_list_2_html_table_2(json_list, url_prot, url_host):
                 sym = i_this[j_this].split(':')[0]
                 bufl = '<td><a href="{}://{}/plot/{}/{}/{}/{}"> {} </a></td>'.format(url_prot,
                            url_host, sym, res_t, n_bars, ema_str, sym)
+            elif j_this == 'ema_period_list':
+                bufl = '<td> {} </td>'.format(ema_str)
             else:
                 bufl = '<td> {} </td>'.format(str(i_this[j_this]).encode('utf-8').strip())
             # endif
