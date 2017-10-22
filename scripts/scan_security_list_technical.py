@@ -55,6 +55,7 @@ res_tbl = {
               "15m"    : 15,
               "30m"    : 30,
               "1h"     : 60,
+              "4h"     : 240,
               "5h"     : 300,
               "1D"     : "D",
               "1W"     : "W",
@@ -207,6 +208,15 @@ def populate_sec_list(sfile):
                 s_arr = l_this.replace('\n', '').split(',')
                 sec_list.append({
                                     'code' : s_arr[2],
+                                    'name' : s_arr[0],
+                               })
+            elif file_type == 'nse_fo_mktlots':
+                if re.match('UNDERLYING', l_this) or re.match('Derivatives in', l_this):
+                    continue
+                # endif
+                s_arr = l_this.replace('\n', '').split(',')
+                sec_list.append({
+                                    'code' : s_arr[1].replace(' ', ''),
                                     'name' : s_arr[0],
                                })
             elif file_type == None:
