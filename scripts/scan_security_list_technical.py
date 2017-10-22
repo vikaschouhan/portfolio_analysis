@@ -55,6 +55,7 @@ res_tbl = {
               "15m"    : 15,
               "30m"    : 30,
               "1h"     : 60,
+              "5h"     : 300,
               "1D"     : "D",
               "1W"     : "W",
               "1M"     : "M",
@@ -166,88 +167,51 @@ def parse_dict_file(file_name=None):
     # endif
 # endif
 
-def detect_csv_type(csv_file):
-    def and_patt_l(string, patt_list=['high', 'low', 'open', 'close']):
-        for p_this in patt_list:
-            if not re.search(p_this, string.lower()):
-                return False
-            # endif
-        # endfor
-        return True
-    # enddef
-
-    l_ctr = 0
-    with open(csv_file, 'r') as file_h:
-        for l_this in file_h:
-            l_ctr = l_ctr + 1
-            if l_ctr == 1:
-                f_type = None
-
-                # This of type nse
-                if and_patt_l(l_this):
-                    f_type = 'bhavcopy'       # This is bhavopy
-                else:
-                    f_type = 'other'          # Some other file type
-                # endif
-                if f_type == 'bhavcopy':
-                    if re.search('ISIN', l_this):
-                        print Fore.MAGENTA + 'File type seems to be nse bhavcopy !!' + Fore.RESET
-                        return 'nse_bhavopy'
-                    else:
-                        print Fore.MAGENTA + 'File type seems to be nse group file !!' + Fore.RESET
-                        return 'bse_bhavcopy'
-                    # endif
-                # endif
-            elif l_ctr == 2:
-                if re.search('^\s*5(\d)+,' ,l_this):
-                    print Fore.MAGENTA + 'File type seems to be bse csv !!' + Fore.RESET
-                    return 'bse_grp'
-                elif re.search('INE', l_this):
-                    print Fore.MAGENTA + 'File type seems to be nse csv !!' + Fore.RESET
-                    return 'nse_grp'
-                else:
-                    print Fore.MAGENTA + 'Unknown File type !! Please specify it explicitly.' + Fore.RESET
-                    return None
-                # endif
-            # endif
-        # endfor
-    # endwith
-# enddef
-
 # Function to populate sec csv file in mentioned format to symbol list
 def populate_sec_list(sfile):
-    sec_list = []
-    with open(sfile, 'r') as file_h:
-        for l_this in file_h:
-            if re.match('^\s*#', l_this):
-                continue
-            # endif
-            s_arr = l_this.replace('\n', '').split(',')
-            sec_list.append({
-                                'code' : s_arr[2],
-                                'name' : s_arr[0],
-                           })
-        # endfor
-    # endwith
-    return sec_list
-# enddef
-def populate_sec_list_bse(sfile):
-    sec_list = []
-    l_ctr    = 0
+    sec_list      = []
+    l_ctr         = 0
+    file_type     = None
     with open(sfile, 'r') as file_h:
         for l_this in file_h:
             l_ctr = l_ctr + 1
             if l_ctr == 1:
+                if re.match('bse_bhavcopy', l_this):
+                    file_type = 'bse_bhavcopy'
+                elif  re.match('nse_bavcopy', l_this):
+                    file_type = 'nse_bhavcopy'
+                elif re.match('nse_fo_mktlots', l_this):
+                    file_type = 'nse_fo_mktlots'
+                else:
+                    file_type = None
+                # endif
+                if file_type:
+                    print Fore.MAGENTA + 'File type seems to be {} !!'.format(file_type) + Fore.RESET
+                else:
+                    print Fore.MAGENTA + 'Unsupported file type. Ensure that first line of csv file specifies file_type !!' + Fore.RESET
+                    sys.exit(-1)
+                # endif
                 continue
             # endif
             if re.match('^\s*#', l_this):
                 continue
             # endif
-            s_arr = l_this.replace('\n', '').split(',')
-            sec_list.append({
-                                'code' : s_arr[0],
-                                'name' : s_arr[2],
-                           })
+
+            if file_type == 'bse_bhavcopy':
+                s_arr = l_this.replace('\n', '').split(',')
+                sec_list.append({
+                                    'code' : s_arr[0],
+                                    'name' : s_arr[2],
+                               })
+            elif file_type == 'nse_bhavcopy':
+                s_arr = l_this.replace('\n', '').split(',')
+                sec_list.append({
+                                    'code' : s_arr[2],
+                                    'name' : s_arr[0],
+                               })
+            elif file_type == None:
+                continue
+            # endif
         # endfor
     # endwith
     return sec_list
@@ -656,15 +620,7 @@ if __name__ == '__main__':
     down2up    = args.__dict__["down2up"]
 
     # Get security list from screener.in using default screen_no=17942
-    csv_type   = detect_csv_type(sec_file)
-    if csv_type == 'nse_grp':
-        sec_list   = populate_sec_list(sfile=sec_file)
-    elif csv_type == 'bse_grp':
-        sec_list   = populate_sec_list_bse(sfile=sec_file)
-    else:
-        print 'csv_type = {} not supported for now !!'.format(csv_type)
-        sys.exit(-1)
-    # endif
+    sec_list   = populate_sec_list(sfile=sec_file)
 
     print 'Found {} securities.'.format(len(sec_list))
     sec_tick_d = populate_sym_list(invs_db_f, sec_list)
