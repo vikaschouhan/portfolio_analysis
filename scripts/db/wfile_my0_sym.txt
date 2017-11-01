@@ -1,8 +1,11 @@
 Crude Oil WTI Futures      : MCX     : 5h : 9,   14,  21 : 280
 Crude Oil WTI Futures      : MCX     : 5m : 50, 100, 200 : 280
+Crude Oil WTI Futures      :         : 5h : 9,   14,  21 : 280
 Gold Mini Futures          : MCX     : 5h : 9,   14,  21 : 280
+Gold Futures               :         : 5h : 9,   14,  21 : 280
 Nickel Mini Futures        : MCX     : 5h : 21,  35      : 280
 Zinc Mini Futures          : MCX     : 1D : 14,  21      : 280
+Zinc Mini Futures          : MCX     : 15m : 21, 28      : 280
 Copper Mini Futures        : MCX     : 5h : 14,  21,  28 : 280
 Silver Micro Futures       : MCX     : 5h : 9,   14,  21 : 280
 Lead Mini Futures          : MCX     : 5h : 9,   14      : 280
@@ -15,3 +18,4 @@ Natural Gas Futures        : MCX     : 5m : 50, 100, 200 : 280
 Natural Gas Futures        : MCX     : 1h : 9,   14,  21 : 280
 IND50 NIFTY 50 Futures     :         : 1D : 9,   14,  21 : 280
 NSEI                       : NS      : 1D : 9,   14,  21 : 280
+INDIA VIX                  : NS      : 1D : 8            : 280
