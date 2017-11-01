@@ -81,7 +81,8 @@ def scan_securities(name, itype='', exchange='', limit=60):
     # Check for exchange
     if exchange not in exchg_l:
         if exchange != '':
-            return 'Exchange not in {}'.format(exchg_l)
+            print 'Exchange not in {}. Defaulting to _'.format(exchg_l)
+            exchange = ''
         else:
             exchange = exchg_l
         # endif
