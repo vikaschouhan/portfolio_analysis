@@ -177,10 +177,10 @@ def populate_sec_list(sfile):
         for l_this in file_h:
             l_ctr = l_ctr + 1
             if l_ctr == 1:
-                if re.match('bse_bhavcopy', l_this):
-                    file_type = 'bse_bhavcopy'
-                elif  re.match('nse_bavcopy', l_this):
-                    file_type = 'nse_bhavcopy'
+                if re.match('bse_eqlist', l_this):
+                    file_type = 'bse_eqlist'
+                elif  re.match('nse_eqlist', l_this):
+                    file_type = 'nse_eqlist'
                 elif re.match('nse_fo_mktlots', l_this):
                     file_type = 'nse_fo_mktlots'
                 else:
@@ -198,13 +198,13 @@ def populate_sec_list(sfile):
                 continue
             # endif
 
-            if file_type == 'bse_bhavcopy':
+            if file_type == 'bse_eqlist':
                 s_arr = l_this.replace('\n', '').split(',')
                 sec_list.append({
                                     'code' : s_arr[0],
                                     'name' : s_arr[2],
                                })
-            elif file_type == 'nse_bhavcopy':
+            elif file_type == 'nse_eqlist':
                 s_arr = l_this.replace('\n', '').split(',')
                 sec_list.append({
                                     'code' : s_arr[2],
@@ -595,7 +595,7 @@ if __name__ == '__main__':
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
     parser.add_argument("--res",     help="Resolution", type=str, default='1W')
-    parser.add_argument("--sfile",   help="Security csv file. Can be group file or bhavcopy file.", type=str, default=None)
+    parser.add_argument("--sfile",   help="Security csv file. Can be list file or bhavcopy file.", type=str, default=None)
     parser.add_argument("--down2up", help="Only should securities with down to up trend switch.", action="store_true")
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
