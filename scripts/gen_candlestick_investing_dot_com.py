@@ -254,7 +254,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
         t_now    = unixdate_now()
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
 
-        #print "{} : Fetching {}".format(strdate_now(), this_url)
+        print "{} : Fetching {}".format(strdate_now(), this_url)
         response = urllib.urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
@@ -269,7 +269,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
         t_from   = j_data['t'][0] + t_lag
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
 
-        #print "{} : Fetching {}".format(strdate_now(), this_url)
+        print "{} : Fetching {}".format(strdate_now(), this_url)
         response = urllib.urlopen(this_url)
         j_data   = json.loads(response.read())
         break
@@ -471,6 +471,7 @@ if __name__ == '__main__':
     prsr.add_argument("--nbars",   help="no of candles to print", type=int, default=40)
     prsr.add_argument("--stime",   help="Sleep time. Default=None", type=int, default=None)
     prsr.add_argument("--eauth",   help="email authentication",   type=str, default=None)
+    prsr.add_argument("--csvfile", help="write to csv file",      type=str, default=None)
     args = prsr.parse_args()
 
     ### Symbol
@@ -497,6 +498,11 @@ if __name__ == '__main__':
         # endif
         send_mail = True
     # endif
+    if args.__dict__["csvfile"]:
+        csv_file = args.__dict__["csvfile"]
+    else:
+        csv_file = None
+    # endif
 
     # get socket
     sock = g_sock()
@@ -517,6 +523,9 @@ if __name__ == '__main__':
             sys.exit(-1)
         # endif
         gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=nbars)
+        if csv_file:
+            j_data.to_csv(csv_file, encoding='utf-8', index=False)
+        # endif 
         if send_mail:
             if os.path.exists(pfile) and os.path.isfile(pfile):
                 #print 'Sending email..'
