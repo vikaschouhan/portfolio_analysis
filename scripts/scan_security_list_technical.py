@@ -38,6 +38,7 @@ import matplotlib.dates as mdates
 import datetime as datetime
 import numpy as np
 import logging
+from   subprocess import call, check_call
 
 #################################################################
 # GLOBALS
@@ -574,6 +575,8 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             csv_writer.writerow(item_this)
         # endfor
     # endwith
+
+    return csv_report_file
 # enddef
 
 #########################################################
@@ -637,7 +640,12 @@ if __name__ == '__main__':
     print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
 
     # Run strategy function
-    run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", plots_dir=args.__dict__["plots_dir"], only_down2up=down2up)
+    rep_file = '~/csv_report_security_list_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], datetime.datetime.now().date().isoformat())
+    rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
+                   plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file)
+
+    # Upload to google-drive (just a temporary solution. Will change it later)
+    status = check_call(['gdrive-linux-x64', 'upload', os.path.expanduser(rep_file)])
 
     # DEBUG
     #d_this = fetch_data(sec_tick_d[sec_tick_d.keys()[0]]['ticker'], '1W')
