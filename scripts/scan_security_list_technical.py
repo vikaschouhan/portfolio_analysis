@@ -40,6 +40,9 @@ import numpy as np
 import logging
 from   subprocess import call, check_call
 
+# Switch backend
+matplotlib.pyplot.switch_backend('agg')
+
 #################################################################
 # GLOBALS
 headers = {'User-agent' : 'Mozilla/5.0'}
