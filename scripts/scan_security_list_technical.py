@@ -41,7 +41,7 @@ import logging
 from   subprocess import call, check_call
 
 # Switch backend
-matplotlib.pyplot.switch_backend('agg')
+plt.switch_backend('agg')
 
 #################################################################
 # GLOBALS
