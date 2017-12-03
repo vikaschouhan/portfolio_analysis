@@ -439,20 +439,21 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
     status  = False
     trend_switch = None
 
-    ## Get values for diff emas
-    o_copy['s_ema']   = rmean(d_s, period_list[0])
-    o_copy['m_ema']   = rmean(d_s, period_list[1])
-    o_copy['l_ema']   = rmean(d_s, period_list[2])
-
     # Generate signals according to chosen indicator mode
     def _g_signal(df, s_mode="12_or_23"):
+        ## Get values for diff emas
+        df['s_ema']   = rmean(d_s, period_list[0])
+        df['m_ema']   = rmean(d_s, period_list[1])
+        
         if s_mode == "12":
             df['pos'] = (df['s_ema'] > df['m_ema']).astype(int).diff()
             return df[df['pos'] != 0]
         elif s_mode == "12_or_23":
+            df['l_ema']   = rmean(d_s, period_list[2])
             df['pos'] = ((df['s_ema'] > df['m_ema']) | (df['m_ema'] > df['l_ema'])).astype(int).diff()
             return df[df['pos'] != 0]
         elif s_mode == "12_and_23":
+            df['l_ema']   = rmean(d_s, period_list[2])
             df['pos'] = ((df['s_ema'] > df['m_ema']) & (df['m_ema'] > df['l_ema'])).astype(int).diff()
             return df[df['pos'] != 0]
         else:
@@ -484,7 +485,7 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 # enddef
 
 # Common Wrapper over all strategies
-def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x",
+def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
                                      plots_dir=None, only_down2up=False, rep_file=None):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
@@ -506,7 +507,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
         csv_rep_list.append(['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %'])
 
         # Hyper parameters
-        period_list = [9, 14, 21]
+        period_list = [9, 14, 21] if period_list == None else period_list
         sig_mode    = "12"
 
         print 'Running {} strategy using lag={}, sig_mode={} & period_list={}'.format(strategy_name, lag, sig_mode, period_list)
@@ -601,6 +602,7 @@ if __name__ == '__main__':
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
     parser.add_argument("--res",     help="Resolution", type=str, default='1W')
+    parser.add_argument("--ma_plist",help="Moving average period list", type=str, default=None)
     parser.add_argument("--sfile",   help="Security csv file. Can be list file or bhavcopy file.", type=str, default=None)
     parser.add_argument("--down2up", help="Only should securities with down to up trend switch.", action="store_true")
     parser.add_argument("--plots_dir", \
@@ -627,6 +629,11 @@ if __name__ == '__main__':
         print "--sfile is required !!"
         sys.exit(-1)
     # endif
+    if not args.__dict__["ma_plist"]:
+        ma_plist = [9, 14, 21]
+    else:
+        ma_plist = [ int(x) for x in args.__dict__["ma_plist"].split(',') ]
+    # endif
 
     # Vars
     invs_db_f  = os.path.expanduser(invs_db_file)
@@ -645,7 +652,7 @@ if __name__ == '__main__':
     # Run strategy function
     rep_file = '~/csv_report_security_list_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], datetime.datetime.now().date().isoformat())
     rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
-                   plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file)
+                   period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file)
 
     # Upload to google-drive (just a temporary solution. Will change it later)
     status = check_call(['gdrive-linux-x64', 'upload', os.path.expanduser(rep_file)])
