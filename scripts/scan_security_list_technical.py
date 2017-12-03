@@ -415,6 +415,14 @@ def c_f_1(ma_p0, ma_p1, lag=30):
     return False
 # endif
 
+# Add volume moving average to the data frame
+def add_vol_ma(o_frame, period_list):
+    of_copy = o_frame.copy()
+    rmean   = g_rmean_f(type='e')
+    of_copy['v_ma'] = rmean(of_copy['v'], period_list[0])
+    return of_copy
+# enddef
+
 # Strategy
 def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
     if len(period_list) != 2:
@@ -504,7 +512,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
         ctr         = 0
         ctr2        = 0
         # Add csv headers
-        csv_rep_list.append(['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %'])
+        csv_rep_list.append(['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %', 'Price', 'Volume Up'])
 
         # Hyper parameters
         period_list = [9, 14, 21] if period_list == None else period_list
@@ -526,14 +534,24 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             def _c_dwn(d):
                 return (d.iloc[-1]['c'] - d['c'].min())/d.iloc[-1]['c']
             # enddef
+            def _vol_up(d):
+                try:
+                    return (d.iloc[-1]['v_ma'] - d.iloc[-3]['v_ma'])/d.iloc[-3]['v_ma']
+                except:
+                    return 0
+                # endif
+            # enddef
             # Fetch data
             d_this = fetch_data(sec_dict[sec_code]['ticker'], res)
             # Run strategy
             logging.debug("{} : Running ema crossover function over {}".format(ctr2, sec_code))
             status, tdelta, trend_switch, d_new = run_ema2(d_this, lag=lag, period_list=period_list, sig_mode=sig_mode)
+            # Add volume ma
+            d_v_this = add_vol_ma(d_this, period_list=period_list)
             # Analyse data
             p2t_up   = _c_up(d_new)
             p2t_down = _c_dwn(d_new)
+            vol_up   = _vol_up(d_v_this)
             # Print reports
             if (status==True):
                 if trend_switch:
@@ -551,7 +569,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                     continue
                 else:
                     # Add rep list entry
-                    csv_rep_list.append([sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t)])
+                    csv_rep_list.append([sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), d_this.iloc[-1]['c'], vol_up])
                     # Print
                     sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
                     sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
