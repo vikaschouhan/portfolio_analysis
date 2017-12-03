@@ -115,8 +115,9 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 500940,FINOLEXIND,FINOLEX INDUSTRIES LTD.,Active,A ,10.00,INE183A01016,Plastic Products,Equity
 501425,BBTC,BOMBAY BURMAH TRADING CORP.LTD.,Active,A ,2.00,INE050A01025,Tea &amp; Coffee,Equity
 502355,BALKRISIND,BALKRISHNA INDUSTRIES LTD.-$,Active,A ,2.00,INE787D01026,Auto Tyres &amp; Rubber Products,Equity
-502742,SINTEX,SINTEX INDUSTRIES LTD.,Active,A ,1.00,INE429C01035,Plastic Products,Equity
+502742,SINTEX,SINTEX INDUSTRIES LTD.,Active,A ,1.00,INE429C01035,Textiles,Equity
 503806,SRF,SRF LTD.,Active,A ,10.00,INE647A01010,Textiles,Equity
+504973,TIFHL,TI Financial Holdings Ltd,Active,A ,1.00,INE149A01033,Auto Parts &amp; Equipment,Equity
 505200,EICHERMOT,EICHER MOTORS LTD.,Active,A ,10.00,INE066A01013,2/3 Wheelers,Equity
 505537,ZEEL,ZEE ENTERTAINMENT ENTERPRISES LTD.,Active,A ,1.00,INE256A01028,Broadcasting &amp; Cable TV,Equity
 506285,BAYERCROP,BAYER CROPSCIENCE LTD.,Active,A ,10.00,INE462A01022,Agrochemicals,Equity
@@ -127,7 +128,7 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 509480,BERGEPAINT,BERGER PAINTS INDIA LTD.,Active,A ,1.00,INE463A01038,Furniture-Furnishing-Paints,Equity
 509930,SUPREMEIND,SUPREME INDUSTRIES LTD.,Active,A ,2.00,INE195A01028,Plastic Products,Equity
 511072,DHFL,DEWAN HOUSING FINANCE CORPORATION LTD.,Active,A ,10.00,INE202B01012,Housing Finance ,Equity
-511196,CANFINHOME,CAN FIN HOMES LTD.,Active,A ,10.00,INE477A01012,Housing Finance ,Equity
+511196,CANFINHOME,CAN FIN HOMES LTD.,Active,A ,2.00,INE477A01020,Housing Finance ,Equity
 511218,SRTRANSFIN,SHRIRAM TRANSPORT FINANCE CO.LTD.,Active,A ,10.00,INE721A01013,Finance (including NBFCs),Equity
 511243,CHOLAFIN,Cholamandalam Investment and Finance Company Ltd,Active,A ,10.00,INE121A01016,Finance (including NBFCs),Equity
 511288,GRUH,GRUH FINANCE LTD.,Active,A ,2.00,INE580B01029,Housing Finance ,Equity
@@ -217,7 +218,7 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 532498,SHRIRAMCIT,SHRIRAM CITY UNION FINANCE LTD.,Active,A ,10.00,INE722A01011,Finance (including NBFCs),Equity
 532500,MARUTI,MARUTI SUZUKI INDIA LTD.,Active,A ,5.00,INE585B01010,Cars &amp; Utility Vehicles,Equity
 532505,UCOBANK,UCO BANK,Active,A ,10.00,INE691A01018,Banks,Equity
-532514,IGL,INDRAPRASTHA GAS LTD.,Active,A ,10.00,INE203G01019,Utilities:Non-Elec.,Equity
+532514,IGL,INDRAPRASTHA GAS LTD.,Active,A ,2.00,INE203G01027,Utilities:Non-Elec.,Equity
 532522,PETRONET,PETRONET LNG LTD.,Active,A ,10.00,INE347G01014,Oil Marketing &amp; Distribution,Equity
 532523,BIOCON,BIOCON LTD.,Active,A ,5.00,INE376G01013,Biotechnology,Equity
 532524,PTC,PTC INDIA LTD.,Active,A ,10.00,INE877F01012,Electric Utilities,Equity
@@ -230,7 +231,7 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 532617,JETAIRWAYS,JET AIRWAYS (INDIA) LTD.,Active,A ,10.00,INE802G01018,Airlines,Equity
 532622,GDL,GATEWAY DISTRIPARKS LTD.,Active,A ,10.00,INE852F01015,Transportation - Logistics,Equity
 532636,IIFL,IIFL Holdings Limited,Active,A ,2.00,INE530B01024,Other Financial Services,Equity
-532648,YESBANK,YES BANK LTD.,Active,A ,10.00,INE528G01019,Banks,Equity
+532648,YESBANK,YES BANK LTD.,Active,A ,2.00,INE528G01027,Banks,Equity
 532652,KTKBANK,KARNATAKA BANK LTD.,Active,A ,10.00,INE614B01018,Banks,Equity
 532654,MCLEODRUSS,MCLEOD RUSSEL INDIA LTD.,Active,A ,5.00,INE942G01012,Tea &amp; Coffee,Equity
 532659,IDFC,IDFC LIMITED,Active,A ,10.00,INE043D01016,Finance (including NBFCs),Equity
@@ -285,7 +286,7 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 533096,ADANIPOWER,ADANI POWER LTD.,Active,A ,10.00,INE814H01011,Electric Utilities,Equity
 533098,NHPC,NHPC LTD.,Active,A ,10.00,INE848E01016,Electric Utilities,Equity
 533106,OIL,OIL INDIA LTD.,Active,A ,10.00,INE274J01014,Exploration &amp; Production,Equity
-533107,RDEL,Reliance Defence and Engineering Ltd,Active,A ,10.00,INE542F01012,Defence,Equity
+533107,RNAVAL,Reliance Naval and Engineering Ltd,Active,A ,10.00,INE542F01012,Defence,Equity
 533122,RTNPOWER,RattanIndia Power Limited,Active,A ,10.00,INE399K01017,Electric Utilities,Equity
 533137,DEN,Den Networks Ltd,Active,A ,10.00,INE947J01015,Broadcasting &amp; Cable TV,Equity
 533144,COX&amp;KINGS,Cox &amp; Kings Limited,Active,A ,5.00,INE008I01026,Travel Support Services,Equity
@@ -315,7 +316,7 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 534809,PCJEWELLER,PC JEWELLER LTD.,Active,A ,10.00,INE785M01013,Other Apparels &amp; Accessories,Equity
 534816,INFRATEL,BHARTI INFRATEL LTD.,Active,A ,10.00,INE121J01017,Other Telecom Services,Equity
 535322,REPCOHOME,REPCO HOME FINANCE LTD.,Active,A ,10.00,INE612J01015,Housing Finance ,Equity
-535648,JUSTDIAL*,JUST DIAL LTD.,Active,A ,10.00,INE599M01018,Publishing,Equity
+535648,JUSTDIAL,JUST DIAL LTD.,Active,A ,10.00,INE599M01018,Publishing,Equity
 535755,ABFRL,Aditya Birla Fashion and Retail Ltd,Active,A ,10.00,INE647O01011,Department Stores,Equity
 535789,IBULHSGFIN,Indiabulls Housing Finance Ltd,Active,A ,2.00,INE148I01020,Housing Finance ,Equity
 538835,INTELLECT,Intellect Design Arena Ltd,Active,A ,5.00,INE306R01017,IT Software Products,Equity
@@ -336,7 +337,6 @@ Security Code,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry
 540005,LTI,Larsen &amp; Toubro Infotech Ltd,Active,A ,1.00,INE214T01019,IT Consulting &amp; Software,Equity
 540025,ADVENZYMES,Advanced Enzyme Technologies Ltd,Active,A ,2.00,INE837H01020,Other Agricultural Products,Equity
 540047,DBL,Dilip Buildcon Ltd,Active,A ,10.00,INE917M01012,Roads &amp; Highways,Equity
-540064,FRETAIL,Future Retail Ltd,Active,A ,2.00,INE752P01024,Department Stores,Equity
 540065,RBLBANK,RBL Bank Ltd,Active,A ,10.00,INE976G01028,Banks,Equity
 540115,LTTS,L&amp;T Technology Services Ltd,Active,A ,2.00,INE010V01017,Internet Software &amp; Services,Equity
 570001,TATAMTRDVR,Tata Motors  Ltd - DVR,Active,A ,2.00,IN9155A01020,Commercial Vehicles,Equity
