@@ -536,7 +536,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             # enddef
             def _vol_up(d):
                 try:
-                    return (d.iloc[-1]['v_ma'] - d.iloc[-3]['v_ma'])/d.iloc[-3]['v_ma']
+                    return (d.iloc[-1]['v_ma'] - d.iloc[-10]['v_ma'])/d.iloc[-10]['v_ma']
                 except:
                     return 0
                 # endif
