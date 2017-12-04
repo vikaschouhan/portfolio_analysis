@@ -494,7 +494,7 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, only_down2up=False, rep_file=None):
+                                     plots_dir=None, only_down2up=False, rep_file=None, plot_monthly=False):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
 
@@ -581,6 +581,12 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                 if plots_dir:
                     pic_name = plots_dir + '/' + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
                     gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'], plot_period=100, file_name=pic_name)
+                    # Plot monthly chart if required
+                    if plot_monthly:
+                        d_mon    = fetch_data(sec_dict[sec_code]['ticker'], '1M')
+                        pic_name = plots_dir + '/' + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly.png'
+                        gen_candlestick(d_this, title=sec_dict[sec_code]['name'], plot_period=200, file_name=pic_name)
+                    # endif
                 # endif
             # endif
         # endfor
@@ -625,6 +631,7 @@ if __name__ == '__main__':
     parser.add_argument("--down2up", help="Only should securities with down to up trend switch.", action="store_true")
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
+    parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -659,6 +666,7 @@ if __name__ == '__main__':
     ma_lag     = args.__dict__["lag"]
     res        = args.__dict__["res"]
     down2up    = args.__dict__["down2up"]
+    plot_m     = args.__dict__["plot_mon"]
 
     # Get security list from screener.in using default screen_no=17942
     sec_list   = populate_sec_list(sfile=sec_file)
@@ -670,7 +678,8 @@ if __name__ == '__main__':
     # Run strategy function
     rep_file = '~/csv_report_security_list_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], datetime.datetime.now().date().isoformat())
     rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
-                   period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file)
+                   period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file, \
+                   plot_monthly=plot_m)
 
     # Upload to google-drive (just a temporary solution. Will change it later)
     status = check_call(['gdrive-linux-x64', 'upload', os.path.expanduser(rep_file)])
