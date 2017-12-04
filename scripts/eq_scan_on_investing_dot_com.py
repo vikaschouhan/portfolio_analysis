@@ -24,6 +24,11 @@ import pprint
 from   email.mime.multipart import MIMEMultipart
 from   email.mime.text import MIMEText
 
+# Vars
+N_SLEEP       = 8
+N_TIMEOUT     = 15
+N_TRYOUTS     = 15
+
 # Glb ds
 sock = "bcbf3d08f70aaf07b860dc2f481beee5/1473605026"
 
@@ -174,7 +179,7 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
 # enddef
 
 # Scan for securities
-def scan_securities(name, exchange, n_sleep=4, n_timeout=4, n_tryouts=5):
+def scan_securities(name, exchange, n_sleep=N_SLEEP, n_timeout=N_TIMEOUT, n_tryouts=N_TRYOUTS):
     if exchange not in ['NS', 'BO']:
         print "Exchange could only be {}".format(['NS', 'BO'])
         sys.exit(-1)
