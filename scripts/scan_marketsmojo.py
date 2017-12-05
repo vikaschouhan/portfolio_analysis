@@ -28,7 +28,9 @@ def pull_info_from_marketsmojo(scrip):
     # Go over all of them
     for item_this in req_this.json():
         url_page = url_front + item_this[u'url']
-        company  = item_this[u'Company']
+        company  = item_this[u'Company'].replace('<b>', '').replace('</b>', '')
+        bse_code = int(item_this[u'ScriptCode'])
+        nse_code = item_this[u'Symbol']
         pg_this  = requests.get(url_page)
 
         # Parse using beautifulsoup
@@ -40,7 +42,8 @@ def pull_info_from_marketsmojo(scrip):
 
         company_l.append({
                              "name"         : company,
-                             "code"         : scrip,
+                             "bsecode"      : bse_code,
+                             "nse_code"     : nse_code,
                              "valuation"    : valuation,
                              "quality"      : quality,
                              "fintrend"     : fin_trend,
