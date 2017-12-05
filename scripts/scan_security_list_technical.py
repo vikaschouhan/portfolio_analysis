@@ -28,7 +28,6 @@ import os
 import math
 import csv
 import contextlib, warnings
-import pprint
 import shutil
 from   colorama import Fore, Back, Style
 from   matplotlib.finance import candlestick2_ohlc, volume_overlay
@@ -39,6 +38,8 @@ import datetime as datetime
 import numpy as np
 import logging
 from   subprocess import call, check_call
+import requests
+from   bs4 import BeautifulSoup
 
 # Switch backend
 plt.switch_backend('agg')
@@ -47,6 +48,47 @@ plt.switch_backend('agg')
 # GLOBALS
 headers = {'User-agent' : 'Mozilla/5.0'}
 sleep_time = 4
+
+##################################################################
+# MARKETSMOJO.COM functions
+def pull_info_from_marketsmojo(scrip):
+    url_search = 'https://www.marketsmojo.com/portfolio-plus/frontendsearch?SearchPhrase={}'
+    url_front  = 'https://www.marketsmojo.com'
+    company_l  = []
+
+    req_this   = requests.get(url_search.format(scrip))
+    if req_this.json() == []:
+        print 'Nothing found for {} !!'.format(scrip)
+        return None
+    # endif
+
+    # Go over all of them
+    for item_this in req_this.json():
+        url_page = url_front + item_this[u'url']
+        company  = item_this[u'Company'].replace('<b>', '').replace('</b>', '')
+        bse_code = int(item_this[u'ScriptCode'])
+        nse_code = item_this[u'Symbol']
+        pg_this  = requests.get(url_page)
+
+        # Parse using beautifulsoup
+        html_page = BeautifulSoup(pg_this.text, 'html.parser')
+        ##
+        valuation = html_page.find('div', {'class' : 'valuation cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+        quality   = html_page.find('div', {'class' : 'quality cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+        fin_trend = html_page.find('div', {'class' : 'financials cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+
+        company_l.append({
+                             "name"         : company,
+                             "bsecode"      : bse_code,
+                             "nse_code"     : nse_code,
+                             "valuation"    : valuation,
+                             "quality"      : quality,
+                             "fintrend"     : fin_trend,
+                        })
+    # endfor
+
+    return company_l
+# enddef
 
 ##################################################################
 # INVESTING.COM FUNCTIONS
@@ -494,9 +536,15 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, only_down2up=False, rep_file=None, plot_monthly=False):
+                                     plots_dir=None, only_down2up=False, rep_file=None, plot_monthly=False, invoke_marketsmojo=True):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
+
+    # Headers
+    header_l        = ['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %', 'Price', 'Volume Up']
+    if invoke_marketsmojo:
+        header_l    = header_l + ['Valuation', 'Quality', 'Fin Trend']
+    # endif
 
     if plots_dir:
         plots_dir = os.path.expanduser(plots_dir)
@@ -506,13 +554,14 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
         # endif
         print 'Plots dir = {}'.format(plots_dir)
     # endif
+
     # Start scan
     if strategy_name == "em2_x":
         sec_list    = []
         ctr         = 0
         ctr2        = 0
         # Add csv headers
-        csv_rep_list.append(['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %', 'Price', 'Volume Up'])
+        csv_rep_list.append(header_l)
 
         # Hyper parameters
         period_list = [9, 14, 21] if period_list == None else period_list
@@ -569,7 +618,23 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                     continue
                 else:
                     # Add rep list entry
-                    csv_rep_list.append([sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), d_this.iloc[-1]['c'], vol_up])
+                    row_this = [sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), d_this.iloc[-1]['c'], vol_up]
+                    if invoke_marketsmojo:
+                        info_this = pull_info_from_marketsmojo(sec_code)
+                        # If nothing returned
+                        if info_this == None:
+                            row_this  = row_this + ['-', '-', '-']
+                        else:
+                            info_this = info_this[0]  # Pick only first element
+                            # Add assertion
+                            # FIXME : fix this assertion
+                            #assert(row_this['bsecode'] == sec_code or row_this['nsecode'] == sec_code)
+                            # Add to the main row
+                            row_this  = row_this + [info_this['valuation'], info_this['quality'], info_this['fintrend']]
+                        # endif
+                    # endif
+                    csv_rep_list.append(row_this)
+
                     # Print
                     sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
                     sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
