@@ -9,7 +9,7 @@ import csv
 import datetime
 import argparse
 
-def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_statement.csv'):
+def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_statement.csv', gen_report=True):
     row_l    = []
     browser  = spynner.browser.Browser()
     base_url = 'https://q.zerodha.com/'
@@ -47,14 +47,19 @@ def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_s
     #browser.destroy_webview() 
     #browser.close()
 
-    print 'Writing report file to {}'.format(file_name)
-    with open(os.path.expanduser(file_name), 'w') as f_out:
-        csv_writer = csv.writer(f_out, delimiter=',')
-        csv_writer.writerow(header_l)
-        for item_this in row_l:
-            csv_writer.writerow(item_this)
-        # endfor
-    # endwith
+    if gen_report:
+        print 'Writing report file to {}'.format(file_name)
+        with open(os.path.expanduser(file_name), 'w') as f_out:
+            csv_writer = csv.writer(f_out, delimiter=',')
+            csv_writer.writerow(header_l)
+            for item_this in row_l:
+                csv_writer.writerow(item_this)
+            # endfor
+        # endwith
+        return None
+    else:
+        return row_l, header_l
+    # endif
 # enddef
 
 if __name__ == '__main__':

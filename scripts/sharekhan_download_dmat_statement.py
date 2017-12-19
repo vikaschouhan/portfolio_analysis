@@ -7,7 +7,7 @@ import time
 import argparse
 import datetime
 
-def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~/sharekhan_mydp.xls'):
+def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~/sharekhan_mydp.xls', gen_report=True):
     login_url = 'https://newtrade.sharekhan.com/rmmweb/login/LoginPage.jsp'
     dmat_url  = 'https://newtrade.sharekhan.com/rmmweb/statements/excel/eq_dpsr_report.jsp?balance=-1'
     browser = spynner.browser.Browser()
@@ -20,9 +20,18 @@ def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~
 
     bin_file = browser.download(dmat_url)
     browser.close()
-    with open(os.path.expanduser(file_name), 'w') as f_out:
-        f_out.write(bin_file)
-    # endwith
+
+    if gen_report:
+        with open(os.path.expanduser(file_name), 'w') as f_out:
+            f_out.write(bin_file)
+        # endwith
+        return None
+    else:
+        # Get header and rows fro xls data
+        # TODO
+        #return row_l, header_l
+        return None
+    # endif
 # enddef
 
 if __name__ == '__main__':
