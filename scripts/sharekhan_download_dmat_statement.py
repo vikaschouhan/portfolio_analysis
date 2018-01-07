@@ -7,17 +7,27 @@ import time
 import argparse
 import datetime
 
+user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"
+
 def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~/sharekhan_mydp.xls', gen_report=True):
     login_url = 'https://newtrade.sharekhan.com/rmmweb/login/LoginPage.jsp'
     dmat_url  = 'https://newtrade.sharekhan.com/rmmweb/statements/excel/eq_dpsr_report.jsp?balance=-1'
-    browser = spynner.browser.Browser()
+    dmat_lurl = 'https://newtrade.sharekhan.com/rcs.sk?execute=dynamicreport&pType=905'
+    browser = spynner.browser.Browser(user_agent=user_agent)
     browser.load(login_url, load_timeout=60)
+    #browser.show()
 
     browser.wk_fill('input[name=loginid]', login_id)
     browser.wk_fill('input[name=brpwd]', br_passwd)
     browser.wk_fill('input[name=trpwd]', tr_passwd)
     browser.wk_click('input[name=Login]', wait_load=True)
 
+    # WTF (sometime the dmat statement simply doesn't load, I don't know
+    # anything else besides waiting !!)
+    browser.load(dmat_lurl, load_timeout=60)
+    #time.sleep(sleep_time)
+
+    # Get dmat statement file & close the browser
     bin_file = browser.download(dmat_url)
     browser.close()
 
@@ -25,12 +35,25 @@ def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~
         with open(os.path.expanduser(file_name), 'w') as f_out:
             f_out.write(bin_file)
         # endwith
-        return None
+        return 'Report downloaded to {} !!'.format(file_name)
     else:
         # Get header and rows fro xls data
         # TODO
-        #return row_l, header_l
-        return None
+        from bs4 import BeautifulSoup
+        soup_t = BeautifulSoup(bin_file, 'lxml')
+        table_t = soup_t.find('table', {'border':1})
+        row_l = table_t.find_all('tr')
+        # Pop last row as it's some useless information
+        row_l.pop(-1)
+        # Pop header
+        header_r = row_l.pop(0)
+        header_l = [x.text for x in header_r.find_all('td')]
+        # Extract rows
+        scrip_l = []
+        for r_t in row_l:
+           scrip_l.append([x.text.replace('\t', '').replace('\r', '').replace('\n', '') for x in r_t.find_all('td')])
+        # endfor
+        return scrip_l, header_l
     # endif
 # enddef
 
@@ -38,6 +61,7 @@ if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument('--auth',     help='Sharekhan Authentication (loginid,brpwd,trpwd)', type=str, default=None)
     parser.add_argument('--filename', help='Target filename', type=str, default=None)
+    parser.add_argument('--genrep',   help='Generate Report', action='store_true')
     args    = parser.parse_args()
 
     if not args.__dict__['auth']:
@@ -57,5 +81,5 @@ if __name__ == '__main__':
     # endif
 
     # Download
-    download_sharekhan_dp_statement(auth_l[0], auth_l[1], auth_l[2], file_name)
+    print download_sharekhan_dp_statement(auth_l[0], auth_l[1], auth_l[2], file_name, args.__dict__['genrep'])
 # endif

@@ -9,9 +9,11 @@ import csv
 import datetime
 import argparse
 
+user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"
+
 def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_statement.csv', gen_report=True):
     row_l    = []
-    browser  = spynner.browser.Browser()
+    browser  = spynner.browser.Browser(user_agent=user_agent)
     base_url = 'https://q.zerodha.com/'
     hold_url = 'https://q.zerodha.com/holdings/display/'
     browser.load(base_url)
@@ -56,7 +58,7 @@ def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_s
                 csv_writer.writerow(item_this)
             # endfor
         # endwith
-        return None
+        return 'Report downloaded to {}'.format(file_name)
     else:
         return row_l, header_l
     # endif
@@ -66,6 +68,7 @@ if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument('--auth',     help='Zerodha Authentication (username,password)', type=str, default=None)
     parser.add_argument('--filename', help='Target filename', type=str, default=None)
+    parser.add_argument('--genrep',    help='Generate Report', action='store_true')
     args    = parser.parse_args()
 
     if not args.__dict__['auth']:
@@ -85,5 +88,5 @@ if __name__ == '__main__':
     # endif
 
     # Download
-    download_zerodha_dp_statement(auth_l[0], auth_l[1], file_name)
+    print download_zerodha_dp_statement(auth_l[0], auth_l[1], file_name, args.__dict__['genrep'])
 # endef
