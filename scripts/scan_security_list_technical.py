@@ -220,6 +220,12 @@ def populate_sec_list(sfile):
     l_ctr         = 0
     file_type     = None
     file_type_l   = ['nse_eqlist', 'nse_eqlist_m', 'bse_eqlist', 'nse_fo_mktlots', 'sym_name_list']
+
+    # Return supported file types if no file passed
+    if sfile == None:
+        return file_type_l
+    # endif
+
     with open(sfile, 'r') as file_h:
         for l_this in file_h:
             l_ctr = l_ctr + 1
@@ -265,7 +271,7 @@ def populate_sec_list(sfile):
                                     'code' : s_arr[1].replace(' ', ''),
                                     'name' : s_arr[0],
                                })
-            elif fle_type == 'sym_name_list':
+            elif file_type == 'sym_name_list':
                 s_arr = l_this.replace('\n', '').split(',')
                 sec_list.append({
                                     'code' : s_arr[0].replace(' ', ''),
@@ -722,7 +728,7 @@ if __name__ == '__main__':
         shutil.copyfile(os.path.expanduser(invs_db_file), os.path.expanduser(dot_invs_py))
     # endif
     if not args.__dict__["sfile"]:
-        print "--sfile is required !!"
+        print "--sfile is required !! It should be one of supported types : {}".format(populate_sec_list(None))
         sys.exit(-1)
     # endif
     if not args.__dict__["ma_plist"]:
