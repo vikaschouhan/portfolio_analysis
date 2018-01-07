@@ -73,9 +73,15 @@ def pull_info_from_marketsmojo(scrip):
         # Parse using beautifulsoup
         html_page = BeautifulSoup(pg_this.text, 'html.parser')
         ##
-        valuation = html_page.find('div', {'class' : 'valuation cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
-        quality   = html_page.find('div', {'class' : 'quality cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
-        fin_trend = html_page.find('div', {'class' : 'financials cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+        try:
+            valuation = html_page.find('div', {'class' : 'valuation cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+            quality   = html_page.find('div', {'class' : 'quality cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+            fin_trend = html_page.find('div', {'class' : 'financials cf'}).text.replace('\n', ' ').rstrip(' ').strip(' ')
+        except AttributeError:
+            valuation = ''
+            quality   = ''
+            fin_trend = ''
+        # endtry
 
         company_l.append({
                              "name"         : company,
@@ -753,7 +759,8 @@ if __name__ == '__main__':
     print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
 
     # Run strategy function
-    rep_file = '~/csv_report_security_list_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], datetime.datetime.now().date().isoformat())
+    rep_file = '~/csv_report_security_list_{}_{}_per{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
+                  datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
     rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
                    period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file, \
                    plot_monthly=plot_m)
