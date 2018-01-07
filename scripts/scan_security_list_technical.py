@@ -219,7 +219,7 @@ def populate_sec_list(sfile):
     sec_list      = []
     l_ctr         = 0
     file_type     = None
-    file_type_l   = ['nse_eqlist', 'nse_eqlist_m', 'bse_eqlist', 'nse_fo_mktlots']
+    file_type_l   = ['nse_eqlist', 'nse_eqlist_m', 'bse_eqlist', 'nse_fo_mktlots', 'sym_name_list']
     with open(sfile, 'r') as file_h:
         for l_this in file_h:
             l_ctr = l_ctr + 1
@@ -264,6 +264,12 @@ def populate_sec_list(sfile):
                 sec_list.append({
                                     'code' : s_arr[1].replace(' ', ''),
                                     'name' : s_arr[0],
+                               })
+            elif fle_type == 'sym_name_list':
+                s_arr = l_this.replace('\n', '').split(',')
+                sec_list.append({
+                                    'code' : s_arr[0].replace(' ', ''),
+                                    'name' : s_arr[1],
                                })
             elif file_type == None:
                 continue
@@ -536,7 +542,7 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, only_down2up=False, rep_file=None, plot_monthly=False, invoke_marketsmojo=True):
+                                     plots_dir=None, only_down2up=False, rep_file=None, plot_monthly=False, invoke_marketsmojo=True, volume_lag=10):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
 
@@ -583,9 +589,9 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             def _c_dwn(d):
                 return (d.iloc[-1]['c'] - d['c'].min())/d.iloc[-1]['c']
             # enddef
-            def _vol_up(d):
+            def _vol_up(d, vol_lag=10):
                 try:
-                    return (d.iloc[-1]['v_ma'] - d.iloc[-10]['v_ma'])/d.iloc[-10]['v_ma']
+                    return (d.iloc[-1]['v_ma'] - d.iloc[-1 - vol_lag]['v_ma'])/d.iloc[-1 - vol_lag]['v_ma']
                 except:
                     return 0
                 # endif
@@ -600,7 +606,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             # Analyse data
             p2t_up   = _c_up(d_new)
             p2t_down = _c_dwn(d_new)
-            vol_up   = _vol_up(d_v_this)
+            vol_up   = _vol_up(d_v_this, vol_lag=volume_lag)
             # Print reports
             if (status==True):
                 if trend_switch:
