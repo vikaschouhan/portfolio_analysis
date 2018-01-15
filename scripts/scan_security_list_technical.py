@@ -671,8 +671,8 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                     # Plot monthly chart if required
                     if plot_monthly:
                         d_mon    = fetch_data(sec_dict[sec_code]['ticker'], '1M')
-                        pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly.png'
-                        gen_candlestick(d_this, title=sec_dict[sec_code]['name'], plot_period=200, file_name=pic_name)
+                        pic_name_mon = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly.png'
+                        gen_candlestick(d_this, title=sec_dict[sec_code]['name'], plot_period=200, file_name=pic_name_mon)
                     # endif
 
                     # Add to csv
