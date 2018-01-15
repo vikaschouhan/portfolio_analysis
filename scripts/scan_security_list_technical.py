@@ -554,9 +554,10 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, only_down2up=False, rep_file=None, plot_monthly=False, invoke_marketsmojo=True, volume_lag=10):
+                                     plots_dir=None, rep_file=None, plot_monthly=False, invoke_marketsmojo=True, volume_lag=10):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
+    g_graphs_dir    = '/graphs/'
 
     # Headers
     header_l        = ['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %', 'Price', 'Volume Up']
@@ -565,10 +566,16 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
     # endif
 
     if plots_dir:
+        # Add header
+        header_l    = header_l + ['Graph']
+
+        # Other things
         plots_dir = os.path.expanduser(plots_dir)
+        csv_report_file = plots_dir + '/' + os.path.basename(csv_report_file)
         if not os.path.isdir(plots_dir):
             print "{} doesn't exist. Creating it now !!".format(plots_dir)
             os.makedirs(plots_dir)
+            os.makedirs(plots_dir + g_graphs_dir)
         # endif
         print 'Plots dir = {}'.format(plots_dir)
     # endif
@@ -621,6 +628,8 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             vol_up   = _vol_up(d_v_this, vol_lag=volume_lag)
             # Print reports
             if (status==True):
+                row_this = []  # This row
+
                 if trend_switch:
                     t_swt    = "Down2Up"
                     t_switch = Fore.GREEN + "Down to Up" + Fore.RESET
@@ -630,47 +639,48 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                     t_switch = Fore.RED + "Up to Down" + Fore.RESET
                     p2t      = int(p2t_down * 100)
                 # endif
-                # If only down2up is to be shown and trend_switch is up to down, just continue
-                # and don't show anything
-                if only_down2up and not trend_switch:
-                    continue
-                else:
-                    # Add rep list entry
-                    row_this = [sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), d_this.iloc[-1]['c'], vol_up]
-                    if invoke_marketsmojo:
-                        info_this = pull_info_from_marketsmojo(sec_code)
-                        # If nothing returned
-                        if info_this == None:
-                            row_this  = row_this + ['-', '-', '-']
-                        else:
-                            info_this = info_this[0]  # Pick only first element
-                            # Add assertion
-                            # FIXME : fix this assertion
-                            #assert(row_this['bsecode'] == sec_code or row_this['nsecode'] == sec_code)
-                            # Add to the main row
-                            row_this  = row_this + [info_this['valuation'], info_this['quality'], info_this['fintrend']]
-                        # endif
-                    # endif
-                    csv_rep_list.append(row_this)
 
-                    # Print
-                    sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
-                    sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
-                    sys.stdout.flush()
-                    ctr = ctr + 1
+                # Add rep list entry
+                row_this = row_this + [sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), d_this.iloc[-1]['c'], vol_up]
+                if invoke_marketsmojo:
+                    info_this = pull_info_from_marketsmojo(sec_code)
+                    # If nothing returned
+                    if info_this == None:
+                        row_this  = row_this + ['-', '-', '-']
+                    else:
+                        info_this = info_this[0]  # Pick only first element
+                        # Add assertion
+                        # FIXME : fix this assertion
+                        #assert(row_this['bsecode'] == sec_code or row_this['nsecode'] == sec_code)
+                        # Add to the main row
+                        row_this  = row_this + [info_this['valuation'], info_this['quality'], info_this['fintrend']]
+                    # endif
                 # endif
+                
+
+                # Print
+                sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
+                sys.stdout.write('{}. {} switched trend from {}, {} days ago. Peak to trough % = {}%\n'.format(ctr, sec_name, t_switch, tdelta, p2t))
+                sys.stdout.flush()
+                ctr = ctr + 1
 
                 # Save plot
                 if plots_dir:
-                    pic_name = plots_dir + '/' + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
+                    pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
                     gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'], plot_period=100, file_name=pic_name)
                     # Plot monthly chart if required
                     if plot_monthly:
                         d_mon    = fetch_data(sec_dict[sec_code]['ticker'], '1M')
-                        pic_name = plots_dir + '/' + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly.png'
+                        pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly.png'
                         gen_candlestick(d_this, title=sec_dict[sec_code]['name'], plot_period=200, file_name=pic_name)
                     # endif
+
+                    # Add to csv
+                    row_this = row_this + ['=HYPERLINK("file:///{}")'.format(pic_name)]
                 # endif
+
+                # Append final row to list
+                csv_rep_list.append(row_this)
             # endif
         # endfor
     else:
@@ -711,7 +721,6 @@ if __name__ == '__main__':
     parser.add_argument("--res",     help="Resolution", type=str, default='1W')
     parser.add_argument("--ma_plist",help="Moving average period list", type=str, default=None)
     parser.add_argument("--sfile",   help="Security csv file. Can be list file or bhavcopy file.", type=str, default=None)
-    parser.add_argument("--down2up", help="Only should securities with down to up trend switch.", action="store_true")
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
@@ -748,7 +757,6 @@ if __name__ == '__main__':
     sec_file   = args.__dict__["sfile"]
     ma_lag     = args.__dict__["lag"]
     res        = args.__dict__["res"]
-    down2up    = args.__dict__["down2up"]
     plot_m     = args.__dict__["plot_mon"]
 
     # Get security list from screener.in using default screen_no=17942
@@ -762,7 +770,7 @@ if __name__ == '__main__':
     rep_file = '~/csv_report_security_list_{}_{}_per{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                   datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
     rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
-                   period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], only_down2up=down2up, rep_file=rep_file, \
+                   period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
                    plot_monthly=plot_m)
 
     # Upload to google-drive (just a temporary solution. Will change it later)
