@@ -141,7 +141,7 @@ def strdate_now():
 # Fetch from investing.com
 def fetch_data(ticker, resl, t_from=None, t_timeout=4):
     if t_from == None:
-        t_from = strdate_to_unixdate("01/01/1992")
+        t_from = strdate_to_unixdate("01/01/2000")
     # endif
     ftch_tout = 5
     t_indx    = 0
