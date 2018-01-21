@@ -27,6 +27,14 @@ import datetime as datetime
 import numpy as np
 from   textwrap import wrap
 
+import pandas as pd
+import datetime
+from   sklearn.cluster import MeanShift, estimate_bandwidth
+import copy
+
+import plotly.plotly
+from   plotly.tools import FigureFactory as FF
+
 # Switch matplotlib backend
 matplotlib.pyplot.switch_backend('agg')
 
@@ -415,6 +423,43 @@ def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_
     file_name = '{}/{}_{}_{}_{}.png'.format(plot_dir, sym, res, plot_period, '-'.join([str(x) for x in period_list]))
     gen_candlestick(j_data, period_list=period_list, title=sec_name, file_name=file_name, plot_period=plot_period, plot_volume=plot_volume)
     return file_name
+# enddef
+
+## This is experimental and uses plotly as the chart generation engine
+## This generates candlestick chart along with support & resistance lines
+def gen_supp_res(j_data, n_samples=200):
+    data = j_data.as_matrix(columns=['c'])
+
+    bandwidth = estimate_bandwidth(data, quantile=0.1, n_samples=n_samples)
+    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    ms.fit(data)
+
+    #Calculate Support/Resistance
+    ml_results = []
+    for k in range(len(np.unique(ms.labels_))):
+        my_members = ms.labels_ == k
+        values = data[my_members, 0]
+        #print values
+
+        # find the edges
+        ml_results.append(min(values))
+        ml_results.append(max(values))
+    # endfor
+
+    fig = FF.create_candlestick(j_data['o'], j_data['h'], j_data['l'], j_data['c'], dates=j_data.index)
+
+    x_ax = fig.data[0]['x']
+    fig_datac = fig.data[0]
+
+    fig_copy = copy.copy(fig)
+    for k in ml_results:
+        fig_data_cc = {}
+        fig_data_cc['y'] = [k] * len(x_ax)
+        fig_data_cc['x'] = x_ax
+        fig.data.append(fig_data_cc)
+    # endfor
+
+    plotly.offline.plot(fig, filename=os.path.expanduser('~/data.html'))
 # enddef
 
 ################################################################
