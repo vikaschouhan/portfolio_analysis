@@ -238,7 +238,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
     #print 'Security with sym_name={} found with description={}'.format(sym, sym_name)
 
     if t_from == None:
-        t_from = strdate_to_unixdate("01/01/1992")
+        t_from = strdate_to_unixdate("01/01/2000")
     # endif
     ftch_tout = 5
     t_indx    = 0
