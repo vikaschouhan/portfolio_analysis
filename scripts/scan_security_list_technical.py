@@ -204,7 +204,14 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
     # enddef
 
     #print "{} : Fetched data. done !!".format(strdate_now())
-    return g_pdbase(j_data)
+    # Enclosed within try except block to print the data incase some exception happens
+    try:
+        return g_pdbase(j_data)
+    except Exception, e:
+        # Debug info
+        print j_data
+        sys.exit(-1)
+    # endtry
 # enddef
 
 
@@ -700,6 +707,57 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
     return csv_report_file
 # enddef
 
+# F&o Stats generator
+def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
+    ctr2 = 0
+    csv_rep_list    = []
+    strategy_name   = 'calc_stats'
+    header_l        = ['Name', '9mastd']
+    csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
+
+    print 'Running {} strategy.'.format(strategy_name)
+    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+    # Add header
+    csv_rep_list.append(header_l)
+
+    # Iterate over all security dict
+    for sec_code in sec_dict.keys():
+        logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
+        # Fetch data
+        d_this   = fetch_data(sec_dict[sec_code]['ticker'], res)
+        sec_name = sec_dict[sec_code]['name']
+
+        # Calculate stats
+        # std wrt 9 period ma
+        d3       = (d_this['c'] + d_this['l'] + d_this['h'])
+        d3_9     = d3.ewm(span=9).mean()
+        d3_d     = d3 - d3_9
+        d3_std   = d3_d.std()
+        # max diff per day
+        #d_dmax   = max(d_this['h'] - d_this['l'])
+
+        sec_name_c = Fore.GREEN + sec_name + Fore.RESET
+        d3_std_c   = Fore.MAGENTA + str(d3_std) + Fore.RESET
+        print '{}. {:<50}, 9maxtd={}'.format(ctr2, sec_name_c, d3_std_c)
+
+        csv_rep_list.append([ sec_name, d3_std ])
+        ctr2 = ctr2 + 1
+    # endfor
+
+    # Write to csv file
+    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
+    print 'Writing report file to {}'.format(csv_report_file)
+    with open(os.path.expanduser(csv_report_file), 'w') as f_out:
+        csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for item_this in csv_rep_list:
+            csv_writer.writerow(item_this)
+        # endfor
+    # endwith
+
+    return csv_report_file
+# enddef
+
 #########################################################
 # Main
 
@@ -715,6 +773,8 @@ if __name__ == '__main__':
         dot_invs_py_exists = True
     # endif
 
+    strategy_l = ['scanner', 'statsgen']
+
     parser  = argparse.ArgumentParser()
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
@@ -724,6 +784,7 @@ if __name__ == '__main__':
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
+    parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -752,6 +813,12 @@ if __name__ == '__main__':
         ma_plist = [ int(x) for x in args.__dict__["ma_plist"].split(',') ]
     # endif
 
+    if args.__dict__["strategy"] not in strategy_l:
+        print '--strategy should be one of following : {}'.format(strategy_l)
+        sys.exit(-1)
+    # endif
+    strategy_type = args.__dict__["strategy"]
+
     # Vars
     invs_db_f  = os.path.expanduser(invs_db_file)
     sec_file   = args.__dict__["sfile"]
@@ -767,11 +834,22 @@ if __name__ == '__main__':
     print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
 
     # Run strategy function
-    rep_file = '~/csv_report_security_list_{}_{}_per{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
-                  datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
-    rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
-                   period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
-                   plot_monthly=plot_m)
+    if strategy_type == 'scanner':
+        print 'Running scanner...'
+        rep_file = '~/csv_report_security_list_{}_{}_per{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
+                      datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
+        rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
+                       period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
+                       plot_monthly=plot_m)
+    elif strategy_type == 'statsgen':
+        rep_file = '~/csv_report_security_list__stats_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
+                      datetime.datetime.now().date().isoformat())
+        print 'Running statsgen...'
+        rep_file = run_scanner_sec_stats(sec_tick_d, res=res, rep_file=rep_file)
+    else:
+        print 'No valid strategy found !!'
+        sys.exit(-1)
+    # endif
 
     # Upload to google-drive (just a temporary solution. Will change it later)
     status = check_call(['gdrive-linux-x64', 'upload', os.path.expanduser(rep_file)])
