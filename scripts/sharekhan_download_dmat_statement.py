@@ -9,14 +9,17 @@ import datetime
 
 user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"
 
-def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~/sharekhan_mydp.xls', gen_report=True):
+def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~/sharekhan_mydp.xls', gen_report=True, brshow=False, timeout=60):
     login_url = 'https://newtrade.sharekhan.com/rmmweb/login/LoginPage.jsp'
     dmat_url  = 'https://newtrade.sharekhan.com/rmmweb/statements/excel/eq_dpsr_report.jsp?balance=-1'
     dmat_lurl = 'https://newtrade.sharekhan.com/rcs.sk?execute=dynamicreport&pType=905'
     browser = spynner.browser.Browser(user_agent=user_agent)
-    browser.load(login_url, load_timeout=60)
-    #browser.show()
+    
+    if brshow:
+        browser.show()
+    # endif
 
+    browser.load(login_url, load_timeout=timeout)
     browser.wk_fill('input[name=loginid]', login_id)
     browser.wk_fill('input[name=brpwd]', br_passwd)
     browser.wk_fill('input[name=trpwd]', tr_passwd)
@@ -62,6 +65,8 @@ if __name__ == '__main__':
     parser.add_argument('--auth',     help='Sharekhan Authentication (loginid,brpwd,trpwd)', type=str, default=None)
     parser.add_argument('--filename', help='Target filename', type=str, default=None)
     parser.add_argument('--genrep',   help='Generate Report', action='store_true')
+    parser.add_argument('--brshow',   help='Browser show', action='store_true')
+    parser.add_argument('--timeout',  help='Page load timeout', type=int, default=60)
     args    = parser.parse_args()
 
     if not args.__dict__['auth']:
@@ -81,5 +86,6 @@ if __name__ == '__main__':
     # endif
 
     # Download
-    print download_sharekhan_dp_statement(auth_l[0], auth_l[1], auth_l[2], file_name, args.__dict__['genrep'])
+    print download_sharekhan_dp_statement(auth_l[0], auth_l[1], auth_l[2], \
+              file_name, args.__dict__['genrep'], args.__dict__['brshow'], args.__dict__['timeout'])
 # endif

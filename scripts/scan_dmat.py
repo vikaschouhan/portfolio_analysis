@@ -2,6 +2,7 @@
 # License : GPLv2
 
 import spynner
+from   spynner.browser import SpynnerTimeout
 import os
 import sys
 from   bs4 import BeautifulSoup
@@ -51,18 +52,28 @@ def get_scrips_list(config_file):
     en_ze  = False if 'Zerodha' not in config.sections() else True
 
     scrips_l = []
-    if en_sh:
-        sh_data, sh_hdr = get_sharekhan_data(config)
-        for item_t in sh_data:
-            scrips_l.append(item_t[1])
-        # endfor
-    # endif
-    if en_ze:
-        ze_data, ze_hdr = get_zerodha_data(config)
-        for item_t in ze_data:
-            scrips_l.append(item_t[1])
-        # endfor
-    # endif
+    # Try sharekhan if available
+    try:
+        if en_sh:
+            sh_data, sh_hdr = get_sharekhan_data(config)
+            for item_t in sh_data:
+                scrips_l.append(item_t[1])
+            # endfor
+        # endif
+    except SpynnerTimeout:
+        print 'Sharekhan timeout !!'
+    # endtry
+    # Try zerodha if available
+    try:
+        if en_ze:
+            ze_data, ze_hdr = get_zerodha_data(config)
+            for item_t in ze_data:
+                scrips_l.append(item_t[1])
+            # endfor
+        # endif
+    except SpynnerTimeout:
+        print 'Zerodha timeout !!'
+    # endtry
 
     return scrips_l 
 # enddef
