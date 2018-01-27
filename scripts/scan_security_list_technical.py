@@ -712,7 +712,7 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
     ctr2 = 0
     csv_rep_list    = []
     strategy_name   = 'calc_stats'
-    header_l        = ['Name', 'price_spike(nearness)', 'price_spike2(fluctuation)']
+    header_l        = ['Name', 'price_spike(nearness)', 'price_spike2(fluctuation)', 'vol_spike']
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
 
     print 'Running {} strategy.'.format(strategy_name)
@@ -740,11 +740,16 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
         dhlc_raad = (dhlc_ra - dhlc_raa)/dhlc_raa
         dhlc_m2   = dhlc_raad.mean()
 
+        # Vol spike
+        dhlc_r00  = dhlc_ra/dhlc_ra.shift(5)
+        dhlc_r01  = dhlc_r00[::5]
+        dhlc_r02  = abs(np.log(dhlc_r01.mean()))
+
         # Print stats
         sec_name_c = Fore.GREEN + sec_name + Fore.RESET
-        print '{}. {:<50}, price_spike={}, price_spike2={}'.format(ctr2, sec_name_c, dhlc_m, dhlc_m2*1e5)
+        print '{}. {:<50}, price_spike={}, price_spike2={}, vol_spike={}'.format(ctr2, sec_name_c, dhlc_m, dhlc_m2, dhlc_r02)
 
-        csv_rep_list.append([ sec_name, dhlc_m, dhlc_m2 ])
+        csv_rep_list.append([ sec_name, dhlc_m, dhlc_m2, dhlc_r02 ])
         ctr2 = ctr2 + 1
     # endfor
 
