@@ -209,8 +209,8 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
         return g_pdbase(j_data)
     except Exception, e:
         # Debug info
-        print j_data
-        sys.exit(-1)
+        print '** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data)
+        return g_pdbase({'c' : [], 'o' : [], 'h' : [], 'l' : [], 'v' : [], 'vo' : [], 't' : [], 'T' : []})
     # endtry
 # enddef
 
@@ -712,7 +712,7 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
     ctr2 = 0
     csv_rep_list    = []
     strategy_name   = 'calc_stats'
-    header_l        = ['Name', '9mastd']
+    header_l        = ['Name', 'price_spike(nearness)', 'price_spike2(fluctuation)']
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
 
     print 'Running {} strategy.'.format(strategy_name)
@@ -729,19 +729,22 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
         sec_name = sec_dict[sec_code]['name']
 
         # Calculate stats
-        # std wrt 9 period ma
-        d3       = (d_this['c'] + d_this['l'] + d_this['h'])
-        d3_9     = d3.ewm(span=9).mean()
-        d3_d     = d3 - d3_9
-        d3_std   = d3_d.std()
-        # max diff per day
-        #d_dmax   = max(d_this['h'] - d_this['l'])
+        # Av d
+        dhlc_a   = (d_this['h'] + d_this['l'] + d_this['c'])/3
+        dhlc_ra  = dhlc_a.ewm(span=9).mean()
+        dhlc_rad = (dhlc_a - dhlc_ra)/dhlc_ra
+        dhlc_m   = dhlc_rad.max()
 
+        # Spike 2
+        dhlc_raa  = dhlc_ra.ewm(span=9).mean()
+        dhlc_raad = (dhlc_ra - dhlc_raa)/dhlc_raa
+        dhlc_m2   = dhlc_raad.mean()
+
+        # Print stats
         sec_name_c = Fore.GREEN + sec_name + Fore.RESET
-        d3_std_c   = Fore.MAGENTA + str(d3_std) + Fore.RESET
-        print '{}. {:<50}, 9maxtd={}'.format(ctr2, sec_name_c, d3_std_c)
+        print '{}. {:<50}, price_spike={}, price_spike2={}'.format(ctr2, sec_name_c, dhlc_m, dhlc_m2*1e5)
 
-        csv_rep_list.append([ sec_name, d3_std ])
+        csv_rep_list.append([ sec_name, dhlc_m, dhlc_m2 ])
         ctr2 = ctr2 + 1
     # endfor
 
