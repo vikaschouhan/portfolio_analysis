@@ -124,8 +124,8 @@ def unixdate_now():
 def strdate_now():
     return datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
-def scan_security_by_symbol(sym):
-    this_url = g_surl(sock) + "query={}".format(sym)
+def scan_security_by_symbol(sym, exchg="NS"):
+    this_url = g_surl(sock) + "query={}&exchange={}".format(sym, exchg)
 
     #print "{} : Fetching {}".format(strdate_now(), this_url)
     response = urllib.urlopen(this_url)
@@ -134,7 +134,12 @@ def scan_security_by_symbol(sym):
         print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
         sys.exit(-1)
     else:
-        return j_data[0]["description"]
+        for item in j_data:
+            if item["symbol"] == sym:
+                return item["description"]
+            # endif
+        # endfor
+        return None
     # endif
 # enddef
 
