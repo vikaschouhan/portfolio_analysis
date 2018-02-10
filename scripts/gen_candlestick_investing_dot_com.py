@@ -573,7 +573,7 @@ if __name__ == '__main__':
             sys.exit(-1)
         # endif
         gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=nbars)
-        gen_supp_res(j_data)
+        #gen_supp_res(j_data)
         if csv_file:
             j_data.to_csv(csv_file, encoding='utf-8', index=False)
         # endif 
