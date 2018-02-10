@@ -136,7 +136,7 @@ def scan_security_by_symbol(sym, exchg="NS"):
     else:
         for item in j_data:
             if item["symbol"] == sym:
-                return item["description"]
+                return item["description"], item["ticker"]
             # endif
         # endfor
         return None
@@ -246,7 +246,7 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
     # Scan for the security with symbol 'sym'. Get it's name.
     # This acts as second level check
     if sym_name == None:
-        sym_name = scan_security_by_symbol(sym)
+        sym_name, _ = scan_security_by_symbol(sym)
     # endif
     #print 'Security with sym_name={} found with description={}'.format(sym, sym_name)
 
@@ -420,7 +420,7 @@ def gen_candlestick_wrap(sym, res='1D', mode='c', period_list=[9, 14, 21], plot_
     if res not in res_tbl:
         return "Resolution should be one of {}".format(res_tbl.keys())
     # endif
-    sym_name = scan_security_by_symbol(sym)
+    sym_name, _ = scan_security_by_symbol(sym)
     j_data, sec_name = fetch_data(sym, res, sym_name=sym_name)
     if j_data is None:
         return sec_name
@@ -558,7 +558,7 @@ if __name__ == '__main__':
     sock = g_sock()
     print "sock = {}".format(sock)
 
-    sym_name = scan_security_by_symbol(sym)
+    sym_name, sym = scan_security_by_symbol(sym)
     pfile    = '~/tmp_candles.png' if not args.__dict__["pfile"] else args.__dict__["pfile"]
     nbars    = args.__dict__["nbars"]
     stime    = args.__dict__["stime"]
@@ -573,6 +573,7 @@ if __name__ == '__main__':
             sys.exit(-1)
         # endif
         gen_candlestick(j_data, period_list=[9, 14, 21], title=sec_name, file_name=pfile, plot_period=nbars)
+        gen_supp_res(j_data)
         if csv_file:
             j_data.to_csv(csv_file, encoding='utf-8', index=False)
         # endif 
