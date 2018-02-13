@@ -99,11 +99,19 @@ def g_sock():
     # endwith
     assert(False)
 # enddef
+def init_sock():
+    global sock
+    sock = g_sock()
+# enddef
 
 def g_burlb():
     return "http://tvc4.forexpros.com"
 def g_burl(soc_idf):
     return g_burlb() + "/{}/1/1/8/history?".format(soc_idf)
+def g_bsurl(soc_idf):
+    return g_burlb() + "/{}/1/1/8/symbols?".format(soc_idf)
+def g_surl(soc_idf):
+    return g_burlb() + "/{}/1/1/8/search?".format(soc_idf)
 
 def strdate_to_unixdate(str_date):
     return int(time.mktime(datetime.datetime.strptime(str_date, '%d/%m/%Y').timetuple()))
