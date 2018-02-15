@@ -295,6 +295,49 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
     return csv_report_file
 # enddef
 
+# Common Wrapper over all strategies
+def graph_generator(sec_dict, res='1W', period_list=[9, 14, 21], plots_dir=None, plot_period=None, fig_ratio=1.0):
+    g_graphs_dir    = '/graphs/'
+    ctr             = 0
+
+    if plots_dir:
+        # Other things
+        plots_dir = os.path.expanduser(plots_dir)
+        if not os.path.isdir(plots_dir):
+            print "{} doesn't exist. Creating it now !!".format(plots_dir)
+            os.makedirs(plots_dir)
+            os.makedirs(plots_dir + g_graphs_dir)
+        # endif
+        print 'Plots dir = {}'.format(plots_dir)
+    # endif
+    if period_list == None:
+        period_list = []
+    # endif
+
+    print 'Running graph_generator strategy'
+    print Fore.GREEN + '-----------------------------------------------------' + Fore.RESET
+
+    # Iterate over all security dict
+    for sec_code in sec_dict.keys():
+        # Fetch data
+        d_this = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
+        # Print
+        sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
+        sys.stdout.write('{}. graph_generator : {}\n'.format(ctr, sec_name))
+        sys.stdout.flush()
+        ctr = ctr + 1
+
+        # Save plot
+        if plots_dir:
+            pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
+            invs_plot.gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'],
+                      plot_period=plot_period, file_name=pic_name, fig_ratio=fig_ratio)
+        # endif
+    # endfor
+
+    print Fore.GREEN + '-----------------------------------------------------' + Fore.RESET
+# enddef
+
 # F&o Stats generator
 def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
     ctr2 = 0
@@ -369,7 +412,7 @@ if __name__ == '__main__':
         dot_invs_py_exists = True
     # endif
 
-    strategy_l = ['scanner', 'statsgen']
+    strategy_l = ['scanner', 'statsgen', 'graphgen']
 
     parser  = argparse.ArgumentParser()
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
@@ -381,6 +424,7 @@ if __name__ == '__main__':
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
     parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
+    parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -442,6 +486,12 @@ if __name__ == '__main__':
                       datetime.datetime.now().date().isoformat())
         print 'Running statsgen...'
         rep_file = run_scanner_sec_stats(sec_tick_d, res=res, rep_file=rep_file)
+    elif strategy_type == 'graphgen':
+        if args.__dict__["plots_dir"] == None:
+            print '--plots_dir is compulsory when strategy is specified as graphgen'
+            sys.exit(-1)
+        # endif
+        graph_generator(sec_tick_d, res=res, period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], fig_ratio=args.__dict__["fig_ratio"])
     else:
         print 'No valid strategy found !!'
         sys.exit(-1)
