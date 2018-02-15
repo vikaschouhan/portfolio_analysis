@@ -38,11 +38,13 @@ matplotlib.pyplot.switch_backend('agg')
 ####################################################
 # PLOTTING FUNCTIONS
 #
-def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True):
+def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True, fig_ratio=None):
     # Vars
     l_bar          = ''.join(['-']*60)
     def_fig_dim    = plt.rcParams['figure.figsize']
     def_font_size  = plt.rcParams['font.size']
+    def_bars       = 50
+    def_n_locs     = 6
 
     # Check period list
     if period_list == None:
@@ -53,7 +55,20 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
     d_frame_c_c = d_frame.copy()
 
     # Slice the frame which needs to be plotted
-    d_frame_c = d_frame_c_c[-plot_period:].copy()
+    if plot_period:
+        d_frame_c    = d_frame_c_c[-plot_period:].copy()
+        fig_r        = int(plot_period * 1.0/def_bars) + 1
+    else:
+        d_frame_c    = d_frame_c_c.copy()
+        fig_r        = 1.0
+    # endif
+
+    # Check if fig_ratio is passed directly
+    if fig_ratio:
+        fig_ratio = float(fig_ratio)
+    else:
+        fig_ratio = fig_r
+    # endif
 
     # Get date list and rmean function
     xdate     = [datetime.datetime.fromtimestamp(t) for t in d_frame_c['T']]
@@ -70,11 +85,8 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
         return str(round(p_f.iloc[indx], rnd))
     # enddef
 
-    # Process n_bars
-    def_bars       = 50
-    def_n_locs     = 6
-    fig_ratio      = int(plot_period * 1.0/def_bars) + 1
-    new_fig_dim    = [ fig_ratio * x for x in def_fig_dim ]
+    # Calculate new figure dimention
+    new_fig_dim  = [ fig_ratio * x for x in def_fig_dim ]
 
     # Pre-processing
     fig = plt.figure(figsize=new_fig_dim)
