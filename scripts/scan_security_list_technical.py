@@ -25,6 +25,7 @@ import sys
 import re
 import datetime
 import shutil
+from   subprocess import check_call
 
 # Function to populate sec csv file in mentioned format to symbol list
 def populate_sec_list(sfile):
@@ -327,6 +328,11 @@ def graph_generator(sec_dict, res='1W', period_list=[9, 14, 21], plots_dir=None,
         sys.stdout.flush()
         ctr = ctr + 1
 
+        # If dataframe is empty, continue
+        if d_this.empty:
+            continue
+        # endif
+
         # Save plot
         if plots_dir:
             pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
@@ -425,6 +431,7 @@ if __name__ == '__main__':
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
     parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
     parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
+    parser.add_argument("--upload",    help="Upload report file", action='store_true')
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -492,13 +499,16 @@ if __name__ == '__main__':
             sys.exit(-1)
         # endif
         graph_generator(sec_tick_d, res=res, period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], fig_ratio=args.__dict__["fig_ratio"])
+        rep_file = None
     else:
         print 'No valid strategy found !!'
         sys.exit(-1)
     # endif
 
     # Upload to google-drive (just a temporary solution. Will change it later)
-    status = check_call(['gdrive-linux-x64', 'upload', os.path.expanduser(rep_file)])
+    if args.__dict__["upload"] and rep_file:
+        status = check_call(['gdrive-linux-x64', 'upload', os.path.expanduser(rep_file)])
+    # endif
 
     # DEBUG
     #d_this = fetch_data(sec_tick_d[sec_tick_d.keys()[0]]['ticker'], '1W')
