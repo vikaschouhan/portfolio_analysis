@@ -426,8 +426,8 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None):
         sec_name = sec_dict[sec_code]['name']
 
         # Calculate stats
-        sr_list  = invs_tools.supp_res(d_this).diff()
-        sr_this  = sr_list.median()
+        sr_list  = invs_tools.supp_res(d_this, ema_period=9).diff()
+        sr_this  = sr_list.mean()
 
         # Print stats
         sec_name_c = Fore.GREEN + sec_name + Fore.RESET
