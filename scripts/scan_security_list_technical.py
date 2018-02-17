@@ -432,8 +432,9 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None):
         # endif
 
         # Calculate stats
-        sr_list  = invs_tools.supp_res(d_this, ema_period=9).diff()
-        sr_this  = sr_list.mean()
+        sr_list  = invs_tools.supp_res(d_this, ema_period=9)
+        srd_list = sr_list.diff()
+        sr_this  = srd_list.mean()
 
         # Print stats
         sec_name_c = Fore.GREEN + sec_name + Fore.RESET
