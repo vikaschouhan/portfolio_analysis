@@ -54,6 +54,12 @@ def s_mode(f_frame, mode='c'):
     # endif
 # enddef
 
+def d_ema(f_frame, ema_period, mode='c'):
+    d_fr   = s_mode(f_frame, mode)
+    ema_fn = g_rmean_f(type='e')
+    return ema_fn(d_fr, ema_period)
+# enddef
+
 ################################################
 # GENERIC
 
