@@ -26,6 +26,7 @@ import sys
 import re
 import datetime
 import shutil
+import csv
 from   subprocess import check_call
 
 # Function to populate sec csv file in mentioned format to symbol list
@@ -424,6 +425,11 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None):
         # Fetch data
         d_this   = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
         sec_name = sec_dict[sec_code]['name']
+
+        # If dataframe is empty, continue
+        if d_this.empty:
+            continue
+        # endif
 
         # Calculate stats
         sr_list  = invs_tools.supp_res(d_this, ema_period=9).diff()
