@@ -17,6 +17,7 @@ from   modules import invs_core
 from   modules import invs_plot
 from   modules import invs_scanners
 from   modules import invs_utils
+from   modules import invs_tools
 import logging
 from   colorama import Fore, Back, Style
 import os
@@ -403,6 +404,52 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
     return csv_report_file
 # enddef
 
+# F&o Stats generator
+def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None):
+    ctr2 = 0
+    csv_rep_list    = []
+    strategy_name   = 'calc_stats'
+    header_l        = ['Name', 'supp_res_v']
+    csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
+
+    print 'Running {} strategy.'.format(strategy_name)
+    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+    # Add header
+    csv_rep_list.append(header_l)
+
+    # Iterate over all security dict
+    for sec_code in sec_dict.keys():
+        logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
+        # Fetch data
+        d_this   = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
+        sec_name = sec_dict[sec_code]['name']
+
+        # Calculate stats
+        sr_list  = invs_tools.supp_res(d_this).diff()
+        sr_this  = sr_list.median()
+
+        # Print stats
+        sec_name_c = Fore.GREEN + sec_name + Fore.RESET
+        print '{}. {:<50}, suppres={}'.format(ctr2, sec_name_c, sr_this)
+
+        csv_rep_list.append([ sec_name, sr_this ])
+        ctr2 = ctr2 + 1
+    # endfor
+
+    # Write to csv file
+    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
+    print 'Writing report file to {}'.format(csv_report_file)
+    with open(os.path.expanduser(csv_report_file), 'w') as f_out:
+        csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for item_this in csv_rep_list:
+            csv_writer.writerow(item_this)
+        # endfor
+    # endwith
+
+    return csv_report_file
+# enddef
+
 #########################################################
 # Main
 
@@ -418,7 +465,7 @@ if __name__ == '__main__':
         dot_invs_py_exists = True
     # endif
 
-    strategy_l = ['scanner', 'statsgen', 'graphgen']
+    strategy_l = ['scanner', 'statsgen', 'suppresgen', 'graphgen']
 
     parser  = argparse.ArgumentParser()
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
@@ -500,6 +547,11 @@ if __name__ == '__main__':
         # endif
         graph_generator(sec_tick_d, res=res, period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], fig_ratio=args.__dict__["fig_ratio"])
         rep_file = None
+    elif strategy_type == 'suppresgen':
+        rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
+                      datetime.datetime.now().date().isoformat())
+        print 'Running suppresgen...'
+        rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file)
     else:
         print 'No valid strategy found !!'
         sys.exit(-1)
