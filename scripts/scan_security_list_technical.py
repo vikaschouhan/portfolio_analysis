@@ -406,7 +406,7 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
 # enddef
 
 # F&o Stats generator
-def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None):
+def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True, ema_period=9, n_samples=50):
     ctr2 = 0
     csv_rep_list    = []
     strategy_name   = 'calc_stats'
@@ -432,13 +432,16 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None):
         # endif
 
         # Calculate stats
-        sr_list  = invs_tools.supp_res(d_this, ema_period=9)
+        sr_list  = invs_tools.supp_res(d_this, ema_period=ema_period, n_samples=n_samples)
         srd_list = sr_list.diff()
         sr_this  = srd_list.mean()
 
         # Print stats
-        sec_name_c = Fore.GREEN + sec_name + Fore.RESET
+        sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
         print '{}. {:<50}, suppres={}'.format(ctr2, sec_name_c, sr_this)
+        if disp_levels:
+            print '** Levels : {}'.format(Fore.YELLOW + ','.join(['{0:.2f}'.format(x) for x in sr_list.tolist()]) + Fore.RESET)
+        # endif
 
         csv_rep_list.append([ sec_name, sr_this ])
         ctr2 = ctr2 + 1
