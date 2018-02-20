@@ -38,7 +38,7 @@ matplotlib.pyplot.switch_backend('agg')
 ####################################################
 # PLOTTING FUNCTIONS
 #
-def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True, fig_ratio=None):
+def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True, fig_ratio=None, sr_list=None):
     # Vars
     l_bar          = ''.join(['-']*60)
     def_fig_dim    = plt.rcParams['figure.figsize']
@@ -49,6 +49,9 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
     # Check period list
     if period_list == None:
         period_list = []
+    # endif
+    if sr_list == None:
+        sr_list = []
     # endif
 
     # Make a copy
@@ -109,6 +112,11 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
         d_frame_c.reset_index(inplace=True, drop=True)
         d_frame_c[label].plot(ax=ax)
         title2 = title2 + ' {}:{}'.format(label, r_ns_tr(d_frame_c[label]))
+    # endfor
+    # Add sr lines if passed
+    for l_this in sr_list:
+        d_frame_c[str(l_this)] = [l_this]*len(d_frame_c.index)
+        d_frame_c[str(l_this)].plot(ax=ax)
     # endfor
     if plot_volume:
         # Plot volume
