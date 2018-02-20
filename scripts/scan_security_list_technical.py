@@ -406,7 +406,7 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
 # enddef
 
 # F&o Stats generator
-def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True, ema_period=9, n_samples=50):
+def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True, ema_period=9, n_samples=200):
     ctr2 = 0
     csv_rep_list    = []
     strategy_name   = 'calc_stats'
@@ -489,6 +489,7 @@ if __name__ == '__main__':
     parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
     parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
     parser.add_argument("--upload",    help="Upload report file", action='store_true')
+    parser.add_argument("--nsrsamples",help="Samples to calculate sr levels", type=int, default=100)
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -561,7 +562,7 @@ if __name__ == '__main__':
         rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
         print 'Running suppresgen...'
-        rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file)
+        rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file, n_samples=args.__dict__["nsrsamples"])
     else:
         print 'No valid strategy found !!'
         sys.exit(-1)
