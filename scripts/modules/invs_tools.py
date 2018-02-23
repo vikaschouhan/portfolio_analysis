@@ -34,3 +34,15 @@ def supp_res(j_data, n_samples=200, mode='c', ema_period=None):
     ml_results.sort()
     return pd.Series(ml_results)
 # enddef
+
+def pivots0(j_data):
+    PP = pd.Series((j_data['h'] + j_data['l'] + j_data['c']) / 3)
+    R1 = pd.Series(2 * PP - j_data['l'])
+    S1 = pd.Series(2 * PP - j_data['h'])
+    R2 = pd.Series(PP + j_data['h'] - j_data['l'])
+    S2 = pd.Series(PP - j_data['h'] + j_data['l'])
+    R3 = pd.Series(j_data['h'] + 2 * (PP - j_data['l']))
+    S3 = pd.Series(j_data['l'] - 2 * (j_data['l'] - PP))
+    psr = {'PP':PP, 'R1':R1, 'S1':S1, 'R2':R2, 'S2':S2, 'R3':R3, 'S3':S3}
+    return psr
+# enddef
