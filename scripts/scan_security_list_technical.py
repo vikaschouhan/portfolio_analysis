@@ -434,16 +434,17 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
         # Calculate stats
         sr_list  = invs_tools.supp_res(d_this, ema_period=ema_period, n_samples=n_samples)
         srd_list = sr_list.diff()
-        sr_this  = srd_list.mean()
+        sr_mean  = srd_list.mean()
+        sr_med   = srd_list.median()
 
         # Print stats
         sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
-        print '{}. {:<50}, suppres={}'.format(ctr2, sec_name_c, sr_this)
+        print '{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, sr_mean, sr_med)
         if disp_levels:
             print '** Levels : {}'.format(Fore.YELLOW + ','.join(['{0:.2f}'.format(x) for x in sr_list.tolist()]) + Fore.RESET)
         # endif
 
-        csv_rep_list.append([ sec_name, sr_this ])
+        csv_rep_list.append([ sec_name, sr_mean ])
         ctr2 = ctr2 + 1
     # endfor
 
@@ -490,6 +491,7 @@ if __name__ == '__main__':
     parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
     parser.add_argument("--upload",    help="Upload report file", action='store_true')
     parser.add_argument("--nsrsamples",help="Samples to calculate sr levels", type=int, default=100)
+    parser.add_argument("--sr_period", help="Support resistance ema period", type=int, default=9)
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -562,7 +564,8 @@ if __name__ == '__main__':
         rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
         print 'Running suppresgen...'
-        rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file, n_samples=args.__dict__["nsrsamples"])
+        rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file,
+                     n_samples=args.__dict__["nsrsamples"], ema_period=args.__dict__["sr_period"])
     else:
         print 'No valid strategy found !!'
         sys.exit(-1)
