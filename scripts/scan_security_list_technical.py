@@ -463,6 +463,55 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
     return csv_report_file
 # enddef
 
+# CSV report generator
+def run_csv_gen(sec_dict, res, plots_dir):
+    ctr2 = 0
+    csv_rep_list    = []
+    strategy_name   = 'csvgen'
+
+    if plots_dir:
+        # Other things
+        plots_dir = os.path.expanduser(plots_dir)
+        if not os.path.isdir(plots_dir):
+            print "{} doesn't exist. Creating it now !!".format(plots_dir)
+            os.makedirs(plots_dir)
+        # endif
+        print 'Plots dir = {}'.format(plots_dir)
+    else:
+        print 'plots_dir cannot be None'
+        sys.exit(-1)
+    # endif
+
+    print 'Running {} strategy.'.format(strategy_name)
+    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+    # Iterate over all security dict
+    for sec_code in sec_dict.keys():
+        logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
+        # Fetch data
+        d_this   = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
+        sec_name = sec_dict[sec_code]['name']
+
+        # If dataframe is empty, continue
+        if d_this.empty:
+            continue
+        # endif
+
+        # Set time axis as index
+        d_this = d_this.set_index('t')
+
+        # save to CSV file
+        csv_file_this = plots_dir + '/{}_{}.csv'.format(sec_name.replace(' ', '_'), res)
+        print '{}. CSV Report for {}'.format(ctr2, Fore.MAGENTA + sec_name + Fore.RESET)
+        d_this.to_csv(csv_file_this)
+
+        ctr2 = ctr2 + 1
+    # endfor
+
+    # Write to csv file
+    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
+# enddef
+
 #########################################################
 # Main
 
@@ -478,7 +527,7 @@ if __name__ == '__main__':
         dot_invs_py_exists = True
     # endif
 
-    strategy_l = ['scanner', 'statsgen', 'suppresgen', 'graphgen']
+    strategy_l = ['scanner', 'statsgen', 'suppresgen', 'graphgen', 'csvgen']
 
     parser  = argparse.ArgumentParser()
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
@@ -568,6 +617,14 @@ if __name__ == '__main__':
         print 'Running suppresgen...'
         rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file,
                      n_samples=args.__dict__["nsrsamples"], ema_period=args.__dict__["sr_period"])
+    elif strategy_type == 'csvgen':
+        print 'Running csvgen...'
+        if args.__dict__["plots_dir"] == None:
+            print '--plots_dir is required for this.'
+            sys.exit(-1)
+        # endif
+        run_csv_gen(sec_tick_d, res=res, plots_dir=args.__dict__["plots_dir"])
+        rep_file = None
     else:
         print 'No valid strategy found !!'
         sys.exit(-1)
