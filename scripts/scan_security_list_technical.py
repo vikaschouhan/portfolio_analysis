@@ -409,11 +409,13 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
 def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True, ema_period=9, n_samples=200):
     ctr2 = 0
     csv_rep_list    = []
-    strategy_name   = 'calc_stats'
+    strategy_name   = 'suppresgen'
     header_l        = ['Name', 'supp_res_v']
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
 
     print 'Running {} strategy.'.format(strategy_name)
+    print 'ema_period = {}'.format(ema_period)
+    print 'n_samples  = {}'.format(n_samples)
     print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
 
     # Add header
