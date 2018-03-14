@@ -543,6 +543,7 @@ if __name__ == '__main__':
     parser.add_argument("--upload",    help="Upload report file", action='store_true')
     parser.add_argument("--nsrsamples",help="Samples to calculate sr levels", type=int, default=100)
     parser.add_argument("--sr_period", help="Support resistance ema period", type=int, default=9)
+    parser.add_argument("--plot_period", help="Plot period", type=int, default=None)
     args    = parser.parse_args()
 
     if not args.__dict__["invs"]:
@@ -609,7 +610,8 @@ if __name__ == '__main__':
             print '--plots_dir is compulsory when strategy is specified as graphgen'
             sys.exit(-1)
         # endif
-        graph_generator(sec_tick_d, res=res, period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], fig_ratio=args.__dict__["fig_ratio"])
+        graph_generator(sec_tick_d, res=res, period_list=ma_plist,
+                plots_dir=args.__dict__["plots_dir"], fig_ratio=args.__dict__["fig_ratio"], plot_period=args.__dict__["plot_period"])
         rep_file = None
     elif strategy_type == 'suppresgen':
         rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
