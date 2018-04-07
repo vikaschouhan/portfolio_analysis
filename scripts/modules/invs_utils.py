@@ -10,6 +10,15 @@ from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
 import pandas
+import os
+
+###########################################################################################
+# File system handling
+
+# Resolve path
+def rp(x):
+    return os.path.expanduser(x)
+# enddef
 
 
 ############################################################################################
