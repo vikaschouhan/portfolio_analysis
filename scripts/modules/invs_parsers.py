@@ -1,5 +1,6 @@
 import re
 from   colorama import Fore
+import sys
 
 # Function to populate sec csv file in mentioned format to symbol list
 def populate_sec_list(sfile):
