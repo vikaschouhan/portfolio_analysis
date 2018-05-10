@@ -181,7 +181,7 @@ if __name__ == '__main__':
         cerebro.broker.setcash(20000.0)
  
         # Add a FixedSize sizer according to the stake
-        cerebro.addsizer(bt.sizers.FixedSize, stake=2)
+        cerebro.addsizer(bt.sizers.FixedSize, stake=1)
  
         # Set the fees
         #cerebro.broker.setcommission(commission=0.00005)
