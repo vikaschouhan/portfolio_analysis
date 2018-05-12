@@ -18,8 +18,8 @@ def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_s
     hold_url = 'https://q.zerodha.com/holdings/display/'
     browser.load(base_url)
 
-    browser.wk_fill('input[name=username]', 'YC8500')
-    browser.wk_fill('input[name=password]', 'system#001')
+    browser.wk_fill('input[name=username]', user_name)
+    browser.wk_fill('input[name=password]', password)
     browser.wk_click('input[value=Login]', wait_load=True)
 
     browser.load(hold_url, load_timeout=60)
