@@ -66,10 +66,11 @@ def get_scrips_list(config_file):
     # Try zerodha if available
     try:
         if en_ze:
-            ze_data, ze_hdr = get_zerodha_data(config)
-            for item_t in ze_data:
-                scrips_l.append(item_t[1])
-            # endfor
+            #ze_data, ze_hdr = get_zerodha_data(config)
+            #for item_t in ze_data:
+            #    scrips_l.append(item_t[1])
+            ## endfor
+            print 'Zerodha Q backoffice login has changed. Thus our old login menthod no longer works !! It will be supported in future.'
         # endif
     except SpynnerTimeout:
         print 'Zerodha timeout !!'
