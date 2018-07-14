@@ -14,7 +14,11 @@ from   email.mime.multipart import MIMEMultipart
 from   email.mime.text import MIMEText
 from   email.mime.application import MIMEApplication
 import matplotlib
-from   matplotlib.finance import candlestick2_ohlc, volume_overlay
+try:
+    from  matplotlib.finance import candlestick2_ohlc, volume_overlay
+except:
+    from  mpl_finance import candlestick2_ohlc, volume_overlay
+# entry
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates

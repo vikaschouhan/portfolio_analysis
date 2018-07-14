@@ -83,7 +83,7 @@ def populate_sym_list(invs_dict_file, sec_list):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, rep_file=None, plot_monthly=False, invoke_marketsmojo=True, volume_lag=10):
+                                     plots_dir=None, rep_file=None, plot_monthly=False, invoke_marketsmojo=False, volume_lag=10):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
     g_graphs_dir    = '/graphs/'

@@ -23,6 +23,13 @@ import requests
 from   bs4 import BeautifulSoup
 from   modules import invs_utils
 
+try:
+    import ta # ta library for techincal analysis
+except:
+    print 'ta library is required for this to work !!'
+    sys.exit(-1)
+# endtry
+
 ####################################################
 # SCANNERS
 #
@@ -129,3 +136,35 @@ def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
     return status, tdelta.days, trend_switch, o_copy[['t', 'c', 'pos']][-10:]
 # enddef
 
+# Donchian channel breakout
+def run_donch_breakout(o_frame, lag=20, channel_period=20):
+    o_fr_copy = o_frame.copy()
+    status  = False
+    trend_switch = None
+
+    # Get donch channnel lines
+    o_fr_copy['donch_high'] = ta.volaitlity.donchian_channel_hband(o_fr_copy['h'], channel_period)
+    o_fr_copy['donch_low']  = ta.volaitlity.donchian_channel_lband(o_fr_copy['l'], channel_period)
+
+    # Generate signals
+    o_fr_copy['break_high'] = (o_fr_copy['c'] > o_fr_copy['donch_high'])
+    o_fr_copy['break_low']  = (o_fr_copy['c'] < o_fr_copy['donch_low'])
+    
+    ## Get time different between last position switch and now
+    #tdelta = pandas.Timestamp(datetime.datetime.now()) - o_copy.iloc[-1]['t']
+
+    ## Last trend switch
+    #if o_copy.iloc[-1]['pos'] == 1.0:
+    #    trend_switch = 1
+    #else:
+    #    trend_switch = 0
+    ## endif
+
+    ## Check if lag > tdelta
+    #if lag > tdelta.days:
+    #    status = True
+    ## endif
+
+    ## Return only date/time, close price and position switches
+    #return status, tdelta.days, trend_switch, o_copy[['t', 'c', 'pos']][-10:]
+# enddef
