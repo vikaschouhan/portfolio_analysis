@@ -1,8 +1,6 @@
 # Author  : Vikas Chouhan (presentisgood@gmail.com
 # License : GPLv2
 
-import spynner
-from   spynner.browser import SpynnerTimeout
 import os
 import sys
 from   bs4 import BeautifulSoup
@@ -15,19 +13,19 @@ script_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_path)
 
 from   sharekhan_download_dmat_statement import download_sharekhan_dp_statement
-from   zerodha_download_dmat_statement import download_zerodha_dp_statement
-
-def get_zerodha_data(config):
-    login_data = dict(config.items(section='Zerodha'))
-    if 'user_name' not in login_data.keys() or 'passwd' not in login_data.keys():
-        print 'Zerodha section should have keys : user_name and passwd'
-        sys.exit(-1)
-    # endif
-
-    print 'Pulling dmat data from zerodha !!'
-    data = download_zerodha_dp_statement(login_data['user_name'], login_data['passwd'], gen_report=False)
-    return data
-# enddef
+#from   zerodha_download_dmat_statement import download_zerodha_dp_statement
+#
+#def get_zerodha_data(config):
+#    login_data = dict(config.items(section='Zerodha'))
+#    if 'user_name' not in login_data.keys() or 'passwd' not in login_data.keys():
+#        print 'Zerodha section should have keys : user_name and passwd'
+#        sys.exit(-1)
+#    # endif
+#
+#    print 'Pulling dmat data from zerodha !!'
+#    data = download_zerodha_dp_statement(login_data['user_name'], login_data['passwd'], gen_report=False)
+#    return data
+## enddef
 
 def get_sharekhan_data(config):
     login_data = dict(config.items(section='Sharekhan'))
@@ -60,7 +58,7 @@ def get_scrips_list(config_file):
                 scrips_l.append(item_t[1])
             # endfor
         # endif
-    except SpynnerTimeout:
+    except:
         print 'Sharekhan timeout !!'
     # endtry
     # Try zerodha if available
@@ -72,7 +70,7 @@ def get_scrips_list(config_file):
             ## endfor
             print 'Zerodha Q backoffice login has changed. Thus our old login menthod no longer works !! It will be supported in future.'
         # endif
-    except SpynnerTimeout:
+    except:
         print 'Zerodha timeout !!'
     # endtry
 
