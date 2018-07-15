@@ -83,7 +83,7 @@ def populate_sym_list(invs_dict_file, sec_list):
 
 # Common Wrapper over all strategies
 def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, rep_file=None, plot_monthly=False, invoke_marketsmojo=False, volume_lag=10):
+                                     plots_dir=None, rep_file=None, plot_monthly=False, invoke_marketsmojo=False, volume_lag=10, plot_period=100):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
     g_graphs_dir    = '/graphs/'
@@ -93,6 +93,9 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
     if invoke_marketsmojo:
         header_l    = header_l + ['Valuation', 'Quality', 'Fin Trend']
     # endif
+
+    # set default value of plot_period
+    plot_period     = plot_period if plot_period else 100
 
     if plots_dir:
         # Add header
@@ -195,13 +198,13 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
 
                 # Save plot
                 if plots_dir:
-                    pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
-                    invs_plot.gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'], plot_period=100, file_name=pic_name)
+                    pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_{}p.png'.format(plot_period)
+                    invs_plot.gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'], plot_period=plot_period, file_name=pic_name)
                     # Plot monthly chart if required
                     if plot_monthly:
                         d_mon    = invs_core.fetch_data(sec_dict[sec_code]['ticker'], '1M')
-                        pic_name_mon = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly.png'
-                        invs_plot.gen_candlestick(d_this, title=sec_dict[sec_code]['name'], plot_period=200, file_name=pic_name_mon)
+                        pic_name_mon = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly_{}p.png'.format(plot_period)
+                        invs_plot.gen_candlestick(d_mon, title=sec_dict[sec_code]['name'], plot_period=plot_period, file_name=pic_name_mon)
                     # endif
 
                     # Add to csv
@@ -530,7 +533,7 @@ if __name__ == '__main__':
                       datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
         rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
                        period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
-                       plot_monthly=plot_m)
+                       plot_monthly=plot_m, plot_period=args.__dict__["plot_period"])
     elif strategy_type == 'statsgen':
         rep_file = '~/csv_report_security_list__stats_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
