@@ -1,31 +1,71 @@
 # Author  : Vikas Chouhan (presentisgood@gmail.com
 # License : GPLv2
 
-import spynner
 import os
 import sys
 from   bs4 import BeautifulSoup
 import csv
 import datetime
 import argparse
+import time
+from   selenium import webdriver
 
-user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"
+def download_zerodha_dp_statement(user_name, password, questions_dict, file_name='~/zerodha_dp_statement.csv', gen_report=True, brshow=False):
+    #print questions_dict
 
-def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_statement.csv', gen_report=True):
     row_l    = []
-    browser  = spynner.browser.Browser(user_agent=user_agent)
-    base_url = 'https://q.zerodha.com/'
-    hold_url = 'https://q.zerodha.com/holdings/display/'
-    browser.load(base_url)
+    login_url  = 'https://kite.zerodha.com'
+    base_url   = 'https://q.zerodha.com/'
+    hold_url   = 'https://q.zerodha.com/holdings/display/'
 
-    browser.wk_fill('input[name=username]', user_name)
-    browser.wk_fill('input[name=password]', password)
-    browser.wk_click('input[value=Login]', wait_load=True)
+    options = webdriver.ChromeOptions()
+    if not brshow:
+        options.add_argument('headless')
+    # endif
+    driver = webdriver.Chrome(chrome_options=options)
 
-    browser.load(hold_url, load_timeout=60)
+    # Login
+    driver.get(login_url)
+    time.sleep(1)
+    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/input').send_keys(user_name)
+    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/input').send_keys(password)
+    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[4]/button').click()
+    time.sleep(2)
+    
+    # Questions page
+    # Assuming only two questions
+    ques1 = str(driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/div/label').text)
+    ques2 = str(driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/div/label').text)
+    if ques1 not in questions_dict :
+        print 'Answer to question "{}" is not present in Zerodha Questions.'.format(ques1)
+        driver.close()
+        sys.exit(-1)
+    # endif
+    if ques2 not in questions_dict :
+        print 'Answer to question "{}" is not present in Zerodha Questions.'.format(ques1)
+        driver.close()
+        sys.exit(-1)
+    # endif
+
+    # Answer
+    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/div/input').send_keys(questions_dict[ques1])
+    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/div/input').send_keys(questions_dict[ques2])
+
+    # Click continue button
+    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[4]/button').click()
+
+    # Goto backoffice page
+    driver.get(base_url)
+    time.sleep(1)
+    driver.find_element_by_xpath('//*[@id="login"]/div/center/a').click()
+
+    # Goto holdings
+    driver.get(hold_url)
+    time.sleep(1)
+    browser_html = driver.page_source
 
     while True:
-        html_page = BeautifulSoup(browser.html, 'html.parser')
+        html_page = BeautifulSoup(browser_html, 'html.parser')
         hld_table = html_page.find('table', {'id' : 'holdings-table'})
         header_l  =  [ x.text for x in hld_table.find('tr').find_all('th') ]
 
@@ -37,7 +77,7 @@ def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_s
         next_btn = html_page.find('a', {'id' : 'holdings-table_next'})
         if next_btn.attrs['class'][2] != 'disabled':
             print 'On page {} \n'.format(next_btn.attrs['tabindex'])
-            browser.wc_click('input[id=holdings-table_next]', wait_load=True)
+            driver.find_element_by_xpath('//*[@id="holdings-table_next"]')
         else:
             break
         # endif
@@ -64,29 +104,29 @@ def download_zerodha_dp_statement(user_name, password, file_name='~/zerodha_dp_s
     # endif
 # enddef
 
-if __name__ == '__main__':
-    parser  = argparse.ArgumentParser()
-    parser.add_argument('--auth',     help='Zerodha Authentication (username,password)', type=str, default=None)
-    parser.add_argument('--filename', help='Target filename', type=str, default=None)
-    parser.add_argument('--genrep',    help='Generate Report', action='store_true')
-    args    = parser.parse_args()
-
-    if not args.__dict__['auth']:
-        print '--auth is required !!'
-        sys.exit(-1)
-    # endif
-    if not args.__dict__['filename']:
-        file_name = '~/zerodha_mydp_statement_{}.csv'.format(str(datetime.datetime.now()))
-    else:
-        file_name = args.__dict__['filename']
-    # endif
-
-    auth_l = args.__dict__['auth'].replace(' ', '').split(',')
-    if len(auth_l) != 2:
-        print '--auth should be in format "username,password"'
-        sys.exit(-1)
-    # endif
-
-    # Download
-    print download_zerodha_dp_statement(auth_l[0], auth_l[1], file_name, args.__dict__['genrep'])
-# endef
+#if __name__ == '__main__':
+#    parser  = argparse.ArgumentParser()
+#    parser.add_argument('--auth',     help='Zerodha Authentication (username,password)', type=str, default=None)
+#    parser.add_argument('--filename', help='Target filename', type=str, default=None)
+#    parser.add_argument('--genrep',    help='Generate Report', action='store_true')
+#    args    = parser.parse_args()
+#
+#    if not args.__dict__['auth']:
+#        print '--auth is required !!'
+#        sys.exit(-1)
+#    # endif
+#    if not args.__dict__['filename']:
+#        file_name = '~/zerodha_mydp_statement_{}.csv'.format(str(datetime.datetime.now()))
+#    else:
+#        file_name = args.__dict__['filename']
+#    # endif
+#
+#    auth_l = args.__dict__['auth'].replace(' ', '').split(',')
+#    if len(auth_l) != 2:
+#        print '--auth should be in format "username,password"'
+#        sys.exit(-1)
+#    # endif
+#
+#    # Download
+#    print download_zerodha_dp_statement(auth_l[0], auth_l[1], file_name, args.__dict__['genrep'])
+## endef

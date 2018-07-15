@@ -13,19 +13,26 @@ script_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_path)
 
 from   sharekhan_download_dmat_statement import download_sharekhan_dp_statement
-#from   zerodha_download_dmat_statement import download_zerodha_dp_statement
+from   zerodha_download_dmat_statement import download_zerodha_dp_statement
 #
-#def get_zerodha_data(config):
-#    login_data = dict(config.items(section='Zerodha'))
-#    if 'user_name' not in login_data.keys() or 'passwd' not in login_data.keys():
-#        print 'Zerodha section should have keys : user_name and passwd'
-#        sys.exit(-1)
-#    # endif
-#
-#    print 'Pulling dmat data from zerodha !!'
-#    data = download_zerodha_dp_statement(login_data['user_name'], login_data['passwd'], gen_report=False)
-#    return data
-## enddef
+def get_zerodha_data(config):
+    # Check for Zerodha Questions
+    if 'Zerodha Questions' not in config.sections():
+        print '[Zerodha] section found, but no [Zerodha Questions] section found. Both are mandatory !!.'
+        sys.exit(-1)
+    # endif
+
+    login_data = dict(config.items(section='Zerodha'))
+    questions  = dict(config.items(section='Zerodha Questions'))
+    if 'user_name' not in login_data.keys() or 'passwd' not in login_data.keys():
+        print 'Zerodha section should have keys : user_name and passwd'
+        sys.exit(-1)
+    # endif
+
+    print 'Pulling dmat data from zerodha !!'
+    data = download_zerodha_dp_statement(login_data['user_name'], login_data['passwd'], questions, gen_report=False)
+    return data
+# enddef
 
 def get_sharekhan_data(config):
     login_data = dict(config.items(section='Sharekhan'))
@@ -45,6 +52,8 @@ def get_scrips_list(config_file):
 
     # parse config_file
     config = ConfigParser.ConfigParser()
+    config.optionxform = str
+    
     config.read(config_file)
     en_sh  = False if 'Sharekhan' not in config.sections() else True
     en_ze  = False if 'Zerodha' not in config.sections() else True
@@ -62,17 +71,13 @@ def get_scrips_list(config_file):
         print 'Sharekhan timeout !!'
     # endtry
     # Try zerodha if available
-    try:
-        if en_ze:
-            #ze_data, ze_hdr = get_zerodha_data(config)
-            #for item_t in ze_data:
-            #    scrips_l.append(item_t[1])
-            ## endfor
-            print 'Zerodha Q backoffice login has changed. Thus our old login menthod no longer works !! It will be supported in future.'
-        # endif
-    except:
-        print 'Zerodha timeout !!'
-    # endtry
+    if en_ze:
+        ze_data, ze_hdr = get_zerodha_data(config)
+        for item_t in ze_data:
+            scrips_l.append(item_t[1])
+        # endfor
+        #print 'Zerodha Q backoffice login has changed. Thus our old login menthod no longer works !! It will be supported in future.'
+    # endif
 
     return scrips_l 
 # enddef
