@@ -10,9 +10,15 @@ import os
 import argparse
 import sys
 
+def rp(x):
+    return os.path.expanduser(x)
+# enddef
+
 def screener_in_populate_company_list(user, passwd, screener_url='/23210/walter-schloss', csv_report_file=None):
     if csv_report_file == None:
-        csv_report_file = os.path.expanduser('~/') + '_'.join(screener_url.split('/')) + '.csv'
+        csv_report_file = rp('~/') + '_'.join(screener_url.split('/')) + '.csv'
+    else:
+        csv_report_file = rp(csv_report_file)
     # endif
 
     print 'Using screen {}'.format(screener_url)
@@ -82,7 +88,7 @@ if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument("--auth",           help="Screener.in authentication in form user,passwd", type=str, default=None)
     parser.add_argument("--screen_url",     help="Screen's url", type=str, default=None)
-    parser.add_argument("--report_file",    help="Csv report file.", type=str, default=None)
+    parser.add_argument("--report_file",    help="Csv report file.", type=str, default='~/screener_in_report.csv')
     args    = parser.parse_args()
 
     if not args.__dict__["auth"]:
