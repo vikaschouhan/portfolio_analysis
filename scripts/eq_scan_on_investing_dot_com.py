@@ -83,7 +83,7 @@ def strdate_now():
     return datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
 # BSE bhavcopy data
-def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'XC', 'XT', 'XD']):
+def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'X', 'XC', 'XT', 'XD']):
     l_file = None
     date_y   = datetime.datetime.today() - datetime.timedelta(days=1)    # yesterday date
     shift    = datetime.timedelta(max(1,(date_y.weekday() + 6) % 7 - 3))
@@ -120,7 +120,11 @@ def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'XC', 'XT', 'XD']):
             }
 
             # Check if the security is in incl_groups
-            if cc_dict['bse_group'] in incl_groups:
+            if incl_groups != None:
+                if cc_dict['bse_group'] in incl_groups:
+                    bse_dict[cc_dict['bse_code']] = cc_dict
+                # endif
+            else:
                 bse_dict[cc_dict['bse_code']] = cc_dict
             # endif
         # endif
@@ -169,8 +173,13 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
                 "no_trades"       : int(item_this[11]),
                 "isin"            : item_this[12].rstrip(),
             }
-            if item_this[1] in incl_series:
-                nse_dict[cc_dict['nse_code']] = cc_dict 
+
+            if incl_series != None:
+                if item_this[1] in incl_series:
+                    nse_dict[cc_dict['nse_code']] = cc_dict
+                # endif
+            else:
+                nse_dict[cc_dict['nse_code']] = cc_dict
             # endif
         # endif
         ctr = ctr + 1
