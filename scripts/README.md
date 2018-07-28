@@ -1,0 +1,3 @@
+This includes many useful scripts for techincal trading/investing.
+Previously I used to maintain some scripts for collecting data based on fundamental scanners (Mostly based on www.screener.in as I play in Indian Stock Markets - NSE/BSE), but they are no longer maintained and I can't guarantee that they would work. Later these would be moved to deprecated section. Most of the scripts based on techincal analysis use bhavcopies and various other reports from NSE & BSE and they use investing.com's (www.investing.com) streaming apis for collecting price/volume data.
+Most of the scripts residing here are meant to be run with Python2.
