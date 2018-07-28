@@ -118,7 +118,7 @@ if __name__ == '__main__':
     csv_file = args.__dict__['repfile']
 
     if csv_file == None:
-        csv_file = '~/{}_'.format(strategy)
+        csv_file = '~/backtester_{}_'.format(strategy)
         for k_t in opt_dict:
             csv_file = csv_file + '{}_{}'.format(k_t, opt_dict[k_t])
         # endfor
