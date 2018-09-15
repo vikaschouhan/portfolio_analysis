@@ -8,7 +8,7 @@ import talib
 ## Super trend indicator
 # Author :  Mathieu Meynier
 # Original link : https://www.quantopian.com/posts/error-computing-super-trend-indicator
-def SupertTrend(data, period, multiplier, columns=['h', 'l', 'o', 'c']):
+def SuperTrend(data, period, multiplier, columns=['h', 'l', 'o', 'c']):
     high_i   = columns[0]
     low_i    = columns[1]
     open_i   = columns[2]
