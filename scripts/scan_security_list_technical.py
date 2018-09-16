@@ -19,6 +19,7 @@ from   modules import invs_scanners
 from   modules import invs_utils
 from   modules import invs_tools
 from   modules import invs_parsers
+from   modules import invs_indicators
 import logging
 from   colorama import Fore, Back, Style
 import os
@@ -28,6 +29,7 @@ import re
 import datetime
 import shutil
 import csv
+import copy
 from   subprocess import check_call
 
 
@@ -215,8 +217,48 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
                 csv_rep_list.append(row_this)
             # endif
         # endfor
+    elif strategy_name == "supertrend_rsi_long":
+        ctr2        = 0
+        # Hyper parameters
+        str_params = (10, 3)   # (Period, Multiplier)
+        rsi_period = 14
+
+        print 'Running {} strategy using lag={}'.format(strategy_name, lag)
+        print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+        # Iterate over all security dict
+        for sec_code in sec_dict.keys():
+            ctr2    = ctr2 + 1
+            logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
+            # NOTE: Don't know what the hell I am calculating using these.
+            #       They need to be reviewed
+            # Fetch data
+            d_this = copy.copy(invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)[-100:])
+
+            # Run strategy
+            d_new = invs_indicators.SuperTrend(d_this, str_params[0], str_params[1])
+            d_new['RSI'] = invs_indicators.talib.RSI(d_new['c'], rsi_period)
+            d_new['RSI_l'] = [40.0] * len(d_new)
+            d_new['RSI_h'] = [60.0] * len(d_new)
+
+            logic = (d_new.iloc[-1]['SuperTrend'] < d_new.iloc[-1]['c']) and (d_new.iloc[-1]['RSI'] > 60)
+            if logic:
+                print '{}. {}'.format(ctr2, sec_code)
+                ctr2 = ctr2 + 1
+            else:
+                continue
+            # endif
+
+            # Save plot
+            if plots_dir:
+                pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_{}p.png'.format(plot_period)
+                invs_plot.gen_candlestick(d_new, period_list=[], title=sec_dict[sec_code]['name'],
+                        plot_period=plot_period, file_name=pic_name, plot_columns=['SuperTrend'], plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
+            # endif
+        # endfor
     else:
         print "Strategy : {}, not implemented yet !!".format(strategy_name)
+        return
     # endif
 
     # Write to csv file
@@ -473,6 +515,7 @@ if __name__ == '__main__':
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
     parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
+    parser.add_argument("--strategy_name",help="Stragey name (only applies for '--strategy scanner')", type=str, default="em2_x")
     parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
     parser.add_argument("--upload",    help="Upload report file", action='store_true')
     parser.add_argument("--nsrsamples",help="Samples to calculate sr levels", type=int, default=100)
@@ -511,6 +554,7 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
     strategy_type = args.__dict__["strategy"]
+    strategy_name = args.__dict__["strategy_name"]
 
     # Vars
     invs_db_f  = os.path.expanduser(invs_db_file)
@@ -531,7 +575,7 @@ if __name__ == '__main__':
         print 'Running scanner...'
         rep_file = '~/csv_report_security_list_{}_{}_per{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
-        rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name="em2_x", \
+        rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name=strategy_name, \
                        period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
                        plot_monthly=plot_m, plot_period=args.__dict__["plot_period"])
     elif strategy_type == 'statsgen':
