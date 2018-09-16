@@ -42,7 +42,17 @@ matplotlib.pyplot.switch_backend('agg')
 ####################################################
 # PLOTTING FUNCTIONS
 #
-def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tmp_plot.png', plot_period=None, plot_volume=True, fig_ratio=None, sr_list=None):
+def gen_candlestick(d_frame,
+                    mode='c',
+                    period_list=[],
+                    title='',
+                    file_name='~/tmp_plot.png',
+                    plot_period=None,
+                    plot_volume=True,
+                    fig_ratio=None,
+                    sr_list=None,
+                    plot_columns=[],
+                    plot_columns_subplot=[]):
     # Vars
     l_bar          = ''.join(['-']*60)
     def_fig_dim    = plt.rcParams['figure.figsize']
@@ -94,10 +104,12 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
 
     # Calculate new figure dimention
     new_fig_dim  = [ fig_ratio * x for x in def_fig_dim ]
+    sub_plot_1   = 211 if len(plot_columns_subplot) > 0 else 111
+    sub_plot_2   = 212 if len(plot_columns_subplot) > 0 else 111
 
     # Pre-processing
     fig = plt.figure(figsize=new_fig_dim)
-    ax  = fig.add_subplot(111)
+    ax  = fig.add_subplot(sub_plot_1)
     plt.xticks(rotation = 45)
     plt.xlabel("Date")
     plt.ylabel("Price")
@@ -122,6 +134,23 @@ def gen_candlestick(d_frame, mode='c', period_list=[], title='', file_name='~/tm
         d_frame_c[str(l_this)] = [l_this]*len(d_frame_c.index)
         d_frame_c[str(l_this)].plot(ax=ax)
     # endfor
+    # Plot specific columns if passed
+    for column_t in plot_columns:
+        d_frame_c.reset_index(inplace=True, drop=True)
+        d_frame_c[column_t].plot(ax=ax)
+    # endfor
+    # Plot overlay columns
+    if len(plot_columns_subplot) > 0:
+        ax3 = fig.add_subplot(sub_plot_2)
+        for column_t in plot_columns_subplot:
+            d_frame_c[column_t].reset_index(inplace=True, drop=True)
+            d_frame_c[column_t].plot(ax=ax3)
+        # endfor
+
+        # Set axes
+        ax3.xaxis.set_major_locator(ticker.MaxNLocator(def_n_locs * fig_ratio))
+        ax3.xaxis.set_major_formatter(ticker.FuncFormatter(mydate))
+    # endif
     if plot_volume:
         # Plot volume
         v_data = [ 0 if j == 'n/a' else j for j in d_frame_c['v'] ]
