@@ -228,15 +228,26 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
 
         # Iterate over all security dict
         for sec_code in sec_dict.keys():
-            ctr2    = ctr2 + 1
             logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
             # NOTE: Don't know what the hell I am calculating using these.
             #       They need to be reviewed
             # Fetch data
-            d_this = copy.copy(invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)[-100:])
+            d_this = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
+
+            if len(d_this) > 100:
+                d_this = copy.copy(d_this[-100:])
+            else:
+                d_this = d_this
+            # endif
 
             # Run strategy
             d_new = invs_indicators.SuperTrend(d_this, str_params[0], str_params[1])
+
+            # This indicator behaves stragely sometimes. Add a check
+            if d_new.empty:
+                print('** Returned empty dataframe for {} after applying Supertrend indicator. Skipping !!'.format(sec_code))
+                continue
+            # endif
             d_new['RSI'] = invs_indicators.talib.RSI(d_new['c'], rsi_period)
             d_new['RSI_l'] = [40.0] * len(d_new)
             d_new['RSI_h'] = [60.0] * len(d_new)
@@ -403,11 +414,6 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
         # Fetch data
         d_this   = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
         sec_name = sec_dict[sec_code]['name']
-
-        # If dataframe is empty, continue
-        if d_this.empty:
-            continue
-        # endif
 
         # Calculate stats
         sr_list  = invs_tools.supp_res(d_this, ema_period=ema_period, n_samples=n_samples)
