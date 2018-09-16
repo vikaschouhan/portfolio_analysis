@@ -32,6 +32,9 @@ import csv
 import copy
 from   subprocess import check_call
 
+# Aliases
+get_arg = invs_utils.get_arg
+
 
 def populate_sym_list(invs_dict_file, sec_list):
     # Convert inv_dot_com_db_list to dict:
@@ -84,8 +87,18 @@ def populate_sym_list(invs_dict_file, sec_list):
 
 
 # Common Wrapper over all strategies
-def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="em2_x", period_list=[9, 14, 21],
-                                     plots_dir=None, rep_file=None, plot_monthly=False, invoke_marketsmojo=False, volume_lag=10, plot_period=100):
+def run_stretegy_over_all_securities(sec_dict,
+                                     lag=30,
+                                     res='1W',
+                                     strategy_name="em2_x",
+                                     period_list=[9, 14, 21],
+                                     plots_dir=None,
+                                     rep_file=None,
+                                     plot_monthly=False,
+                                     invoke_marketsmojo=False,
+                                     volume_lag=10,
+                                     plot_period=100,
+                                     opt_args={}):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
     csv_rep_list    = []
     g_graphs_dir    = '/graphs/'
@@ -219,9 +232,12 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
         # endfor
     elif strategy_name == "supertrend_rsi_long":
         ctr2        = 0
+        ctr2_f      = 0
         # Hyper parameters
-        str_params = (10, 3)   # (Period, Multiplier)
-        rsi_period = 14
+            
+        str_params = (get_arg(opt_args, 'supertrend_period', 10), get_arg(opt_args, 'supertrend_multiplier', 3))   # (Period, Multiplier)
+        rsi_period = get_arg(opt_args, 'rsi_period', 14)
+        sup_lperiod = get_arg(opt_args, 'supertrend_lookback_period', 100)
 
         print 'Running {} strategy using lag={}'.format(strategy_name, lag)
         print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
@@ -234,8 +250,8 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             # Fetch data
             d_this = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
 
-            if len(d_this) > 100:
-                d_this = copy.copy(d_this[-100:])
+            if len(d_this) > sup_lperiod:
+                d_this = copy.copy(d_this[-sup_lperiod:])
             else:
                 d_this = d_this
             # endif
@@ -246,6 +262,7 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
             # This indicator behaves stragely sometimes. Add a check
             if d_new.empty:
                 print('** Returned empty dataframe for {} after applying Supertrend indicator. Skipping !!'.format(sec_code))
+                ctr2_f = ctr2_f + 1
                 continue
             # endif
             d_new['RSI'] = invs_indicators.talib.RSI(d_new['c'], rsi_period)
@@ -254,9 +271,10 @@ def run_stretegy_over_all_securities(sec_dict, lag=30, res='1W', strategy_name="
 
             logic = (d_new.iloc[-1]['SuperTrend'] < d_new.iloc[-1]['c']) and (d_new.iloc[-1]['RSI'] > 60)
             if logic:
-                print '{}. {}'.format(ctr2, sec_code)
+                print '[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code)
                 ctr2 = ctr2 + 1
             else:
+                ctr2_f = ctr2_f + 1
                 continue
             # endif
 
@@ -522,6 +540,7 @@ if __name__ == '__main__':
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
     parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
     parser.add_argument("--strategy_name",help="Stragey name (only applies for '--strategy scanner')", type=str, default="em2_x")
+    parser.add_argument("--opts",    help="Optional args in format arg1=value1,arg2=value2..", type=str, default=None)
     parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
     parser.add_argument("--upload",    help="Upload report file", action='store_true')
     parser.add_argument("--nsrsamples",help="Samples to calculate sr levels", type=int, default=100)
@@ -569,6 +588,9 @@ if __name__ == '__main__':
     res        = args.__dict__["res"]
     plot_m     = args.__dict__["plot_mon"]
 
+    # Check optional arguments
+    opt_args   = invs_utils.parse_opt_args(args.__dict__["opts"])
+
     # Get security list from screener.in using default screen_no=17942
     sec_list   = invs_parsers.populate_sec_list(sfile=sec_file)
 
@@ -583,7 +605,7 @@ if __name__ == '__main__':
                       datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
         rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name=strategy_name, \
                        period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
-                       plot_monthly=plot_m, plot_period=args.__dict__["plot_period"])
+                       plot_monthly=plot_m, plot_period=args.__dict__["plot_period"], opt_args=opt_args)
     elif strategy_type == 'statsgen':
         rep_file = '~/csv_report_security_list__stats_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())

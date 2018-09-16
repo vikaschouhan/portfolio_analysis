@@ -80,3 +80,38 @@ def parse_dict_file(file_name=None):
         return eval(open(file_name, 'r').read())
     # endif
 # endif
+
+
+def get_arg(args_dict, key, default_value):
+    if key not in args_dict:
+        print('{} not found in {}. Picking default value of {}'.format(key, args_dict, default_value))
+        return default_value
+    else:
+        print('Using {} for {}'.format(args_dict[key], key))
+        return args_dict[key]
+    # endif
+# enddef
+
+def parse_opt_args(arg_string):
+    opt_args = {}
+    if arg_string:
+        opt_list = arg_string.split(',')
+        for item_t in opt_list:
+            item_l = item_t.split('=')
+            if len(item_l) != 2:
+                print('Wrong args format on {}.'.format(arg_string))
+                sys.exit(-1)
+            # endif
+            try:
+                opt_args[item_l[0]] = int(item_l[1])         # try cast to integer
+            except:
+                try:
+                    opt_args[item_l[0]] = float(item_l[1])   # try cast to float
+                except:
+                    opt_args[item_l[0]] = item_l[1]          # accept as string
+                # endtry
+            # endtry
+        # endfor
+    # endif
+    return opt_args
+# enddef
