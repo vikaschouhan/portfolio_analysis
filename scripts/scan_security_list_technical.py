@@ -89,7 +89,7 @@ def populate_sym_list(invs_dict_file, sec_list):
 def run_stretegy_over_all_securities(sec_dict,
                                      lag=30,
                                      res='1W',
-                                     strategy_name="em2_x",
+                                     strategy_name="ema_crossover",
                                      plots_dir=None,
                                      rep_file=None,
                                      plot_monthly=False,
@@ -121,7 +121,7 @@ def run_stretegy_over_all_securities(sec_dict,
     # endif
 
     # Start scan
-    if strategy_name == "em2_x":
+    if strategy_name == "ema_crossover":
         sec_list    = []
         ctr         = 0
         ctr2        = 0
@@ -598,7 +598,7 @@ if __name__ == '__main__':
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
     parser.add_argument("--plot_mon",help="Plot monthly charts.", action='store_true')
     parser.add_argument("--strategy",help="Strategy function", type=str, default='scanner')
-    parser.add_argument("--strategy_name",help="Stragey name (only applies for '--strategy scanner')", type=str, default="em2_x")
+    parser.add_argument("--strategy_name",help="Stragey name (only applies for '--strategy scanner')", type=str, default="ema_crossover")
     parser.add_argument("--opts",    help="Optional args in format arg1=value1,arg2=value2..", type=str, default=None)
     parser.add_argument("--fig_ratio", help="Figure ratio", type=float, default='1.0')
     parser.add_argument("--upload",    help="Upload report file", action='store_true')
