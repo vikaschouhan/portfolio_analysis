@@ -34,6 +34,7 @@ from   subprocess import check_call
 
 # Aliases
 get_arg = invs_utils.get_arg
+dindx   = invs_utils.dindx
 
 
 def populate_sym_list(invs_dict_file, sec_list):
@@ -150,14 +151,14 @@ def run_stretegy_over_all_securities(sec_dict,
             # NOTE: Don't know what the hell I am calculating using these.
             #       They need to be reviewed
             def _c_up(d):
-                return (d['c'].max() - d.iloc[-1]['c'])/d.iloc[-1]['c']
+                return (d['c'].max() - dindx(d, 'c', -1))/dindx(d, 'c', -1)
             # enddef
             def _c_dwn(d):
-                return (d.iloc[-1]['c'] - d['c'].min())/d.iloc[-1]['c']
+                return (dindx(d, 'c', -1) - d['c'].min())/dindx(d, 'c', -1)
             # enddef
             def _vol_up(d, vol_lag=10):
                 try:
-                    return (d.iloc[-1]['v_ma'] - d.iloc[-1 - vol_lag]['v_ma'])/d.iloc[-1 - vol_lag]['v_ma']
+                    return (dindx(d, 'v_ma', -1) - dindx(d, 'v_ma', -1 - vol_lag))/dindx(d, 'v_ma', -1 - vol_lag)
                 except:
                     return 0
                 # endif
@@ -188,7 +189,7 @@ def run_stretegy_over_all_securities(sec_dict,
                 # endif
 
                 # Add rep list entry
-                row_this = row_this + [sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), d_this.iloc[-1]['c'], vol_up]
+                row_this = row_this + [sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), dindx(d_this, 'c', -1), vol_up]
                 if invoke_marketsmojo:
                     info_this = invs_core.pull_info_from_marketsmojo(sec_code)
                     # If nothing returned
@@ -269,7 +270,7 @@ def run_stretegy_over_all_securities(sec_dict,
             d_new['RSI_l'] = [40.0] * len(d_new)
             d_new['RSI_h'] = [60.0] * len(d_new)
 
-            logic = (d_new.iloc[-1]['SuperTrend'] < d_new.iloc[-1]['c']) and (d_new.iloc[-1]['RSI'] > 60)
+            logic = (dindx(d_new, 'SuperTrend', -1) < dindx(d_new, 'c', -1)) and (dindx(d_new, 'RSI', -1) > 60)
             if logic:
                 print '[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code)
                 ctr2 = ctr2 + 1
@@ -324,7 +325,7 @@ def run_stretegy_over_all_securities(sec_dict,
             d_new['RSI_l'] = [40.0] * len(d_new)
             d_new['RSI_h'] = [60.0] * len(d_new)
 
-            logic = (d_new.iloc[-1]['SuperTrend'] > d_new.iloc[-1]['c']) and (d_new.iloc[-1]['RSI'] < 40)
+            logic = (dindx(d_new, 'SuperTrend', -1) > dindx(d_new, 'c', -1)) and (dindx(d_new, 'RSI', -1) < 40)
             if logic:
                 print '[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code)
                 ctr2 = ctr2 + 1
