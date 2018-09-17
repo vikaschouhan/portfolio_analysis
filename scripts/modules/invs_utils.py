@@ -115,3 +115,8 @@ def parse_opt_args(arg_string):
     # endif
     return opt_args
 # enddef
+
+# Get data at index in pandas frame
+def dindx(data_frame, key, index):
+    return data_frame.iloc[index][key]
+# enddef
