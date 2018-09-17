@@ -96,7 +96,6 @@ def run_stretegy_over_all_securities(sec_dict,
                                      plots_dir=None,
                                      rep_file=None,
                                      plot_monthly=False,
-                                     invoke_marketsmojo=False,
                                      volume_lag=10,
                                      plot_period=100,
                                      opt_args={}):
@@ -106,9 +105,6 @@ def run_stretegy_over_all_securities(sec_dict,
 
     # Headers
     header_l        = ['Name', 'Switch Direction', 'Time Delta', 'Peek to Trough %', 'Price', 'Volume Up']
-    if invoke_marketsmojo:
-        header_l    = header_l + ['Valuation', 'Quality', 'Fin Trend']
-    # endif
 
     # set default value of plot_period
     plot_period     = plot_period if plot_period else 100
@@ -190,21 +186,6 @@ def run_stretegy_over_all_securities(sec_dict,
 
                 # Add rep list entry
                 row_this = row_this + [sec_dict[sec_code]['name'], t_swt, str(tdelta), str(p2t), dindx(d_this, 'c', -1), vol_up]
-                if invoke_marketsmojo:
-                    info_this = invs_core.pull_info_from_marketsmojo(sec_code)
-                    # If nothing returned
-                    if info_this == None:
-                        row_this  = row_this + ['-', '-', '-']
-                    else:
-                        info_this = info_this[0]  # Pick only first element
-                        # Add assertion
-                        # FIXME : fix this assertion
-                        #assert(row_this['bsecode'] == sec_code or row_this['nsecode'] == sec_code)
-                        # Add to the main row
-                        row_this  = row_this + [info_this['valuation'], info_this['quality'], info_this['fintrend']]
-                    # endif
-                # endif
-                
 
                 # Print
                 sec_name = Fore.GREEN + sec_dict[sec_code]['name'] + Fore.RESET
