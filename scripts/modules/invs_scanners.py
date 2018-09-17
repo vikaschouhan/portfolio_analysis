@@ -72,7 +72,7 @@ def add_vol_ma(o_frame, period_list):
 # enddef
 
 # Strategy
-def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
+def run_ema(o_frame, mode='c', fast_period=9, slow_period=14, lag=30):
     if len(period_list) != 2:
         print 'period_list should have only two elements (p0, p1). p0 is smaller time-period & p1 is larger one.'
         sys.exit(-1)
@@ -81,22 +81,22 @@ def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
     rmean   = invs_utils.g_rmean_f(type='e')
 
     ## Get values
-    ma_p0   = rmean(d_s, period_list[0])
-    ma_p1   = rmean(d_s, period_list[1])
+    ma_p0   = rmean(d_s, fast_period)
+    ma_p1   = rmean(d_s, slow_period)
 
     return c_f_1(ma_p0, ma_p1, lag=lag)
 # enddef
 
 # A ema crossover strategy for detecting crossovers on the frame passed
-def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21]):
+def run_ema2(o_frame, mode='c', fast_period=9, slow_period=14, lag=30):
     d_s     = invs_utils.s_mode(o_frame, mode)
     rmean   = invs_utils.g_rmean_f(type='e')
     o_copy  = o_frame.copy()   # Make a copy
     status  = False
     trend_switch = None
 
-    o_copy['s_ema']   = rmean(d_s, period_list[0])
-    o_copy['l_ema']   = rmean(d_s, period_list[1])
+    o_copy['s_ema']   = rmean(d_s, fast_period)
+    o_copy['l_ema']   = rmean(d_s, slow_period)
     o_copy['pos']     = (o_copy['s_ema'] > o_copy['l_ema']).astype(int).diff()
     o_copy            = o_copy[o_copy['pos'] != 0]
 

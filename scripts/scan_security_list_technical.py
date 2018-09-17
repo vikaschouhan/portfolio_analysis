@@ -163,7 +163,10 @@ def run_stretegy_over_all_securities(sec_dict,
             d_this = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
             # Run strategy
             logging.debug("{} : Running ema crossover function over {}".format(ctr2, sec_code))
-            status, tdelta, trend_switch, d_new = invs_scanners.run_ema2(d_this, lag=lag, period_list=period_list)
+            status, tdelta, trend_switch, d_new = invs_scanners.run_ema2(d_this,
+                                                                         fast_period=fast_period,
+                                                                         slow_period=slow_period,
+                                                                         lag=lag)
             # Add volume ma
             d_v_this = invs_scanners.add_vol_ma(d_this, period_list=period_list)
             # Analyse data
@@ -196,12 +199,20 @@ def run_stretegy_over_all_securities(sec_dict,
                 # Save plot
                 if plots_dir:
                     pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_{}p.png'.format(plot_period)
-                    invs_plot.gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'], plot_period=plot_period, file_name=pic_name)
+                    invs_plot.gen_candlestick(
+                            d_this,
+                            period_list=period_list,
+                            title=sec_dict[sec_code]['name'],
+                            plot_period=plot_period,
+                            file_name=pic_name)
                     # Plot monthly chart if required
                     if plot_monthly:
                         d_mon    = invs_core.fetch_data(sec_dict[sec_code]['ticker'], '1M')
                         pic_name_mon = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_monthly_{}p.png'.format(plot_period)
-                        invs_plot.gen_candlestick(d_mon, title=sec_dict[sec_code]['name'], plot_period=plot_period, file_name=pic_name_mon)
+                        invs_plot.gen_candlestick(d_mon,
+                                title=sec_dict[sec_code]['name'],
+                                plot_period=plot_period,
+                                file_name=pic_name_mon)
                     # endif
 
                     # Add to csv
@@ -263,8 +274,13 @@ def run_stretegy_over_all_securities(sec_dict,
             # Save plot
             if plots_dir:
                 pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_{}p.png'.format(plot_period)
-                invs_plot.gen_candlestick(d_new, period_list=[], title=sec_dict[sec_code]['name'],
-                        plot_period=plot_period, file_name=pic_name, plot_columns=['SuperTrend'], plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
+                invs_plot.gen_candlestick(d_new,
+                        period_list=[],
+                        title=sec_dict[sec_code]['name'],
+                        plot_period=plot_period,
+                        file_name=pic_name,
+                        plot_columns=['SuperTrend'],
+                        plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
             # endif
         # endfor
     elif strategy_name == "supertrend_rsi_short":
@@ -318,8 +334,13 @@ def run_stretegy_over_all_securities(sec_dict,
             # Save plot
             if plots_dir:
                 pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_{}p.png'.format(plot_period)
-                invs_plot.gen_candlestick(d_new, period_list=[], title=sec_dict[sec_code]['name'],
-                        plot_period=plot_period, file_name=pic_name, plot_columns=['SuperTrend'], plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
+                invs_plot.gen_candlestick(d_new,
+                        period_list=[],
+                        title=sec_dict[sec_code]['name'],
+                        plot_period=plot_period,
+                        file_name=pic_name,
+                        plot_columns=['SuperTrend'],
+                        plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
             # endif
         # endfor
     else:
