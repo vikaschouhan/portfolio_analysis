@@ -31,6 +31,10 @@ except:
 # endtry
 
 ####################################################
+# Aliases
+dindx = invs_utils.dindx
+
+####################################################
 # SCANNERS
 #
 def v_i(s, indx):
@@ -84,44 +88,23 @@ def run_ema(o_frame, mode='c', period_list=[14, 21], lag=30):
 # enddef
 
 # A ema crossover strategy for detecting crossovers on the frame passed
-def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21], sig_mode=None):
+def run_ema2(o_frame, mode='c', lag=30, period_list=[9, 14, 21]):
     d_s     = invs_utils.s_mode(o_frame, mode)
     rmean   = invs_utils.g_rmean_f(type='e')
     o_copy  = o_frame.copy()   # Make a copy
     status  = False
     trend_switch = None
 
-    # Generate signals according to chosen indicator mode
-    def _g_signal(df, s_mode="12_or_23"):
-        ## Get values for diff emas
-        df['s_ema']   = rmean(d_s, period_list[0])
-        df['m_ema']   = rmean(d_s, period_list[1])
-        
-        if s_mode == "12":
-            df['pos'] = (df['s_ema'] > df['m_ema']).astype(int).diff()
-            return df[df['pos'] != 0]
-        elif s_mode == "12_or_23":
-            df['l_ema']   = rmean(d_s, period_list[2])
-            df['pos'] = ((df['s_ema'] > df['m_ema']) | (df['m_ema'] > df['l_ema'])).astype(int).diff()
-            return df[df['pos'] != 0]
-        elif s_mode == "12_and_23":
-            df['l_ema']   = rmean(d_s, period_list[2])
-            df['pos'] = ((df['s_ema'] > df['m_ema']) & (df['m_ema'] > df['l_ema'])).astype(int).diff()
-            return df[df['pos'] != 0]
-        else:
-            print 'Unknown mode {} in _g_signal().'.format(s_mode)
-            sys.exit(-1)
-        # endif
-    # enddef
+    o_copy['s_ema']   = rmean(d_s, period_list[0])
+    o_copy['l_ema']   = rmean(d_s, period_list[1])
+    o_copy['pos']     = (o_copy['s_ema'] > o_copy['l_ema']).astype(int).diff()
+    o_copy            = o_copy[o_copy['pos'] != 0]
 
-    # Generate signals
-    o_copy = _g_signal(o_copy, sig_mode)
-    
     # Get time different between last position switch and now
-    tdelta = pandas.Timestamp(datetime.datetime.now()) - o_copy.iloc[-1]['t']
+    tdelta = pandas.Timestamp(datetime.datetime.now()) - dindx(o_copy, 't', -1)
 
     # Last trend switch
-    if o_copy.iloc[-1]['pos'] == 1.0:
+    if dindx(o_copy, 'pos', -1) == 1.0:
         trend_switch = 1
     else:
         trend_switch = 0

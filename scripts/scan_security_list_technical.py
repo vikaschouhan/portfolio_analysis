@@ -4,14 +4,12 @@
 # License   : GPLv2
 # NOTE      : Please respect the license and copyright.
 #
-# Right now it uses ema crossover but anything can be applied.
+# Strategies supported :
+#     a) Ema crossover
+#     b) Supertrend RSI combinator
 #
 # The goal is to find out the right timings for entry in the stocks selected via
-# a fundamental screener.
-# Say for example you get a list of top 30 companies satisfying magic formula criteria
-# (Joel Greenblatt), but still to maximize your returns you also want to apply some
-# form of moving average crossover. This script is supposed to achieve things like
-# that (Thus a sort of techno-fundamental screener).
+# a technical screener.
 
 from   modules import invs_core
 from   modules import invs_plot
@@ -136,11 +134,9 @@ def run_stretegy_over_all_securities(sec_dict,
         volume_lag  = get_arg(opt_args, 'volume_lag', 10)
         opt_period  = None if 'ema_opt_period' not in opt_args else opt_args['ema_opt_period']
         period_list = [fast_period, slow_period]
-
         period_list = period_list if opt_period == None else period_list + [opt_period]
-        sig_mode    = "12"
 
-        print 'Running {} strategy using lag={}, sig_mode={} & period_list={}'.format(strategy_name, lag, sig_mode, period_list)
+        print 'Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list)
         print Fore.MAGENTA + 'Peak to trough percentage has meaning only when trend is down to up !!' + Fore.RESET
         print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
 
@@ -167,7 +163,7 @@ def run_stretegy_over_all_securities(sec_dict,
             d_this = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
             # Run strategy
             logging.debug("{} : Running ema crossover function over {}".format(ctr2, sec_code))
-            status, tdelta, trend_switch, d_new = invs_scanners.run_ema2(d_this, lag=lag, period_list=period_list, sig_mode=sig_mode)
+            status, tdelta, trend_switch, d_new = invs_scanners.run_ema2(d_this, lag=lag, period_list=period_list)
             # Add volume ma
             d_v_this = invs_scanners.add_vol_ma(d_this, period_list=period_list)
             # Analyse data
