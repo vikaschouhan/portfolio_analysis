@@ -285,6 +285,61 @@ def run_stretegy_over_all_securities(sec_dict,
                         plot_period=plot_period, file_name=pic_name, plot_columns=['SuperTrend'], plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
             # endif
         # endfor
+    elif strategy_name == "supertrend_rsi_short":
+        ctr2        = 0
+        ctr2_f      = 0
+        # Hyper parameters
+            
+        str_params = (get_arg(opt_args, 'supertrend_period', 10), get_arg(opt_args, 'supertrend_multiplier', 3))   # (Period, Multiplier)
+        rsi_period = get_arg(opt_args, 'rsi_period', 14)
+        sup_lperiod = get_arg(opt_args, 'supertrend_lookback_period', 100)
+
+        print 'Running {} strategy using lag={}'.format(strategy_name, lag)
+        print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+        # Iterate over all security dict
+        for sec_code in sec_dict.keys():
+            logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
+            # NOTE: Don't know what the hell I am calculating using these.
+            #       They need to be reviewed
+            # Fetch data
+            d_this = invs_core.fetch_data(sec_dict[sec_code]['ticker'], res)
+
+            if len(d_this) > sup_lperiod:
+                d_this = copy.copy(d_this[-sup_lperiod:])
+            else:
+                d_this = d_this
+            # endif
+
+            # Run strategy
+            d_new = invs_indicators.SuperTrend(d_this, str_params[0], str_params[1])
+
+            # This indicator behaves stragely sometimes. Add a check
+            if d_new.empty:
+                print('** Returned empty dataframe for {} after applying Supertrend indicator. Skipping !!'.format(sec_code))
+                ctr2_f = ctr2_f + 1
+                continue
+            # endif
+            d_new['RSI'] = invs_indicators.talib.RSI(d_new['c'], rsi_period)
+            d_new['RSI_l'] = [40.0] * len(d_new)
+            d_new['RSI_h'] = [60.0] * len(d_new)
+
+            logic = (d_new.iloc[-1]['SuperTrend'] > d_new.iloc[-1]['c']) and (d_new.iloc[-1]['RSI'] < 40)
+            if logic:
+                print '[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code)
+                ctr2 = ctr2 + 1
+            else:
+                ctr2_f = ctr2_f + 1
+                continue
+            # endif
+
+            # Save plot
+            if plots_dir:
+                pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '_{}p.png'.format(plot_period)
+                invs_plot.gen_candlestick(d_new, period_list=[], title=sec_dict[sec_code]['name'],
+                        plot_period=plot_period, file_name=pic_name, plot_columns=['SuperTrend'], plot_columns_subplot=['RSI', 'RSI_l', 'RSI_h'])
+            # endif
+        # endfor
     else:
         print "Strategy : {}, not implemented yet !!".format(strategy_name)
         return
