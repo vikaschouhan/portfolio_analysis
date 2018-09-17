@@ -92,11 +92,9 @@ def run_stretegy_over_all_securities(sec_dict,
                                      lag=30,
                                      res='1W',
                                      strategy_name="em2_x",
-                                     period_list=[9, 14, 21],
                                      plots_dir=None,
                                      rep_file=None,
                                      plot_monthly=False,
-                                     volume_lag=10,
                                      plot_period=100,
                                      opt_args={}):
     csv_report_file = '~/csv_report_security_list_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
@@ -133,7 +131,13 @@ def run_stretegy_over_all_securities(sec_dict,
         csv_rep_list.append(header_l)
 
         # Hyper parameters
-        period_list = [9, 14, 21] if period_list == None else period_list
+        fast_period = get_arg(opt_args, 'ema_fast_period', 14)
+        slow_period = get_arg(opt_args, 'ema_slow_period', 21)
+        volume_lag  = get_arg(opt_args, 'volume_lag', 10)
+        opt_period  = None if 'ema_opt_period' not in opt_args else opt_args['ema_opt_period']
+        period_list = [fast_period, slow_period]
+
+        period_list = period_list if opt_period == None else period_list + [opt_period]
         sig_mode    = "12"
 
         print 'Running {} strategy using lag={}, sig_mode={} & period_list={}'.format(strategy_name, lag, sig_mode, period_list)
@@ -341,7 +345,7 @@ def run_stretegy_over_all_securities(sec_dict,
 # enddef
 
 # Common Wrapper over all strategies
-def graph_generator(sec_dict, res='1W', period_list=[9, 14, 21], plots_dir=None, plot_period=None, fig_ratio=1.0):
+def graph_generator(sec_dict, res='1W', plots_dir=None, plot_period=None, fig_ratio=1.0):
     g_graphs_dir    = '/graphs/'
     ctr             = 0
 
@@ -355,9 +359,11 @@ def graph_generator(sec_dict, res='1W', period_list=[9, 14, 21], plots_dir=None,
         # endif
         print 'Plots dir = {}'.format(plots_dir)
     # endif
-    if period_list == None:
-        period_list = []
-    # endif
+
+    period_list = []
+    period_list = period_list + [opt_args['ema_period0']] if 'ema_period0' in opt_args else period_list
+    period_list = period_list + [opt_args['ema_period1']] if 'ema_period1' in opt_args else period_list
+    period_list = period_list + [opt_args['ema_period2']] if 'ema_period2' in opt_args else period_list
 
     print 'Running graph_generator strategy'
     print Fore.GREEN + '-----------------------------------------------------' + Fore.RESET
@@ -570,7 +576,6 @@ if __name__ == '__main__':
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
     parser.add_argument("--lag",     help="Ema/Sma Crossover lag (in days)", type=int, default=10)
     parser.add_argument("--res",     help="Resolution", type=str, default='1W')
-    parser.add_argument("--ma_plist",help="Moving average period list", type=str, default=None)
     parser.add_argument("--sfile",   help="Security csv file. Can be list file or bhavcopy file.", type=str, default=None)
     parser.add_argument("--plots_dir", \
             help="Directory where plots are gonna stored. If this is not passed, plots are not generated at all.", type=str, default=None)
@@ -605,11 +610,6 @@ if __name__ == '__main__':
         print "--sfile is required !! It should be one of supported types : {}".format(invs_parsers.populate_sec_list(None))
         sys.exit(-1)
     # endif
-    if not args.__dict__["ma_plist"]:
-        ma_plist = [9, 14, 21]
-    else:
-        ma_plist = [ int(x) for x in args.__dict__["ma_plist"].split(',') ]
-    # endif
 
     if args.__dict__["strategy"] not in strategy_l:
         print '--strategy should be one of following : {}'.format(strategy_l)
@@ -638,11 +638,18 @@ if __name__ == '__main__':
     # Run strategy function
     if strategy_type == 'scanner':
         print 'Running scanner...'
-        rep_file = '~/csv_report_security_list_{}_{}_per{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
-                      datetime.datetime.now().date().isoformat(), '_'.join([str(x) for x in ma_plist]), res, ma_lag)
-        rep_file = run_stretegy_over_all_securities(sec_tick_d, lag=ma_lag, res=res, strategy_name=strategy_name, \
-                       period_list=ma_plist, plots_dir=args.__dict__["plots_dir"], rep_file=rep_file, \
-                       plot_monthly=plot_m, plot_period=args.__dict__["plot_period"], opt_args=opt_args)
+        rep_file = '~/csv_report_security_list_{}_{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
+                      datetime.datetime.now().date().isoformat(), res, ma_lag)
+        rep_file = run_stretegy_over_all_securities(
+                                                       sec_tick_d,
+                                                       lag=ma_lag,
+                                                       res=res,
+                                                       strategy_name=strategy_name,
+                                                       plots_dir=args.__dict__["plots_dir"],
+                                                       rep_file=rep_file,
+                                                       plot_monthly=plot_m,
+                                                       plot_period=args.__dict__["plot_period"],
+                                                       opt_args=opt_args)
     elif strategy_type == 'statsgen':
         rep_file = '~/csv_report_security_list__stats_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
@@ -653,8 +660,12 @@ if __name__ == '__main__':
             print '--plots_dir is compulsory when strategy is specified as graphgen'
             sys.exit(-1)
         # endif
-        graph_generator(sec_tick_d, res=res, period_list=ma_plist,
-                plots_dir=args.__dict__["plots_dir"], fig_ratio=args.__dict__["fig_ratio"], plot_period=args.__dict__["plot_period"])
+        graph_generator(
+                sec_tick_d,
+                res=res, 
+                plots_dir=args.__dict__["plots_dir"],
+                fig_ratio=args.__dict__["fig_ratio"],
+                plot_period=args.__dict__["plot_period"])
         rep_file = None
     elif strategy_type == 'suppresgen':
         rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
