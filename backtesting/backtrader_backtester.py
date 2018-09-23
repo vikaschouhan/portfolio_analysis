@@ -8,24 +8,13 @@ import matplotlib.pyplot as plt
 import argparse
 import os, sys
 import glob
+from   utils import *
 
 # import strategies
 import strategies
 
 # All available strategies
 avail_strategies = list(strategies.strategy_map.keys())
-
-def rp(path):
-    return os.path.expanduser(path)
-# enddef
-
-def cdir(d_path):
-    d_path = rp(d_path)
-    if not os.path.isdir(d_path):
-        os.mkdir(d_path)
-    # endif
-    return d_path
-# enddef
 
 class PandasDataCustom(btfeeds.PandasData):
     params = (
@@ -150,7 +139,7 @@ if __name__ == '__main__':
         cerebro.adddata(data)
  
         # no slippage
-        cerebro.broker = bt.brokers.BackBroker(slip_perc=0.0)
+        cerebro.broker = bt.brokers.BackBroker(slip_perc=0.003)
  
         # 20 000$ cash initialization
         cerebro.broker.setcash(20000.0)
@@ -159,19 +148,20 @@ if __name__ == '__main__':
         cerebro.addsizer(bt.sizers.FixedSize, stake=1)
  
         # Set the fees
-        #cerebro.broker.setcommission(commission=0.00005)
+        cerebro.broker.setcommission(commission=0.00005)
  
         # add analyzers
         #cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="mySharpe", timeframe=bt.TimeFrame.Minutes, compression=15, riskfreerate=0.061)
         #cerebro.addanalyzer(bt.analyzers.DrawDown, _name="myDrawDown")
         #cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myReturns')
+        cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
  
         # Print out the starting conditions
         #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
         start_portf_value = cerebro.broker.get_value()
  
         backtest = cerebro.run()
-        #thestrat = backtest[0]
+        thestrat = backtest[0]
 
         end_portf_value = cerebro.broker.get_value()
 
@@ -179,7 +169,11 @@ if __name__ == '__main__':
         #print('End_port_value = {}'.format(end_portf_value))
 
         #print('{},{}'.format(file_t, (end_portf_value - start_portf_value)*100.0/start_portf_value))
-        ret_dict[file_t] = (end_portf_value - start_portf_value)*100.0/start_portf_value
+        ret_dict[file_t] = {}
+        ret_dict[file_t]['rets'] = (end_portf_value - start_portf_value)*100.0/start_portf_value
+
+        sqn = thestrat.analyzers.sqn.get_analysis()
+        ret_dict[file_t]['sqn_score'] = to_precision(sqn['sqn'], 2)
 
         #print('Sharpe Ratio:', thestrat.analyzers.mySharpe.get_analysis())
         #print('Returns:', thestrat.analyzers.myReturns.get_analysis())
@@ -189,9 +183,9 @@ if __name__ == '__main__':
 
     print('Writing csv report to {}'.format(csv_file))
     with open(rp(csv_file), 'w') as f_out:
-        f_out.write('file,returns\n')
+        f_out.write('file,returns,sqn_score\n')
         for k_t in ret_dict:
-            f_out.write('{},{}\n'.format(k_t, ret_dict[k_t]))
+            f_out.write('{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], ret_dict[k_t]['sqn_score']))
         # endfor
     # endwith
 # enddef
