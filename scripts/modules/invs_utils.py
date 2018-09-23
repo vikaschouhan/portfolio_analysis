@@ -120,3 +120,11 @@ def parse_opt_args(arg_string):
 def dindx(data_frame, key, index):
     return data_frame.iloc[index][key]
 # enddef
+
+def dropzero(data_frame, columns=['c', 'o', 'h', 'l']):
+    col_logic = True
+    for col_t in columns:
+        col_logic = col_logic & (data_frame[col_t] == 0.0)
+    # endfor
+    return data_frame.drop(data_frame[col_logic].index)
+# enddef

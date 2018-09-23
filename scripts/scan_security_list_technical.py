@@ -404,7 +404,7 @@ def graph_generator(sec_dict, res='1W', plots_dir=None, plot_period=None, fig_ra
         if plots_dir:
             pic_name = plots_dir + g_graphs_dir + sec_dict[sec_code]['name'].replace(' ', '_') + '.png'
             invs_plot.gen_candlestick(d_this, period_list=period_list, title=sec_dict[sec_code]['name'],
-                      plot_period=plot_period, file_name=pic_name, fig_ratio=fig_ratio)
+                      plot_period=plot_period, file_name=pic_name, fig_ratio=fig_ratio, plot_volume=False)
         # endif
     # endfor
 

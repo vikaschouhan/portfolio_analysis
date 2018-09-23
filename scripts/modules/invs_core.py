@@ -22,6 +22,8 @@ from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
 
+from   invs_utils import dropzero
+
 #################################################################
 # GLOBALS
 headers = {'User-agent' : 'Mozilla/5.0'}
@@ -194,7 +196,7 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
     #print "{} : Fetched data. done !!".format(strdate_now())
     # Enclosed within try except block to print the data incase some exception happens
     try:
-        return g_pdbase(j_data)
+        return dropzero(g_pdbase(j_data))
     except Exception, e:
         # Debug info
         print '** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data)
