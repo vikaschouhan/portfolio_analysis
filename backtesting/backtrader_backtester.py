@@ -155,6 +155,8 @@ if __name__ == '__main__':
         #cerebro.addanalyzer(bt.analyzers.DrawDown, _name="myDrawDown")
         #cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myReturns')
         cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
+        cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='ta')
+        cerebro.addanalyzer(bt.analyzers.DrawDown, _name='ddown')
  
         # Print out the starting conditions
         #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -175,6 +177,12 @@ if __name__ == '__main__':
         sqn = thestrat.analyzers.sqn.get_analysis()
         ret_dict[file_t]['sqn_score'] = to_precision(sqn['sqn'], 2)
 
+        ta = thestrat.analyzers.ta.get_analysis()
+        ddown = thestrat.analyzers.ddown.get_analysis()
+        ret_dict[file_t]['max_drawdown'] =  ddown['max']['moneydown']
+        ret_dict[file_t]['max_drawdown_len'] = ddown['max']['len']
+        ret_dict[file_t]['net_profit'] = ta['pnl']['net']['total']
+
         #print('Sharpe Ratio:', thestrat.analyzers.mySharpe.get_analysis())
         #print('Returns:', thestrat.analyzers.myReturns.get_analysis())
 
@@ -183,9 +191,12 @@ if __name__ == '__main__':
 
     print('Writing csv report to {}'.format(csv_file))
     with open(rp(csv_file), 'w') as f_out:
-        f_out.write('file,returns,sqn_score\n')
+        f_out.write('file,returns,sqn_score, profit_per_drawdown,drawdown_len\n')
         for k_t in ret_dict:
-            f_out.write('{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], ret_dict[k_t]['sqn_score']))
+            sqn_score = ret_dict[k_t]['sqn_score']
+            profit_per_ddown = ret_dict[k_t]['net_profit']/ret_dict[k_t]['max_drawdown']
+            max_ddown_len = ret_dict[k_t]['max_drawdown_len']
+            f_out.write('{},{},{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], sqn_score, profit_per_ddown, max_ddown_len))
         # endfor
     # endwith
 # enddef
