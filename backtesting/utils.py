@@ -1,4 +1,6 @@
 import os
+import matplotlib.backends.backend_pdf
+import matplotlib.pyplot as plt
 
 def rp(path):
     return os.path.expanduser(path)
@@ -12,6 +14,33 @@ def cdir(d_path):
     return d_path
 # enddef
 
+def mkdir(path):
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    # endif
+# enddef
+
 def to_precision(x, precision=2):
     return int(x * 10**precision)/(10**precision * 1.0)
+# enddef
+
+def save_figs_to_pdf(pdf_file, figs, close_figs=True):
+    if isinstance(figs, dict):
+        figs = list(figs.values())
+    elif isinstance(figs, list):
+        pass
+    else:
+        figs = [figs]
+    # endif
+    # Pdf plot
+    pdf = matplotlib.backends.backend_pdf.PdfPages(rp(pdf_file))
+    for fig in figs:
+        pdf.savefig(fig)
+    # endfor
+    pdf.close()
+    if close_figs:
+        for fig in figs:
+            plt.close(fig)
+        # endfor
+    # endif
 # enddef

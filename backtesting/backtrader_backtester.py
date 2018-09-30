@@ -49,6 +49,9 @@ if __name__ == '__main__':
     parser.add_argument('--opt',       help='Optional strategy parameters in format (var1=val1,var2=val2 ..)',
                                                           type=str, default=None)
     parser.add_argument('--list_opts', help='Lists optional parameters.', action='store_true')
+    parser.add_argument('--slippage',  help='Slippage %%', type=float, default=0.003)
+    parser.add_argument('--pyfolio',   help='Enable pyfolio integration', action='store_true')
+    parser.add_argument('--outdir',    help='Output Directory.', type=str, default=None)
     args = parser.parse_args()
 
     if args.__dict__['list_opts']:
@@ -68,8 +71,6 @@ if __name__ == '__main__':
         print('--strategy is required. Available values = {}'.format(avail_strategies))
         sys.exit(-1)
     # endif
-
-    
 
     # Parse optional parameters
     if args.__dict__['opt']:
@@ -105,6 +106,16 @@ if __name__ == '__main__':
     csv_dir  = args.__dict__['csvdir']
     csv_dir  = cdir(csv_dir)
     csv_file = args.__dict__['repfile']
+    en_pyfolio = args.__dict__['pyfolio']
+    out_dir    = args.__dict__['outdir']
+
+    if en_pyfolio:
+        if out_dir == None:
+            print('--outdir should be valid when --pyfolio is passed.')
+            sys.exit(-1)
+        # endif
+        mkdir(out_dir)
+    # endif
 
     if csv_file == None:
         csv_file = '~/backtester_{}_'.format(strategy)
@@ -139,7 +150,7 @@ if __name__ == '__main__':
         cerebro.adddata(data)
  
         # no slippage
-        cerebro.broker = bt.brokers.BackBroker(slip_perc=0.003)
+        cerebro.broker = bt.brokers.BackBroker(slip_perc=args.__dict__['slippage'])
  
         # 20 000$ cash initialization
         cerebro.broker.setcash(20000.0)
@@ -157,6 +168,10 @@ if __name__ == '__main__':
         cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
         cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='ta')
         cerebro.addanalyzer(bt.analyzers.DrawDown, _name='ddown')
+
+        if en_pyfolio:
+            cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
+        # endif
  
         # Print out the starting conditions
         #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -183,10 +198,19 @@ if __name__ == '__main__':
         ret_dict[file_t]['max_drawdown_len'] = ddown['max']['len']
         ret_dict[file_t]['net_profit'] = ta['pnl']['net']['total']
 
-        #print('Sharpe Ratio:', thestrat.analyzers.mySharpe.get_analysis())
-        #print('Returns:', thestrat.analyzers.myReturns.get_analysis())
-
-        #cerebro.plot(style='candlestick', barup='green', bardown='red', volume=False)
+        # 
+        if en_pyfolio:
+            returns, positions, transactions, gross_lev = thestrat.analyzers.pyfolio.get_pf_items()
+            #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+            #import pyfolio_override as pfo
+            #report_file = '{}/{}.pdf'.format(out_dir, os.path.basename(file_t))
+            #pfo.create_full_tear_sheet(
+            #        returns,
+            #        positions=positions,
+            #        transactions=transactions,
+            #        save_file=report_file)
+            #        #live_start_date='2005-05-01',
+        # endif
     # endfor
 
     print('Writing csv report to {}'.format(csv_file))
