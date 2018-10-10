@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--opt',       help='Optional strategy parameters in format (var1=val1,var2=val2 ..)',
                                                           type=str, default=None)
     parser.add_argument('--list_opts', help='Lists optional parameters.', action='store_true')
-    parser.add_argument('--slippage',  help='Slippage %%', type=float, default=0.003)
+    parser.add_argument('--slippage',  help='Slippage %%', type=float, default=0.015)
     parser.add_argument('--pyfolio',   help='Enable pyfolio integration', action='store_true')
     parser.add_argument('--outdir',    help='Output Directory.', type=str, default=None)
     args = parser.parse_args()
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     ret_dict = {}
 
     for file_t in files:
-        print('Analysing {}'.format(file_t))
+        print('Analysing {}.......................................'.format(file_t), end='\r')
         pd_data  = pd.read_csv(file_t, index_col='t', parse_dates=['t'])
 
         # drop all rows with close=0,open=0,high=0,low=0
@@ -150,7 +150,7 @@ if __name__ == '__main__':
         cerebro.adddata(data)
  
         # no slippage
-        cerebro.broker = bt.brokers.BackBroker(slip_perc=args.__dict__['slippage'])
+        cerebro.broker.set_slippage_perc(args.__dict__['slippage'], slip_open=True, slip_match=True, slip_out=False)
  
         # 20 000$ cash initialization
         cerebro.broker.setcash(20000.0)
@@ -197,6 +197,8 @@ if __name__ == '__main__':
         ret_dict[file_t]['max_drawdown'] =  ddown['max']['moneydown']
         ret_dict[file_t]['max_drawdown_len'] = ddown['max']['len']
         ret_dict[file_t]['net_profit'] = ta['pnl']['net']['total']
+
+        #cerebro.plot(style='candlestick', barup='green', bardown='red', volume=False)
 
         # 
         if en_pyfolio:
