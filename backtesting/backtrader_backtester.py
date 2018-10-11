@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os, sys
 import glob
+import backtrader_override as bto
 from   utils import *
 
 # import strategies
@@ -109,13 +110,11 @@ if __name__ == '__main__':
     en_pyfolio = args.__dict__['pyfolio']
     out_dir    = args.__dict__['outdir']
 
-    if en_pyfolio:
-        if out_dir == None:
-            print('--outdir should be valid when --pyfolio is passed.')
-            sys.exit(-1)
-        # endif
-        mkdir(out_dir)
+    if out_dir == None:
+        print('--outdir should be valid.')
+        sys.exit(-1)
     # endif
+    mkdir(out_dir)
 
     if csv_file == None:
         csv_file = '~/backtester_{}_'.format(strategy)
@@ -143,7 +142,7 @@ if __name__ == '__main__':
         # prepare feed
         data = PandasDataCustom(dataname=pd_data)
 
-        cerebro = bt.Cerebro()
+        cerebro = bto.Cerebro()
         # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
         cerebro.addstrategy(strategy=strategies.strategy_map[strategy], **opt_dict)
  
@@ -198,7 +197,9 @@ if __name__ == '__main__':
         ret_dict[file_t]['max_drawdown_len'] = ddown['max']['len']
         ret_dict[file_t]['net_profit'] = ta['pnl']['net']['total']
 
-        #cerebro.plot(style='candlestick', barup='green', bardown='red', volume=False)
+        # Save plot to pdf
+        plot_figs = cerebro.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1)
+        save_figs_to_pdf('{}/{}.pdf'.format(out_dir, os.path.basename(file_t)), plot_figs[0])
 
         # 
         if en_pyfolio:
