@@ -199,7 +199,7 @@ if __name__ == '__main__':
 
         # Save plot to pdf
         plot_figs = cerebro.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1)
-        save_figs_to_pdf('{}/{}.pdf'.format(out_dir, os.path.basename(file_t)), plot_figs[0])
+        save_figs_to_pdf('{}/{}.pdf'.format(out_dir, os.path.basename(file_t)), plot_figs[0], width=48, height=27)
 
         # 
         if en_pyfolio:

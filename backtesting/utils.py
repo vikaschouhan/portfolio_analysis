@@ -24,7 +24,7 @@ def to_precision(x, precision=2):
     return int(x * 10**precision)/(10**precision * 1.0)
 # enddef
 
-def save_figs_to_pdf(pdf_file, figs, close_figs=True):
+def save_figs_to_pdf(pdf_file, figs, width=48, height=9, close_figs=True):
     if isinstance(figs, dict):
         figs = list(figs.values())
     elif isinstance(figs, list):
@@ -35,6 +35,7 @@ def save_figs_to_pdf(pdf_file, figs, close_figs=True):
     # Pdf plot
     pdf = matplotlib.backends.backend_pdf.PdfPages(rp(pdf_file))
     for fig in figs:
+        fig.set_size_inches(width, height)
         pdf.savefig(fig)
     # endfor
     pdf.close()
