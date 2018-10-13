@@ -145,75 +145,25 @@ if __name__ == '__main__':
         cerebro = bto.Cerebro()
         # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
         cerebro.addstrategy(strategy=strategies.strategy_map[strategy], **opt_dict)
- 
         cerebro.adddata(data)
  
         # no slippage
         cerebro.broker.set_slippage_perc(args.__dict__['slippage'], slip_open=True, slip_match=True, slip_out=False)
- 
         # 20 000$ cash initialization
         cerebro.broker.setcash(20000.0)
- 
         # Add a FixedSize sizer according to the stake
         cerebro.addsizer(bt.sizers.FixedSize, stake=1)
- 
         # Set the fees
         cerebro.broker.setcommission(commission=0.00005)
- 
-        # add analyzers
-        #cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="mySharpe", timeframe=bt.TimeFrame.Minutes, compression=15, riskfreerate=0.061)
-        #cerebro.addanalyzer(bt.analyzers.DrawDown, _name="myDrawDown")
-        #cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myReturns')
-        cerebro.addanalyzer(bt.analyzers.SQN, _name='sqn')
-        cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='ta')
-        cerebro.addanalyzer(bt.analyzers.DrawDown, _name='ddown')
 
-        if en_pyfolio:
-            cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-        # endif
- 
-        # Print out the starting conditions
-        #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
-        start_portf_value = cerebro.broker.get_value()
- 
+        # Run backtest
         backtest = cerebro.run()
-        thestrat = backtest[0]
 
-        end_portf_value = cerebro.broker.get_value()
+        # Get some stats
+        ret_dict[file_t] = cerebro.get_stats0()
 
-        #print('Start_port_value = {}'.format(start_portf_value))
-        #print('End_port_value = {}'.format(end_portf_value))
-
-        #print('{},{}'.format(file_t, (end_portf_value - start_portf_value)*100.0/start_portf_value))
-        ret_dict[file_t] = {}
-        ret_dict[file_t]['rets'] = (end_portf_value - start_portf_value)*100.0/start_portf_value
-
-        sqn = thestrat.analyzers.sqn.get_analysis()
-        ret_dict[file_t]['sqn_score'] = to_precision(sqn['sqn'], 2)
-
-        ta = thestrat.analyzers.ta.get_analysis()
-        ddown = thestrat.analyzers.ddown.get_analysis()
-        ret_dict[file_t]['max_drawdown'] =  ddown['max']['moneydown']
-        ret_dict[file_t]['max_drawdown_len'] = ddown['max']['len']
-        ret_dict[file_t]['net_profit'] = ta['pnl']['net']['total']
-
-        # Save plot to pdf
-        plot_figs = cerebro.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1)
-        save_figs_to_pdf('{}/{}.pdf'.format(out_dir, os.path.basename(file_t)), plot_figs[0], width=48, height=27)
-
-        # 
-        if en_pyfolio:
-            returns, positions, transactions, gross_lev = thestrat.analyzers.pyfolio.get_pf_items()
-            #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
-            #import pyfolio_override as pfo
-            #report_file = '{}/{}.pdf'.format(out_dir, os.path.basename(file_t))
-            #pfo.create_full_tear_sheet(
-            #        returns,
-            #        positions=positions,
-            #        transactions=transactions,
-            #        save_file=report_file)
-            #        #live_start_date='2005-05-01',
-        # endif
+        # Save plots
+        cerebro.save_plots('{}/{}.png'.format(out_dir, os.path.basename(file_t), width=48, height=27))
     # endfor
 
     print('Writing csv report to {}'.format(csv_file))

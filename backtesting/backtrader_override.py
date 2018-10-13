@@ -1,12 +1,51 @@
 import backtrader.cerebro
 import backtrader.plot as plot
+import backtrader as bt
 import pandas as pd
 import matplotlib.pyplot as plt
+from   utils import *
 
 class Cerebro(backtrader.Cerebro):
     def __init__(self, **kwargs):
+        self.norm_ref   = kwargs.pop('normalization_reference', 100)
+        self.en_pyfolio = kwargs.pop('enable_pyfolio', False)
+        self.riskfree   = kwargs.pop('risk_free_rate', 0.06)
+        self.en_debug   = kwargs.pop('enable_debug', False)
+
         super().__init__(**kwargs)
-        self.norm_ref = kwargs.get('normalization_reference', 100)
+        self.add_report_analyzers()
+    # enddef
+
+    # Enable debug
+    def enable_debug(self):
+        self.en_debug = True
+    # enddef
+    # For debug prints
+    def log(self, message):
+        if self.en_debug:
+            print(message)
+        # endif
+    # enddef
+
+    # Add analyzers according to options passed
+    def add_report_analyzers(self):
+        self.log('Adding SherpeRatio analyzer with risk free rate {}'.format(self.riskfree))
+        self.addanalyzer(bt.analyzers.SharpeRatio,
+                         _name="mySharpe",
+                         riskfreerate=self.riskfree,
+                         timeframe=bt.TimeFrame.Months)
+        self.log('Adding DrawDown analyzer')
+        self.addanalyzer(bt.analyzers.DrawDown, _name="myDrawDown")
+        self.log('Adding AnnualReturn analyzer')
+        self.addanalyzer(bt.analyzers.AnnualReturn, _name="myReturn")
+        self.log('Adding TradeAnalyzer.')
+        self.addanalyzer(bt.analyzers.TradeAnalyzer, _name="myTradeAnalysis")
+        self.log('Adding SQN analyzer.')
+        self.addanalyzer(bt.analyzers.SQN, _name="mySqn")
+        if self.en_pyfolio:
+            self.log('Adding pyFolio analyzer')
+            self.addanalyzer(bt.analyzers.PyFolio, _name='myPyFolio')
+        # endif
     # enddef
 
     ####################
@@ -38,6 +77,27 @@ class Cerebro(backtrader.Cerebro):
         # endfor
 
         return figs
+    # enddef
+
+    #######################################################
+    # Write a csv report with custom stats
+    def get_stats0(self):
+        strat = self.get_strategy_backtest()
+        end_portf_value = self.broker.get_value()
+        start_portf_value = self.broker.startingcash
+
+        ret_dict = {}
+        ret_dict['rets'] = (end_portf_value - start_portf_value)*100.0/start_portf_value
+
+        sqn = strat.analyzers.mySqn.get_analysis()
+        ret_dict['sqn_score'] = to_precision(sqn['sqn'], 2)
+
+        ta = strat.analyzers.myTradeAnalysis.get_analysis()
+        ddown = strat.analyzers.myDrawDown.get_analysis()
+        ret_dict['max_drawdown'] =  ddown['max']['moneydown']
+        ret_dict['max_drawdown_len'] = ddown['max']['len']
+        ret_dict['net_profit'] = ta['pnl']['net']['total']
+        return ret_dict
     # enddef
 
     ##############################################
@@ -110,5 +170,27 @@ class Cerebro(backtrader.Cerebro):
         ax.set_ylabel("return (%)")
         _ = returns.plot.bar(color=is_positive.map({True: 'green', False: 'red'}), ax=ax)
         return fig
+    # enddef
+    def create_pyfolio_tearsheet(self):
+        if self.en_pyfolio:
+            strat = self.get_strategy_backtest()
+            returns, positions, transactions, gross_lev = strat.analyzers.pyfolio.get_pf_items()
+            #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+            #import pyfolio_override as pfo
+            #report_file = '{}/{}.pdf'.format(out_dir, os.path.basename(file_t))
+            #pfo.create_full_tear_sheet(
+            #        returns,
+            #        positions=positions,
+            #        transactions=transactions,
+            #        save_file=report_file)
+            #        #live_start_date='2005-05-01',
+        # endif
+    # enddef
+
+    #####################################
+    # Save plots
+    def save_plots(self, plot_file, width=16, height=9):
+        plot_figs = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1)[0]
+        save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
 # endclass
