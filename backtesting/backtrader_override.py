@@ -133,6 +133,26 @@ class Cerebro(backtrader.Cerebro):
         _ = dotted.plot(kind='line', ax=ax, color='grey', linestyle=':')
         return fig
     # enddef
+    def get_equity_curve_pts(self):
+        st = self.get_strategy_backtest()
+        dt = st.data._dataname[st.data.params.open].index
+        profit_pts = np.nan_to_num(np.array(st.stats.trades.lines[0].array[:len(dt)]))
+        loss_pts = np.nan_to_num(np.array(st.stats.trades.lines[1].array[:len(dt)]))
+        final_pts = profit_pts + loss_pts
+        # Create incementing pts array
+        sum = np.cumsum(final_pts)
+        curve = pd.Series(data=sum, index=dt)
+        return curve
+    # enddef
+    def plot_equity_curve_pts(self):
+        curve = self.get_equity_curve_pts()
+        xrnge = [curve.index[0], curve.index[-1]]
+        fig, ax = plt.subplots(1, 1)
+        ax.set_ylabel('Pts')
+        ax.set_title('Equity curve')
+        _ = curve.plot(kind='line', ax=ax, color='green')
+        return fig
+    # enddef
     def _get_periodicity(self):
         curve = self.get_equity_curve()
         startdate = curve.index[0]
@@ -199,7 +219,7 @@ class Cerebro(backtrader.Cerebro):
         save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
     def save_equity_curve_plot(self, plot_file, width=16, height=9):
-        plot_figs = [self.plot_equity_curve()]
+        plot_figs = [self.plot_equity_curve_pts()]
         save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
 # endclass
