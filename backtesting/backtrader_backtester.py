@@ -50,7 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('--opt',       help='Optional strategy parameters in format (var1=val1,var2=val2 ..)',
                                                           type=str, default=None)
     parser.add_argument('--list_opts', help='Lists optional parameters.', action='store_true')
-    parser.add_argument('--slippage',  help='Slippage %%', type=float, default=0.015)
+    parser.add_argument('--slippage',  help='Slippage (fixed)', type=float, default=1.0)
     parser.add_argument('--pyfolio',   help='Enable pyfolio integration', action='store_true')
     parser.add_argument('--outdir',    help='Output Directory.', type=str, default=None)
     args = parser.parse_args()
@@ -151,7 +151,7 @@ if __name__ == '__main__':
         cerebro.adddata(data)
  
         # no slippage
-        cerebro.broker.set_slippage_perc(args.__dict__['slippage'], slip_open=True, slip_match=True, slip_out=False)
+        cerebro.broker.set_slippage_fixed(args.__dict__['slippage'], slip_open=True, slip_match=True, slip_out=False)
         # 20 000$ cash initialization
         cerebro.broker.setcash(20000.0)
         # Add a FixedSize sizer according to the stake
