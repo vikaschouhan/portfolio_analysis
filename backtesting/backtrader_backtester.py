@@ -130,10 +130,13 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
 
+    ##
     ret_dict = {}
+    file_ctr  = 1
+    num_files = len(files)
 
     for file_t in files:
-        print('Analysing {}.......................................'.format(file_t), end='\r')
+        print('[{:<4}:{:<4} Analysing {}.......................................'.format(file_ctr, num_files, file_t), end='\r')
         pd_data  = pd.read_csv(file_t, index_col='t', parse_dates=['t'])
 
         # drop all rows with close=0,open=0,high=0,low=0
@@ -163,7 +166,9 @@ if __name__ == '__main__':
         ret_dict[file_t] = cerebro.get_stats0()
 
         # Save plots
-        cerebro.save_plots('{}/{}.png'.format(out_dir, os.path.basename(file_t), width=48, height=27))
+        cerebro.save_equity_curve_plot('{}/{}.png'.format(out_dir, os.path.basename(file_t), width=48, height=27))
+
+        file_ctr += 1
     # endfor
 
     print('Writing csv report to {}'.format(csv_file))
