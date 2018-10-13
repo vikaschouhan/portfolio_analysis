@@ -129,7 +129,7 @@ class Cerebro(backtrader.Cerebro):
         ax.set_ylabel('Net Asset Value (start=100)')
         ax.set_title('Equity curve')
         _ = curve.plot(kind='line', ax=ax, color='green')
-        _ = buynhold.plot(kind='line', ax=ax, color='blue')
+        #_ = buynhold.plot(kind='line', ax=ax, color='blue')
         _ = dotted.plot(kind='line', ax=ax, color='grey', linestyle=':')
         return fig
     # enddef
@@ -190,7 +190,12 @@ class Cerebro(backtrader.Cerebro):
     #####################################
     # Save plots
     def save_plots(self, plot_file, width=16, height=9):
-        plot_figs = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1)[0]
+        main_figs    = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1)[0]
+        equity_fig   = self.plot_equity_curve()
+        ret_fig      = self.plot_return_curve()
+
+        # List of all figures to be plotted
+        plot_figs = [equity_fig, ret_fig] + main_figs
         save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
 # endclass
