@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import PIL.Image
 import pdf2image.pdf2image
 import numpy as np
+import sys
 
 def rp(path):
     return os.path.expanduser(path)
@@ -25,6 +26,15 @@ def mkdir(path):
 
 def to_precision(x, precision=2):
     return int(x * 10**precision)/(10**precision * 1.0)
+# enddef
+
+def append_paths(path_list):
+    if isinstance(path_list, str):
+        path_list = [path_list]
+    elif isinstance(path_list, dict):
+        path_list = list(path_list.keys())
+    # endif
+    sys.path = sys.path + path_list
 # enddef
 
 def save_figs_to_pdf(pdf_file, figs, width=48, height=9, close_figs=True):

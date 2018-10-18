@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os, sys
 import glob
+from   utils import *
 
 # import strategies
 import strategies
@@ -59,7 +60,14 @@ if __name__ == '__main__':
     parser.add_argument('--opt',       help='Optional strategy parameters in format (var1=val1,var2=val2 ..)',
                                                           type=str, default=None)
     parser.add_argument('--list_opts', help='Lists optional parameters.', action='store_true')
+    parser.add_argument('--python_path', 
+                                       help='External python module paths to be used.', type=str, default=None)
     args = parser.parse_args()
+
+    # Append paths
+    if args.__dict__['python_path']:
+        append_paths(args.__dict__['python_path'].split(','))
+    # endif
 
     if args.__dict__['list_opts']:
         if not args.__dict__['strategy']:

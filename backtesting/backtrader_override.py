@@ -144,7 +144,7 @@ class Cerebro(backtrader.Cerebro):
         curve = pd.Series(data=sum, index=dt)
         return curve
     # enddef
-    def plot_equity_curve_pts(self):
+    def plot_equity_curve_pts(self, ma_len=None):
         curve = self.get_equity_curve_pts()
         xrnge = [curve.index[0], curve.index[-1]]
         dotted = pd.Series(data=[0, 0], index=xrnge)
@@ -153,6 +153,10 @@ class Cerebro(backtrader.Cerebro):
         ax.set_title('Equity curve')
         _ = curve.plot(kind='line', ax=ax, color='green')
         _ = dotted.plot(kind='line', ax=ax, color='grey', linestyle=':')
+        if ma_len:
+            ma_curve = curve.ewm(span=ma_len, min_periods=ma_len).mean()
+            _ = ma_curve.plot(kind='line', ax=ax, color='blue', linestyle='-')
+        # endif
         return fig
     # enddef
     def _get_periodicity(self):
