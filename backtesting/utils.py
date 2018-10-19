@@ -5,6 +5,7 @@ import PIL.Image
 import pdf2image.pdf2image
 import numpy as np
 import sys
+import uuid
 
 def rp(path):
     return os.path.expanduser(path)
@@ -24,6 +25,10 @@ def mkdir(path):
     # endif
 # enddef
 
+def u4():
+    return str(uuid.uuid4())
+# enddef
+
 def to_precision(x, precision=2):
     return int(x * 10**precision)/(10**precision * 1.0)
 # enddef
@@ -35,6 +40,25 @@ def append_paths(path_list):
         path_list = list(path_list.keys())
     # endif
     sys.path = sys.path + path_list
+# enddef
+
+def populate_strategy_map(strategy_path_list):
+    import importlib.machinery
+    import strategies
+
+    inc_map = strategies.strategy_map
+    new_map = inc_map
+    # Get other maps as well
+    for path_t in strategy_path_list:
+        if os.path.isfile(path_t + '/__init__.py'):
+            sys.path.append(path_t)
+            module_name = u4()
+            module_t = importlib.machinery.SourceFileLoader(module_name, path_t + '/__init__.py').load_module()
+            new_map  = {**new_map, **module_t.strategy_map}
+        # endif
+    # endfor
+
+    return new_map
 # enddef
 
 def save_figs_to_pdf(pdf_file, figs, width=48, height=9, close_figs=True):

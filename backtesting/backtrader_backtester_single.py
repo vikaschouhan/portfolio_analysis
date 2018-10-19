@@ -10,12 +10,6 @@ import os, sys
 import glob
 from   utils import *
 
-# import strategies
-import strategies
-
-# All available strategies
-avail_strategies = list(strategies.strategy_map.keys())
-
 def rp(path):
     return os.path.expanduser(path)
 # enddef
@@ -66,16 +60,19 @@ if __name__ == '__main__':
 
     # Append paths
     if args.__dict__['python_path']:
-        append_paths(args.__dict__['python_path'].split(','))
+        strategy_map = populate_strategy_map(args.__dict__['python_path'].split(','))
+    else:
+        strategy_map = populate_strategy_map([])
     # endif
+    avail_strategies = list(strategy_map.keys())
 
     if args.__dict__['list_opts']:
         if not args.__dict__['strategy']:
             print('--strategy is required if --list_opts is passed. Available values = {}'.format(avail_strategies))
             sys.exit(-1)
         # endif
-        param_def = [ (x, strategies.strategy_map[args.__dict__['strategy']].params.__dict__[x]) \
-                for x in dir(strategies.strategy_map[args.__dict__['strategy']].params) \
+        param_def = [ (x, strategy_map[args.__dict__['strategy']].params.__dict__[x]) \
+                for x in dir(strategy_map[args.__dict__['strategy']].params) \
                 if (x[0] != '_') and (x not in ['isdefault', 'notdefault']) ]
 
         print('Parameters for {} = {}'.format(args.__dict__['strategy'], param_def))
