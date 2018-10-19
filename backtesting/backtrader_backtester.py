@@ -151,7 +151,7 @@ if __name__ == '__main__':
 
         cerebro = bto.Cerebro()
         # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
-        cerebro.addstrategy(strategy=strategies.strategy_map[strategy], **opt_dict)
+        cerebro.addstrategy(strategy=strategy_map[strategy], **opt_dict)
         cerebro.adddata(data)
  
         # no slippage
