@@ -54,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--opt',       help='Optional strategy parameters in format (var1=val1,var2=val2 ..)',
                                                           type=str, default=None)
     parser.add_argument('--list_opts', help='Lists optional parameters.', action='store_true')
+    parser.add_argument('--slippage',  help='Slippage (fixed)', type=float, default=1.0)
     parser.add_argument('--python_path', 
                                        help='External python module paths to be used.', type=str, default=None)
     args = parser.parse_args()
@@ -132,8 +133,8 @@ if __name__ == '__main__':
  
     cerebro.adddata(data)
  
-    # no slippage
-    cerebro.broker = bt.brokers.BackBroker(slip_perc=0.0)
+    # slippage
+    cerebro.broker.set_slippage_fixed(args.__dict__['slippage'], slip_open=True, slip_match=True, slip_out=False)
  
     # 20 000$ cash initialization
     cerebro.broker.setcash(20000.0)
