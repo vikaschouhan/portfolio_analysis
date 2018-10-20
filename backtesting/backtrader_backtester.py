@@ -140,7 +140,7 @@ if __name__ == '__main__':
     num_files = len(files)
 
     for file_t in files:
-        print('[{:<4}:{:<4} Analysing {}.......................................'.format(file_ctr, num_files, file_t), end='\r')
+        print('[{:<4}:{:<4}] Analysing {}.......................................'.format(file_ctr, num_files, file_t), end='\r')
         pd_data  = pd.read_csv(file_t, index_col='t', parse_dates=['t'])
 
         # drop all rows with close=0,open=0,high=0,low=0
