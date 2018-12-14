@@ -66,13 +66,21 @@ def populate_sym_list(invs_dict_file, sec_list):
         # Search
         if sec_code in nse_keys:
             sec_dict[sec_code] = {
-                                     'ticker' : nse_dict[sec_code][u'ticker'],
-                                     'name'   : nse_dict[sec_code][u'description'],
+                                     'ticker'    : nse_dict[sec_code][u'ticker'],
+                                     'name'      : nse_dict[sec_code][u'description'],
+                                     'exchange'  : nse_dict[sec_code][u'exchange'],
+                                     'full_name' : nse_dict[sec_code][u'full_name'],
+                                     'isin'      : nse_dict[sec_code][u'isin'],
+                                     'symbol'    : nse_dict[sec_code][u'symbol'],
                                  }
         elif sec_code in bse_keys:
             sec_dict[sec_code] = {
-                                     'ticker' : bse_dict[sec_code][u'ticker'],
-                                     'name'   : bse_dict[sec_code][u'description'],
+                                     'ticker'    : bse_dict[sec_code][u'ticker'],
+                                     'name'      : bse_dict[sec_code][u'description'],
+                                     'exchange'  : bse_dict[sec_code][u'exchange'],
+                                     'full_name' : bse_dict[sec_code][u'full_name'],
+                                     'isin'      : bse_dict[sec_code][u'isin'],
+                                     'symbol'    : bse_dict[sec_code][u'symbol'],
                                  }
         else:
             not_f_l.append(sec_this)
