@@ -22,8 +22,7 @@ from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
 
-from   invs_utils import dropzero, cfloat
-from   tabulate import tabulate
+from   invs_utils import dropzero, cfloat, vprint
 from   dateutil.relativedelta import relativedelta, TH
 
 #################################################################
@@ -287,7 +286,7 @@ def last_thu_str(month_incr=0):
     return '{}{}{}'.format(exp_day.day, mon_l[exp_day.month-1], exp_day.year)
 # enddef
     
-def option_table(symbol='NIFTY', month=0, instrument=None):
+def option_table(symbol='NIFTY', month=0, instrument=None, verbose=False):
     #url_this = 'https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?segmentLink=17&instrument=OPTIDX&symbol={}&date={}'
     url_this = 'https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbol={}&instrument={}&date={}&segmentLink=17&segmentLink=17'
     hdr_this = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -326,7 +325,7 @@ def option_table(symbol='NIFTY', month=0, instrument=None):
     # endif
 
     act_url  = url_this.format(symbol, instrument, last_thu_str(month))
-    print 'Fetching from {}'.format(act_url)
+    vprint('Fetching from {}'.format(act_url), verbose)
     req_this = urllib2.Request(act_url, headers=hdr_this)
     page     = urllib2.urlopen(req_this)
     s_this   = page.read()

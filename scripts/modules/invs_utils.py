@@ -132,8 +132,14 @@ def dropzero(data_frame, columns=['c', 'o', 'h', 'l']):
 # Cast to float
 def cfloat(x):
     try:
-        return float(int(x))
+        return float(x)
     except:
         return x
     # endtry
+# enddef
+
+def vprint(msg, verbose=True):
+    if verbose:
+        print(msg)
+    # endif
 # enddef

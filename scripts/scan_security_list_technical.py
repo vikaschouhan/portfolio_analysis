@@ -531,6 +531,49 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
     return csv_report_file
 # enddef
 
+def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
+    strategy_name   = 'optsuppresgen'
+    header_l        = ['Name', 'supp', 'res']
+    csv_rep_list    = []
+    ctr2            = 0
+    csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
+
+    print 'Running {} strategy.'.format(strategy_name)
+    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+
+    # Add header
+    csv_rep_list.append(header_l)
+
+    # Iterate over all security dict
+    for sec_code in sec_dict.keys():
+        logging.debug("{} : Running {} strategy over {}".format(ctr2, strategy_name, sec_code))
+        # Fetch option table
+        sec_name    = sec_dict[sec_code]['name']
+        sec_symbol  = sec_code
+        opt_table_t = invs_core.option_table(symbol=sec_symbol, instrument='OPTSTK')
+        supp_res_t  = invs_core.option_levels(opt_table_t)
+
+        # Print stats
+        sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
+        print '{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, supp_res_t['S1'], supp_res_t['R1'])
+
+        csv_rep_list.append([ sec_name, supp_res_t['S1'], supp_res_t['R1'] ])
+        ctr2 = ctr2 + 1
+    # endfor
+
+    # Write to csv file
+    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
+    print 'Writing report file to {}'.format(csv_report_file)
+    with open(os.path.expanduser(csv_report_file), 'w') as f_out:
+        csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for item_this in csv_rep_list:
+            csv_writer.writerow(item_this)
+        # endfor
+    # endwith
+
+    return csv_report_file
+# enddef
+
 # CSV report generator
 def run_csv_gen(sec_dict, res, plots_dir):
     ctr2 = 0
@@ -595,7 +638,7 @@ if __name__ == '__main__':
         dot_invs_py_exists = True
     # endif
 
-    strategy_l = ['scanner', 'statsgen', 'suppresgen', 'graphgen', 'csvgen']
+    strategy_l = ['scanner', 'statsgen', 'suppresgen', 'graphgen', 'csvgen', 'optsuppresgen']
 
     parser  = argparse.ArgumentParser()
     parser.add_argument("--invs",    help="Investing.com database file (populated by eq_scan_on_investing_dot_com.py)", type=str, default=None)
@@ -698,6 +741,11 @@ if __name__ == '__main__':
         print 'Running suppresgen...'
         rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file,
                      n_samples=args.__dict__["nsrsamples"], ema_period=args.__dict__["sr_period"])
+    elif strategy_type == 'optsuppresgen':
+        rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
+                      datetime.datetime.now().date().isoformat())
+        print 'Running optsuppresgen...'
+        rep_file = run_scanner_sec_supp_res_opt(sec_tick_d, rep_file=rep_file)
     elif strategy_type == 'csvgen':
         print 'Running csvgen...'
         if args.__dict__["plots_dir"] == None:
