@@ -138,6 +138,14 @@ def cfloat(x):
     # endtry
 # enddef
 
+def cint(x):
+    try:
+        return int(x)
+    except:
+        return x
+    # endtry
+# enddef
+
 def vprint(msg, verbose=True):
     if verbose:
         print(msg)

@@ -1,6 +1,7 @@
 import re
 from   colorama import Fore
 import sys
+from   invs_utils import cint
 
 # Function to populate sec csv file in mentioned format to symbol list
 def parse_security_file(sfile, ret_type):
@@ -75,9 +76,11 @@ def parse_security_file(sfile, ret_type):
                 # endif
                 s_arr = l_this.replace('\n', '').split(',')
                 s_code = s_arr[1].replace(' ', '')
+                s_lsize = cint(s_arr[2])
                 add_data({
                              'code' : s_code,
                              'name' : s_arr[0],
+                             'lsize': s_lsize, 
                          }, s_code)
             elif file_type == 'sym_name_list':
                 s_arr = l_this.replace('\n', '').split(',')

@@ -63,6 +63,7 @@ def populate_sym_list(invs_dict_file, sec_list):
     for sec_this in sec_list:
         sec_code = unicode(sec_this['code'], 'utf-8')
         sec_name = sec_this['name']
+        sec_lsize = sec_this['lsize'] if 'lsize' in sec_this else None
         # Search
         if sec_code in nse_keys:
             sec_dict[sec_code] = {
@@ -72,6 +73,7 @@ def populate_sym_list(invs_dict_file, sec_list):
                                      'full_name' : nse_dict[sec_code][u'full_name'],
                                      'isin'      : nse_dict[sec_code][u'isin'],
                                      'symbol'    : nse_dict[sec_code][u'symbol'],
+                                     'lot_size'  : sec_lsize,
                                  }
         elif sec_code in bse_keys:
             sec_dict[sec_code] = {
@@ -81,6 +83,7 @@ def populate_sym_list(invs_dict_file, sec_list):
                                      'full_name' : bse_dict[sec_code][u'full_name'],
                                      'isin'      : bse_dict[sec_code][u'isin'],
                                      'symbol'    : bse_dict[sec_code][u'symbol'],
+                                     'lot_size'  : sec_lsize,
                                  }
         else:
             not_f_l.append(sec_this)
@@ -533,7 +536,7 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
 
 def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
     strategy_name   = 'optsuppresgen'
-    header_l        = ['Name', 'supp', 'res', 'call_supp', 'call_res', 'put_supp', 'put_res']
+    header_l        = ['Name', 'supp', 'res', 'call_supp', 'call_res', 'put_supp', 'put_res', 'lot_size']
     csv_rep_list    = []
     ctr2            = 0
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
@@ -564,7 +567,7 @@ def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
         sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
         print '{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, supp_res_t['S1'], supp_res_t['R1'])
 
-        csv_rep_list.append([ sec_name, supp_t, res_t, call_supp_t, call_res_t, put_supp_t, put_res_t ])
+        csv_rep_list.append([ sec_name, supp_t, res_t, call_supp_t, call_res_t, put_supp_t, put_res_t, sec_dict[sec_code]['lot_size'] ])
         ctr2 = ctr2 + 1
     # endfor
 
