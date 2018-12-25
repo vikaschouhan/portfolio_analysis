@@ -21,17 +21,13 @@ if __name__ == '__main__':
         print('--symbol is mandatory.')
         sys.exit(-1)
     # endif
-    option_tbl_data, option_tbl_hdr = option_table(symbol=symbol, month=month, instrument=instr)
-    #print(option_tbl_data)
+
+    # This is a dataframe
+    option_tbl = option_table(symbol=symbol, month=month, instrument=instr)
     if outf:
         print('Saving in {}'.format(outf))
-        with open(outf, 'w') as f_out:
-            f_out.write(','.join([str(x) for x in option_tbl_hdr]) + '\n')
-            for item_t in option_tbl_data:
-                f_out.write(','.join([str(x) for x in item_t]) + '\n')
-            # endfor
-        # endwith
+        option_tbl.to_csv(outf)
     else:
-        print(tabulate(option_tbl_data, headers=option_tbl_hdr))
+        print(tabulate(option_tbl_data, headers='keys'))
     # endif
 # endif

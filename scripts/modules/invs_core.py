@@ -353,5 +353,13 @@ def option_table(symbol='NIFTY', month=0, instrument=None):
         new_tbl_l.append(d_l)
     # endfor
 
-    return new_tbl_l, header_m
+    # Form pandas dataframe
+    frame_t = pandas.DataFrame()
+    for h_indx_t in range(len(header_m)):
+        h_t = header_m[h_indx_t]
+        c_t = [item[h_indx_t] for item in new_tbl_l]
+        frame_t[h_t] = c_t
+    # endfor
+
+    return frame_t
 # enddef
