@@ -128,3 +128,12 @@ def dropzero(data_frame, columns=['c', 'o', 'h', 'l']):
     # endfor
     return data_frame.drop(data_frame[col_logic].index)
 # enddef
+
+# Cast to float
+def cfloat(x):
+    try:
+        return float(int(x))
+    except:
+        return x
+    # endtry
+# enddef

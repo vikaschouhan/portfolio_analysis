@@ -22,7 +22,7 @@ from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
 
-from   invs_utils import dropzero
+from   invs_utils import dropzero, cfloat
 from   tabulate import tabulate
 from   dateutil.relativedelta import relativedelta, TH
 
@@ -334,20 +334,12 @@ def option_table(symbol='NIFTY', month=0, instrument=None):
     tbl_l    = soup.findAll('table')
     tr_l     = tbl_l[2].findAll('tr')
 
-    def c_float(x):
-        try:
-            return float(int(x))
-        except:
-            return x
-        # endtry
-    # enddef
-    
     new_tbl_l = []
     for i in range(0, len(tr_l)):
         if i == 0 or i == 1 or i == (len(tr_l) - 1):
             continue
         # endif
-        d_l = [ c_float(x.text.strip('\r\n\t ').replace(',', '')) for x in tr_l[i].findAll('td')]
+        d_l = [ cfloat(x.text.strip('\r\n\t ').replace(',', '')) for x in tr_l[i].findAll('td')]
         # First and last columns are junk
         d_l = d_l[1:-1]
         new_tbl_l.append(d_l)
@@ -364,4 +356,14 @@ def option_table(symbol='NIFTY', month=0, instrument=None):
     frame_t.replace('-', np.nan, inplace=True)
 
     return frame_t
+# enddef
+
+# Get major support and resistance levels from option chain
+def option_levels(option_table):
+    new_table = option_table.set_index('Strike_Price')
+    # Get strike prices for highest call OI and put OI
+    resistance = cfloat(new_table.loc[new_table['Call_OI'] == new_table['Call_OI'].max()].index[0])
+    support = cfloat(new_table.loc[new_table['Put_OI'] == new_table['Put_OI'].max()].index[0])
+
+    return {'R1' : resistance, 'S1' : support}
 # enddef
