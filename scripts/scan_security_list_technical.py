@@ -533,7 +533,7 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
 
 def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
     strategy_name   = 'optsuppresgen'
-    header_l        = ['Name', 'supp', 'res']
+    header_l        = ['Name', 'supp', 'res', 'call_supp', 'call_res', 'put_supp', 'put_res']
     csv_rep_list    = []
     ctr2            = 0
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
@@ -552,12 +552,19 @@ def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
         sec_symbol  = sec_code
         opt_table_t = invs_core.option_table(symbol=sec_symbol, instrument='OPTSTK')
         supp_res_t  = invs_core.option_levels(opt_table_t)
+        supp_t      = supp_res_t['S1']
+        res_t       = supp_res_t['R1']
+        new_table_t = opt_table_t.set_index('Strike_Price')
+        call_res_t  = new_table_t.ix[res_t]['Call_LTP']
+        put_res_t   = new_table_t.ix[res_t]['Put_LTP']
+        call_supp_t = new_table_t.ix[supp_t]['Call_LTP']
+        put_supp_t  = new_table_t.ix[supp_t]['Put_LTP']
 
         # Print stats
         sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
         print '{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, supp_res_t['S1'], supp_res_t['R1'])
 
-        csv_rep_list.append([ sec_name, supp_res_t['S1'], supp_res_t['R1'] ])
+        csv_rep_list.append([ sec_name, supp_t, res_t, call_supp_t, call_res_t, put_supp_t, put_res_t ])
         ctr2 = ctr2 + 1
     # endfor
 
