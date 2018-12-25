@@ -360,6 +360,8 @@ def option_table(symbol='NIFTY', month=0, instrument=None):
         c_t = [item[h_indx_t] for item in new_tbl_l]
         frame_t[h_t] = c_t
     # endfor
+    # Replace all empty cells by nan
+    frame_t.replace('-', np.nan, inplace=True)
 
     return frame_t
 # enddef

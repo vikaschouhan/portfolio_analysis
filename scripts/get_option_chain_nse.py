@@ -28,6 +28,6 @@ if __name__ == '__main__':
         print('Saving in {}'.format(outf))
         option_tbl.to_csv(outf)
     else:
-        print(tabulate(option_tbl_data, headers='keys'))
+        print(tabulate(option_tbl, headers='keys'))
     # endif
 # endif
