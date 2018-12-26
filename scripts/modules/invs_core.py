@@ -379,3 +379,54 @@ def option_levels(option_table):
 
     return {'R1' : resistance, 'S1' : support}
 # enddef
+
+# Options historical data
+def option_historical(symbol, option_type, month=0, instrument=None, verbose=False, date_range='24month'):
+    url_this = 'https://nseindia.com/products/dynaContent/common/productsSymbolMapping.jsp?instrumentType={}&symbol={}&expiryDate={}&optionType={}&strikePrice=&dateRange={}&fromDate=&toDate=&segmentLink=9&symbolCount='
+    if option_type not in ['PE', 'CE']:
+        print('option_type can be either PE or CE')
+        sys.exit(-1)
+    # endif
+    # Decide upon instrument type
+    if instrument == None:
+        if symbol in ['NIFTY']:
+            print('Using OPTIDX for {}.'.format(symbol))
+            instrument = 'OPTIDX'
+        else:
+            print('Using OPTSTK for {}.'.format(symbol))
+            instrument = 'OPTSTK'
+        # endif
+    else:
+        if instrument not in ['OPTIDX', 'OPTSTK']:
+            print('Invalid instrument type passed {}'.format(instrument))
+            sys.exit(-1)
+        # endif
+    # endif
+    exp_date = last_thu_str(month, historical=True)
+    url_act = url_this.format(instrument, symbol, exp_date, option_type, date_range)
+
+    vprint('Fetching from {}'.format(url_act), verbose)
+    session = requests.Session()
+    headers = {'Referer' : 'https://nseindia.com/products/content/derivatives/equities/historical_fo.htm' ,
+               'Accept-Encoding' : 'gzip, deflate, br',
+               'User-Agent' : 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:64.0) Gecko/20100101 Firefox/64.0'}
+    resp_t  = session.get(url_act, headers=headers)
+    soup_t  = BeautifulSoup(resp_t.text, 'lxml')
+    csv_ele = soup_t.find('div', {'id' : 'csvContentDiv'})
+    csv_ele_t = csv_ele.text.replace('"', '')
+
+    if csv_ele_t == '':
+        return None
+    # endif
+    data_t = [x.split(',') for x in csv_ele_t.split(':')]
+    # Check if last element is not the same size as first one. If not remove it
+    data_t = data_t[:-2] if len(data_t[-1]) != len(data_t[0]) else data_t
+
+    # Convert to dataframe
+    dataframe_t = pandas.DataFrame()
+    for i in range(len(data_t[0])):
+        dataframe_t[data_t[0][i]] = [x[i] for x in data_t[1:]]
+    # endfor
+
+    return dataframe_t
+# enddef
