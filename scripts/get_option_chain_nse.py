@@ -13,12 +13,14 @@ if __name__ == '__main__':
     parser.add_argument('--instrument',  help='Instrument type (OPTSTK for stock, OPTIDX for indices).', type=int, default=None)
     parser.add_argument('--outfile',     help='''Output file (csv).If none passed table is displayed on console.
                                                Use --outfile=open to open with default application''', type=str, default=None)
+    parser.add_argument('--verbose',     help='Verbose mode', action='store_true')
     args    = parser.parse_args()
 
     symbol = args.__dict__['symbol']
     month  = args.__dict__['month']
     instr  = args.__dict__['instrument']
     outf   = args.__dict__['outfile']
+    debug  = args.__dict__['verbose']
 
     if symbol == None:
         print('--symbol is mandatory.')
@@ -26,7 +28,7 @@ if __name__ == '__main__':
     # endif
 
     # This is a dataframe
-    option_tbl = option_table(symbol=symbol, month=month, instrument=instr)
+    option_tbl = option_table(symbol=symbol, month=month, instrument=instr, verbose=debug)
 
     if outf == 'open':
         tmp_file = '/tmp/____tmp.csv'

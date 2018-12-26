@@ -280,9 +280,22 @@ def last_thu(month_incr=0):
     return t
 # enddef
 
-def last_thu_str(month_incr=0):
+# Miniaturized version of last_thu
+def last_thu2(month_incr=0):
+    return  datetime.date.today() + relativedelta(day=1, months=+1, days=-1) + relativedelta(months=month_incr) + relativedelta(weekday=TH(-1))
+# enddef
+
+def last_thu_opt_tbl(month_incr=0):
+    if month_incr > 2 or month_incr < 0:
+        print('month_incr should be between 0 to 2.')
+        sys.exit(-1)
+    # endif
+    return last_thu2(month_incr)
+# enddef
+
+def last_thu_str(month_incr=0, historical=False):
     mon_l   = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-    exp_day = last_thu(month_incr)
+    exp_day = last_thu2(month_incr) if historical else last_thu_opt_tbl(month_incr)
     return '{}{}{}'.format(exp_day.day, mon_l[exp_day.month-1], exp_day.year)
 # enddef
     
