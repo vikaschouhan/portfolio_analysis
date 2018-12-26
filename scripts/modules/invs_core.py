@@ -402,7 +402,7 @@ def option_historical(symbol, option_type, month=0, instrument=None, verbose=Fal
             sys.exit(-1)
         # endif
     # endif
-    exp_date = last_thu_str(month, historical=True)
+    exp_date = last_thu2(month).strftime('%d-%m-%Y')
     url_act = url_this.format(instrument, symbol, exp_date, option_type, date_range)
 
     vprint('Fetching from {}'.format(url_act), verbose)
