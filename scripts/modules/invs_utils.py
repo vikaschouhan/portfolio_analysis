@@ -40,7 +40,7 @@ def g_rmean_f(**kwargs):
 def s_mode(f_frame, mode='c'):
     m_list = ['o', 'c', 'h', 'l', 'hl2', 'hlc3', 'ohlc4']
     if not mode in m_list:
-        print "mode should be one of {}".format(m_list)
+        print("mode should be one of {}".format(m_list))
         sys.exit(-1)
     # endif
 
@@ -150,4 +150,12 @@ def vprint(msg, verbose=True):
     if verbose:
         print(msg)
     # endif
+# enddef
+
+def cdir(d_path):
+    d_path = rp(d_path)
+    if not os.path.isdir(d_path):
+        os.mkdir(d_path)
+    # endif
+    return d_path
 # enddef
