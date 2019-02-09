@@ -1,3 +1,5 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+#
 import math
 import csv
 import contextlib, warnings
@@ -162,3 +164,4 @@ def cdir(d_path):
 
 def precision(x, n=2):
     return int(x * 10.0**n)/(10.0**n)
+# enddef

@@ -1,3 +1,5 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+#
 from   sklearn.cluster import MeanShift, estimate_bandwidth
 import numpy as np
 import pandas as pd
