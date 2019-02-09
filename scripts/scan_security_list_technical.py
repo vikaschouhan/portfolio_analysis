@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author    : Vikas Chouhan (presentisgood@gmail.com)
 # Copyright : Vikas Chouhan (presentisgood@gmail.com)
 # License   : GPLv2
@@ -55,13 +55,13 @@ def populate_sym_list(invs_dict_file, sec_list):
 
     # code list
     nse_keys = nse_dict.keys()
-    bse_keys = [unicode(x) for x in bse_dict.keys()]
+    bse_keys = [x for x in bse_dict.keys()]
 
     # Search for tickers
     sec_dict = {}
     not_f_l  = []
     for sec_this in sec_list:
-        sec_code = unicode(sec_this['code'], 'utf-8')
+        sec_code = sec_this['code']
         sec_name = sec_this['name']
         sec_lsize = sec_this['lsize'] if 'lsize' in sec_this else None
         # Search
@@ -89,7 +89,7 @@ def populate_sym_list(invs_dict_file, sec_list):
             not_f_l.append(sec_this)
         # endif
     # endfor
-    print Back.RED + '{} not found in investing.com db'.format(not_f_l) + Back.RESET
+    print(Back.RED + '{} not found in investing.com db'.format(not_f_l) + Back.RESET)
 
     return sec_dict
 # enddef
@@ -123,12 +123,10 @@ def run_stretegy_over_all_securities(sec_dict,
         # Other things
         plots_dir = os.path.expanduser(plots_dir)
         csv_report_file = plots_dir + '/' + os.path.basename(csv_report_file)
-        if not os.path.isdir(plots_dir):
-            print "{} doesn't exist. Creating it now !!".format(plots_dir)
-            os.makedirs(plots_dir)
-            os.makedirs(plots_dir + g_graphs_dir)
-        # endif
-        print 'Plots dir = {}'.format(plots_dir)
+        # Make dirs
+        os.makedirs(plots_dir, exist_ok=True)
+        os.makedirs(plots_dir + g_graphs_dir, exist_ok=True)
+        print('Plots dir = {}'.format(plots_dir))
     # endif
 
     # Start scan
@@ -147,9 +145,9 @@ def run_stretegy_over_all_securities(sec_dict,
         period_list = [fast_period, slow_period]
         period_list = period_list if opt_period == None else period_list + [opt_period]
 
-        print 'Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list)
-        print Fore.MAGENTA + 'Peak to trough percentage has meaning only when trend is down to up !!' + Fore.RESET
-        print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+        print('Running {} strategy using lag={} & period_list={}'.format(strategy_name, lag, period_list))
+        print(Fore.MAGENTA + 'Peak to trough percentage has meaning only when trend is down to up !!' + Fore.RESET)
+        print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
         # Iterate over all security dict
         for sec_code in sec_dict.keys():
@@ -243,8 +241,8 @@ def run_stretegy_over_all_securities(sec_dict,
         rsi_period = get_arg(opt_args, 'rsi_period', 14)
         sup_lperiod = get_arg(opt_args, 'supertrend_lookback_period', 100)
 
-        print 'Running {} strategy using lag={}'.format(strategy_name, lag)
-        print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+        print('Running {} strategy using lag={}'.format(strategy_name, lag))
+        print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
         # Iterate over all security dict
         for sec_code in sec_dict.keys():
@@ -275,7 +273,7 @@ def run_stretegy_over_all_securities(sec_dict,
 
             logic = (dindx(d_new, 'SuperTrend', -1) < dindx(d_new, 'c', -1)) and (dindx(d_new, 'RSI', -1) > 60)
             if logic:
-                print '[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code)
+                print('[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code))
                 ctr2 = ctr2 + 1
             else:
                 ctr2_f = ctr2_f + 1
@@ -303,8 +301,8 @@ def run_stretegy_over_all_securities(sec_dict,
         rsi_period = get_arg(opt_args, 'rsi_period', 14)
         sup_lperiod = get_arg(opt_args, 'supertrend_lookback_period', 100)
 
-        print 'Running {} strategy using lag={}'.format(strategy_name, lag)
-        print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+        print('Running {} strategy using lag={}'.format(strategy_name, lag))
+        print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
         # Iterate over all security dict
         for sec_code in sec_dict.keys():
@@ -335,7 +333,7 @@ def run_stretegy_over_all_securities(sec_dict,
 
             logic = (dindx(d_new, 'SuperTrend', -1) > dindx(d_new, 'c', -1)) and (dindx(d_new, 'RSI', -1) < 40)
             if logic:
-                print '[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code)
+                print('[{:<3}/{:<3}]. {}'.format(ctr2, ctr2_f, sec_code))
                 ctr2 = ctr2 + 1
             else:
                 ctr2_f = ctr2_f + 1
@@ -355,13 +353,13 @@ def run_stretegy_over_all_securities(sec_dict,
             # endif
         # endfor
     else:
-        print "Strategy : {}, not implemented yet !!".format(strategy_name)
+        print("Strategy : {}, not implemented yet !!".format(strategy_name))
         return
     # endif
 
     # Write to csv file
-    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
-    print 'Writing report file to {}'.format(csv_report_file)
+    print(Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET)
+    print('Writing report file to {}'.format(csv_report_file))
     with open(os.path.expanduser(csv_report_file), 'w') as f_out:
         csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for item_this in csv_rep_list:
@@ -381,11 +379,11 @@ def graph_generator(sec_dict, res='1W', plots_dir=None, plot_period=None, fig_ra
         # Other things
         plots_dir = os.path.expanduser(plots_dir)
         if not os.path.isdir(plots_dir):
-            print "{} doesn't exist. Creating it now !!".format(plots_dir)
+            print("{} doesn't exist. Creating it now !!".format(plots_dir))
             os.makedirs(plots_dir)
             os.makedirs(plots_dir + g_graphs_dir)
         # endif
-        print 'Plots dir = {}'.format(plots_dir)
+        print('Plots dir = {}'.format(plots_dir))
     # endif
 
     period_list = []
@@ -393,8 +391,8 @@ def graph_generator(sec_dict, res='1W', plots_dir=None, plot_period=None, fig_ra
     period_list = period_list + [opt_args['ema_period1']] if 'ema_period1' in opt_args else period_list
     period_list = period_list + [opt_args['ema_period2']] if 'ema_period2' in opt_args else period_list
 
-    print 'Running graph_generator strategy'
-    print Fore.GREEN + '-----------------------------------------------------' + Fore.RESET
+    print('Running graph_generator strategy')
+    print(Fore.GREEN + '-----------------------------------------------------' + Fore.RESET)
 
     # Iterate over all security dict
     for sec_code in sec_dict.keys():
@@ -419,7 +417,7 @@ def graph_generator(sec_dict, res='1W', plots_dir=None, plot_period=None, fig_ra
         # endif
     # endfor
 
-    print Fore.GREEN + '-----------------------------------------------------' + Fore.RESET
+    print(Fore.GREEN + '-----------------------------------------------------' + Fore.RESET)
 # enddef
 
 # F&o Stats generator
@@ -430,8 +428,8 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
     header_l        = ['Name', 'price_spike(nearness)', 'price_spike2(fluctuation)', 'vol_spike']
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
 
-    print 'Running {} strategy.'.format(strategy_name)
-    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+    print('Running {} strategy.'.format(strategy_name))
+    print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
     # Add header
     csv_rep_list.append(header_l)
@@ -462,15 +460,15 @@ def run_scanner_sec_stats(sec_dict, res='1m', rep_file=None):
 
         # Print stats
         sec_name_c = Fore.GREEN + sec_name + Fore.RESET
-        print '{}. {:<50}, price_spike={}, price_spike2={}, vol_spike={}'.format(ctr2, sec_name_c, dhlc_m, dhlc_m2, dhlc_r02)
+        print('{}. {:<50}, price_spike={}, price_spike2={}, vol_spike={}'.format(ctr2, sec_name_c, dhlc_m, dhlc_m2, dhlc_r02))
 
         csv_rep_list.append([ sec_name, dhlc_m, dhlc_m2, dhlc_r02 ])
         ctr2 = ctr2 + 1
     # endfor
 
     # Write to csv file
-    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
-    print 'Writing report file to {}'.format(csv_report_file)
+    print(Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET)
+    print('Writing report file to {}'.format(csv_report_file))
     with open(os.path.expanduser(csv_report_file), 'w') as f_out:
         csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for item_this in csv_rep_list:
@@ -489,10 +487,10 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
     header_l        = ['Name', 'supp_res_v']
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
 
-    print 'Running {} strategy.'.format(strategy_name)
-    print 'ema_period = {}'.format(ema_period)
-    print 'n_samples  = {}'.format(n_samples)
-    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+    print('Running {} strategy.'.format(strategy_name))
+    print('ema_period = {}'.format(ema_period))
+    print('n_samples  = {}'.format(n_samples))
+    print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
     # Add header
     csv_rep_list.append(header_l)
@@ -512,9 +510,9 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
 
         # Print stats
         sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
-        print '{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, sr_mean, sr_med)
+        print('{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, sr_mean, sr_med))
         if disp_levels:
-            print '** Levels : {}'.format(Fore.YELLOW + ','.join(['{0:.2f}'.format(x) for x in sr_list.tolist()]) + Fore.RESET)
+            print('** Levels : {}'.format(Fore.YELLOW + ','.join(['{0:.2f}'.format(x) for x in sr_list.tolist()]) + Fore.RESET))
         # endif
 
         csv_rep_list.append([ sec_name, sr_mean ])
@@ -522,8 +520,8 @@ def run_scanner_sec_supp_res(sec_dict, res='1m', rep_file=None, disp_levels=True
     # endfor
 
     # Write to csv file
-    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
-    print 'Writing report file to {}'.format(csv_report_file)
+    print(Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET)
+    print('Writing report file to {}'.format(csv_report_file))
     with open(os.path.expanduser(csv_report_file), 'w') as f_out:
         csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for item_this in csv_rep_list:
@@ -541,8 +539,8 @@ def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
     ctr2            = 0
     csv_report_file = '~/csv_report_stats_{}.csv'.format(datetime.datetime.now().date().isoformat()) if rep_file == None else rep_file
 
-    print 'Running {} strategy.'.format(strategy_name)
-    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+    print('Running {} strategy.'.format(strategy_name))
+    print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
     # Add header
     csv_rep_list.append(header_l)
@@ -565,15 +563,15 @@ def run_scanner_sec_supp_res_opt(sec_dict, rep_file):
 
         # Print stats
         sec_name_c = Fore.MAGENTA + sec_name + Fore.RESET
-        print '{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, supp_res_t['S1'], supp_res_t['R1'])
+        print('{}. {:<50}, suppres={:.2f}-{:.2f}'.format(ctr2, sec_name_c, supp_res_t['S1'], supp_res_t['R1']))
 
         csv_rep_list.append([ sec_name, supp_t, res_t, call_supp_t, call_res_t, put_supp_t, put_res_t, sec_dict[sec_code]['lot_size'] ])
         ctr2 = ctr2 + 1
     # endfor
 
     # Write to csv file
-    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
-    print 'Writing report file to {}'.format(csv_report_file)
+    print(Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET)
+    print('Writing report file to {}'.format(csv_report_file))
     with open(os.path.expanduser(csv_report_file), 'w') as f_out:
         csv_writer = csv.writer(f_out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for item_this in csv_rep_list:
@@ -594,17 +592,17 @@ def run_csv_gen(sec_dict, res, plots_dir):
         # Other things
         plots_dir = os.path.expanduser(plots_dir)
         if not os.path.isdir(plots_dir):
-            print "{} doesn't exist. Creating it now !!".format(plots_dir)
+            print("{} doesn't exist. Creating it now !!".format(plots_dir))
             os.makedirs(plots_dir)
         # endif
-        print 'Plots dir = {}'.format(plots_dir)
+        print('Plots dir = {}'.format(plots_dir))
     else:
-        print 'plots_dir cannot be None'
+        print('plots_dir cannot be None')
         sys.exit(-1)
     # endif
 
-    print 'Running {} strategy.'.format(strategy_name)
-    print Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET
+    print('Running {} strategy.'.format(strategy_name))
+    print(Fore.GREEN + '--------------------- GENERATING REPORT --------------------------------' + Fore.RESET)
 
     # Iterate over all security dict
     for sec_code in sec_dict.keys():
@@ -623,14 +621,14 @@ def run_csv_gen(sec_dict, res, plots_dir):
 
         # save to CSV file
         csv_file_this = plots_dir + '/{}_{}.csv'.format(sec_name.replace(' ', '_'), res)
-        print '{}. CSV Report for {}'.format(ctr2, Fore.MAGENTA + sec_name + Fore.RESET)
+        print('{}. CSV Report for {}'.format(ctr2, Fore.MAGENTA + sec_name + Fore.RESET))
         d_this.to_csv(csv_file_this)
 
         ctr2 = ctr2 + 1
     # endfor
 
     # Write to csv file
-    print Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET
+    print(Fore.GREEN + '--------------------- REPORT END --------------------------------' + Fore.RESET)
 # enddef
 
 #########################################################
@@ -670,27 +668,27 @@ if __name__ == '__main__':
 
     if not args.__dict__["invs"]:
         if dot_invs_py_exists:
-            print 'Using {} as Investing.com database file.'.format(dot_invs_py)
+            print('Using {} as Investing.com database file.'.format(dot_invs_py))
             invs_db_file = dot_invs_py
         else:
-            print "--invs is required !!"
+            print("--invs is required !!")
             sys.exit(-1)
         # endif
     else:
-        print 'Using {} as Investing.com database file.'.format(args.__dict__["invs"])
+        print('Using {} as Investing.com database file.'.format(args.__dict__["invs"]))
         invs_db_file = args.__dict__["invs"]
 
         # Copy the passed file to dot_invs_py
-        print 'Copying {} to {} ..'.format(invs_db_file, dot_invs_py)
+        print('Copying {} to {} ..'.format(invs_db_file, dot_invs_py))
         shutil.copyfile(os.path.expanduser(invs_db_file), os.path.expanduser(dot_invs_py))
     # endif
     if not args.__dict__["sfile"]:
-        print "--sfile is required !! It should be one of supported types : {}".format(invs_parsers.populate_sec_list(None))
+        print("--sfile is required !! It should be one of supported types : {}".format(invs_parsers.populate_sec_list(None)))
         sys.exit(-1)
     # endif
 
     if args.__dict__["strategy"] not in strategy_l:
-        print '--strategy should be one of following : {}'.format(strategy_l)
+        print('--strategy should be one of following : {}'.format(strategy_l))
         sys.exit(-1)
     # endif
     strategy_type = args.__dict__["strategy"]
@@ -709,13 +707,13 @@ if __name__ == '__main__':
     # Get security list from screener.in using default screen_no=17942
     sec_list   = invs_parsers.populate_sec_list(sfile=sec_file)
 
-    print 'Found {} securities.'.format(len(sec_list))
+    print('Found {} securities.'.format(len(sec_list)))
     sec_tick_d = populate_sym_list(invs_db_f, sec_list)
-    print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
+    print('Found {} securities in investing_com database.'.format(len(sec_tick_d)))
 
     # Run strategy function
     if strategy_type == 'scanner':
-        print 'Running scanner...'
+        print('Running scanner...')
         rep_file = '~/csv_report_security_list_{}_{}_res{}_lag{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat(), res, ma_lag)
         rep_file = run_stretegy_over_all_securities(
@@ -731,11 +729,11 @@ if __name__ == '__main__':
     elif strategy_type == 'statsgen':
         rep_file = '~/csv_report_security_list__stats_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
-        print 'Running statsgen...'
+        print('Running statsgen...')
         rep_file = run_scanner_sec_stats(sec_tick_d, res=res, rep_file=rep_file)
     elif strategy_type == 'graphgen':
         if args.__dict__["plots_dir"] == None:
-            print '--plots_dir is compulsory when strategy is specified as graphgen'
+            print('--plots_dir is compulsory when strategy is specified as graphgen')
             sys.exit(-1)
         # endif
         graph_generator(
@@ -748,24 +746,24 @@ if __name__ == '__main__':
     elif strategy_type == 'suppresgen':
         rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
-        print 'Running suppresgen...'
+        print('Running suppresgen...')
         rep_file = run_scanner_sec_supp_res(sec_tick_d, res=res, rep_file=rep_file,
                      n_samples=args.__dict__["nsrsamples"], ema_period=args.__dict__["sr_period"])
     elif strategy_type == 'optsuppresgen':
         rep_file = '~/csv_report_security_list__suppres_{}_{}.csv'.format(os.path.basename(sec_file).split('.')[0], 
                       datetime.datetime.now().date().isoformat())
-        print 'Running optsuppresgen...'
+        print('Running optsuppresgen...')
         rep_file = run_scanner_sec_supp_res_opt(sec_tick_d, rep_file=rep_file)
     elif strategy_type == 'csvgen':
-        print 'Running csvgen...'
+        print('Running csvgen...')
         if args.__dict__["plots_dir"] == None:
-            print '--plots_dir is required for this.'
+            print('--plots_dir is required for this.')
             sys.exit(-1)
         # endif
         run_csv_gen(sec_tick_d, res=res, plots_dir=args.__dict__["plots_dir"])
         rep_file = None
     else:
-        print 'No valid strategy found !!'
+        print('No valid strategy found !!')
         sys.exit(-1)
     # endif
 

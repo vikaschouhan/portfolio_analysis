@@ -1,14 +1,14 @@
 from   sklearn.cluster import MeanShift, estimate_bandwidth
 import numpy as np
 import pandas as pd
-import invs_utils
+from   .invs_utils import d_ema, s_mode
 
 # Support resistance lines
 def supp_res(j_data, n_samples=200, mode='c', ema_period=None):
     if ema_period:
-        d_n = invs_utils.d_ema(j_data, ema_period, mode=mode)
+        d_n = d_ema(j_data, ema_period, mode=mode)
     else:
-        d_n = invs_utils.s_mode(j_data, mode)
+        d_n = s_mode(j_data, mode)
     # endif
 
     # Reshape to appropriate shape

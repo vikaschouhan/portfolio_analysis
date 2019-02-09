@@ -1,8 +1,6 @@
-import json
 import pprint
 import sys
 import re
-import urllib, urllib2, json
 import socket
 import datetime
 import pandas
@@ -26,7 +24,7 @@ from   modules import invs_utils
 try:
     import ta # ta library for techincal analysis
 except:
-    print 'ta library is required for this to work !!'
+    print('ta library is required for this to work !!')
     sys.exit(-1)
 # endtry
 
@@ -74,7 +72,7 @@ def add_vol_ma(o_frame, period_list):
 # Strategy
 def run_ema(o_frame, mode='c', fast_period=9, slow_period=14, lag=30):
     if len(period_list) != 2:
-        print 'period_list should have only two elements (p0, p1). p0 is smaller time-period & p1 is larger one.'
+        print('period_list should have only two elements (p0, p1). p0 is smaller time-period & p1 is larger one.')
         sys.exit(-1)
     # endif
     d_s     = invs_utils.s_mode(o_frame, mode)

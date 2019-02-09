@@ -1,7 +1,7 @@
 import re
 from   colorama import Fore
 import sys
-from   invs_utils import cint
+from   .invs_utils import cint
 
 # Function to populate sec csv file in mentioned format to symbol list
 def parse_security_file(sfile, ret_type):
@@ -41,9 +41,9 @@ def parse_security_file(sfile, ret_type):
                 # Get file_type header (1st line)
                 file_type = l_this.replace('\n', '').replace('\r', '').replace(' ', '')
                 if file_type in file_type_l:
-                    print Fore.MAGENTA + 'File type seems to be {} !!'.format(file_type) + Fore.RESET
+                    print(Fore.MAGENTA + 'File type seems to be {} !!'.format(file_type) + Fore.RESET)
                 else:
-                    print Fore.MAGENTA + 'Unsupported file type {}. Ensure that first line of csv file specifies file_type !!'.format(file_type) + Fore.RESET
+                    print(Fore.MAGENTA + 'Unsupported file type {}. Ensure that first line of csv file specifies file_type !!'.format(file_type) + Fore.RESET)
                     sys.exit(-1)
                 # endif
                 continue

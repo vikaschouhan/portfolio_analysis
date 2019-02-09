@@ -1,4 +1,4 @@
-import urllib, urllib2, json
+import urllib, json
 import datetime
 import pandas
 import argparse

@@ -2,7 +2,9 @@ import json
 import pprint
 import sys
 import re
-import urllib, urllib2, json
+import urllib, json
+from   urllib.request import urlopen, Request
+from   urllib.error import URLError
 import socket
 import datetime
 import pandas
@@ -22,7 +24,7 @@ from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
 
-from   invs_utils import dropzero, cfloat, vprint
+from   .invs_utils import dropzero, cfloat, vprint
 from   dateutil.relativedelta import relativedelta, TH
 
 #################################################################
@@ -39,7 +41,7 @@ def pull_info_from_marketsmojo(scrip):
 
     req_this   = requests.get(url_search.format(scrip))
     if req_this.json() == []:
-        print 'Nothing found for {} !!'.format(scrip)
+        print('Nothing found for {} !!'.format(scrip))
         return None
     # endif
 
@@ -97,7 +99,7 @@ res_tbl = {
 
 def g_sock():
     urlt = g_burlb()
-    with contextlib.closing(urllib2.urlopen(urlt)) as s:
+    with contextlib.closing(urlopen(urlt)) as s:
         return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read()).groups())
     # endwith
     assert(False)
@@ -145,8 +147,8 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
 
         logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
         try:
-            this_req = urllib2.Request(this_url, None, headers)
-            response = urllib2.urlopen(this_req, timeout=t_timeout)
+            this_req = Request(this_url, None, headers)
+            response = urlopen(this_req, timeout=t_timeout)
             j_data   = json.loads(response.read())
             if not bool(j_data):
                 logging.debug("{} : Not able to fetch.".format(strdate_now()))
@@ -158,7 +160,7 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
             # Just try again after a pause if encountered an 104 error
             logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
             time.sleep(sleep_time)
-        except urllib2.URLError:
+        except URLError:
             logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
             time.sleep(sleep_time)
         # endtry
@@ -198,9 +200,9 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4):
     # Enclosed within try except block to print the data incase some exception happens
     try:
         return dropzero(g_pdbase(j_data))
-    except Exception, e:
+    except Exception as e:
         # Debug info
-        print '** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data)
+        print('** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data))
         return g_pdbase({'c' : [], 'o' : [], 'h' : [], 'l' : [], 'v' : [], 'vo' : [], 't' : [], 'T' : []})
     # endtry
 # enddef
@@ -212,7 +214,7 @@ def scan_security_by_symbol(sym, exchg="NS"):
     response = urllib.urlopen(this_url)
     j_data   = json.loads(response.read())
     if not bool(j_data):
-        print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
+        print("{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data))
         sys.exit(-1)
     else:
         for item in j_data:
@@ -248,7 +250,7 @@ def scan_security_by_name(name, exchg_list=['NS', 'BO', 'MCX', 'NCDEX']):
 # This is pretty hacked up code. Need to clean it up !!
 def last_thu(month_incr=0):
     if month_incr > 2:
-        print 'month_incr should be between 0 & 2'
+        print('month_incr should be between 0 & 2')
         sys.exit(-1)
     # endif
     todayte = datetime.datetime.today()
@@ -339,8 +341,8 @@ def option_table(symbol='NIFTY', month=0, instrument=None, verbose=False):
 
     act_url  = url_this.format(symbol, instrument, last_thu_str(month))
     vprint('Fetching from {}'.format(act_url), verbose)
-    req_this = urllib2.Request(act_url, headers=hdr_this)
-    page     = urllib2.urlopen(req_this)
+    req_this = Request(act_url, headers=hdr_this)
+    page     = urlopen(req_this)
     s_this   = page.read()
     soup     = BeautifulSoup(s_this, 'lxml')
     tbl_l    = soup.findAll('table')
