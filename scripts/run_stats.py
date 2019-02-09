@@ -14,9 +14,10 @@ sys.version_info >= (3, )
 def run_algo(pd_data, algo_name, scrip_name):
     if algo_name == 'stats_basic':
         s_rets = (pd_data['c'] - pd_data['o'])/pd_data['o']
+        curr_std = abs(s_rets.tail(1).mean() - s_rets.mean())
         return {
-                    'values'   : [ scrip_name, s_rets.mean(), s_rets.std() ],
-                    'headers'  : [ 'scrip', 'mean', 'std' ],
+                    'values'   : [ scrip_name, s_rets.mean(), s_rets.std(), curr_std ],
+                    'headers'  : [ 'scrip', 'mean', 'std', 'curr_std' ],
                }
     else:
         print('Algo name {} not supported !!'.format(algo_name))

@@ -159,3 +159,6 @@ def cdir(d_path):
     # endif
     return d_path
 # enddef
+
+def precision(x, n=2):
+    return int(x * 10.0**n)/(10.0**n)
