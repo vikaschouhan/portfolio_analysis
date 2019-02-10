@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Author  : Vikas Chouhan (presentisgood@gmail.com)
 # License : GPLv2
@@ -27,13 +27,13 @@ def process_watchlist_file(wfile):
             try:
                 ma_list =  [ int(x) for x in e_a[3].split(',') ]
             except:
-                print '{} does not look like a period list seperated by commas.'.format(e_a[3].split(','))
+                print('{} does not look like a period list seperated by commas.'.format(e_a[3].split(',')))
                 sys.exit(-1)
             # endtry
             try:
                 num_bars = int(e_a[4])
             except:
-                print '{} does not look like an integer.'.format(e_a[4].replace(' ', ''))
+                print('{} does not look like an integer.'.format(e_a[4].replace(' ', '')))
                 sys.exit(-1)
             # endtry
             w_list.append({
@@ -128,14 +128,14 @@ if __name__ == '__main__':
 
     ### Symbol
     if args.__dict__["sym"] == None:
-        print '--sym is required !!'
+        print('--sym is required !!')
         sys.exit(-1)
     else:
         sym = args.__dict__["sym"]
     # endif
     ### Resolution
     if args.__dict__["res"] == None:
-        print '--res is required !! It can be any of the following {}'.format(invs_core.res_tbl.keys())
+        print('--res is required !! It can be any of the following {}'.format(invs_core.res_tbl.keys()))
         sys.exit(-1)
     else:
         assert(args.__dict__["res"] in invs_core.res_tbl.keys())
@@ -155,13 +155,13 @@ if __name__ == '__main__':
     nbars    = args.__dict__["nbars"]
     stime    = args.__dict__["stime"]
 
-    print 'Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, nbars, stime)
+    print('Plotting {} for resolution {} to {}. Using {} bars, {} sleep time'.format(sym_name, res, pfile, nbars, stime))
     while True:
         # Fetch data and generate plot file
         j_data = invs_core.fetch_data(sym, res)
         # Check for any error
         if j_data is None:
-            print sym_name
+            print(sym_name)
             sys.exit(-1)
         # endif
         invs_plot.gen_candlestick(j_data, period_list=[9, 14, 21], title=sym_name, file_name=pfile, plot_period=nbars)

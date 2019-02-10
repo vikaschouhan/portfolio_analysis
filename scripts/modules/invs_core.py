@@ -102,7 +102,7 @@ res_tbl = {
 def g_sock():
     urlt = g_burlb()
     with contextlib.closing(urlopen(urlt)) as s:
-        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read()).groups())
+        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read().decode('utf-8')).groups())
     # endwith
     assert(False)
 # enddef

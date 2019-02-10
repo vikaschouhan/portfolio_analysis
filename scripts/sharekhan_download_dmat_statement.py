@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Author  : Vikas Chouhan
 # License : GPLv2
 
