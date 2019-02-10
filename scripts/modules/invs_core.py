@@ -213,7 +213,7 @@ def scan_security_by_symbol(sym, exchg="NS"):
     this_url = g_surl(sock) + "query={}&exchange={}".format(sym, exchg)
 
     #print "{} : Fetching {}".format(strdate_now(), this_url)
-    response = urllib.urlopen(this_url)
+    response = urlopen(this_url)
     j_data   = json.loads(response.read())
     if not bool(j_data):
         print("{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data))
@@ -236,7 +236,7 @@ def scan_security_by_name(name, exchg_list=['NS', 'BO', 'MCX', 'NCDEX']):
     for exchg_this in exchg_list:
         this_url = this_url_fmt.format(name, exchg_this)
         #print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
+        response = urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
             continue

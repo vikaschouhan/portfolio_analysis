@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Author   : Vikas Chouhan
 # email    : presentisgood@gmail.com
 # License  : GPLv2
 # NOTE     : This script pulls ticker information for all nse &/or bse stocks from http://www.investing.com.
 
-import urllib, urllib2, json
+import json
+from   urllib.request import urlopen
 import datetime
 import pandas
 import argparse
@@ -17,7 +18,6 @@ import re
 import os
 import math
 import contextlib, warnings
-from   StringIO import StringIO
 import zipfile, csv
 import pprint
 
@@ -30,7 +30,7 @@ exchg_l = ['NS', 'BO', 'MCX', 'NCDEX']
 
 def assertm(cond, msg):
     if not cond:
-        print msg
+        print(msg)
         sys.exit(-1) 
     # endif
 # enddef
@@ -49,8 +49,8 @@ def chk_rng2(v, nv, pts):
 
 def g_sock():
     urlt = g_burlb()
-    with contextlib.closing(urllib2.urlopen(urlt)) as s:
-        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read()).groups())
+    with contextlib.closing(urlopen(urlt)) as s:
+        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read().decode('utf-8')).groups())
     # endwith
     assert(False)
 # enddef
@@ -81,7 +81,7 @@ def scan_securities(name, itype='', exchange='', limit=60):
     # Check for exchange
     if exchange not in exchg_l:
         if exchange != '':
-            print 'Exchange not in {}. Defaulting to _'.format(exchg_l)
+            print('Exchange not in {}. Defaulting to _'.format(exchg_l))
             exchange = ''
         else:
             exchange = exchg_l
@@ -95,7 +95,7 @@ def scan_securities(name, itype='', exchange='', limit=60):
 
     # Search for instrument type
     if itype not in itype_l:
-        print 'Type not in {}'.format(itype_l)
+        print('Type not in {}'.format(itype_l))
         itype = ''
     # endif
 
@@ -104,7 +104,7 @@ def scan_securities(name, itype='', exchange='', limit=60):
         this_url = g_bsurl(sock) + "limit={}&query={}&type={}&exchange={}".format(limit, name, itype, exchg)
 
         #print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
+        response = urlopen(this_url)
         j_data   = j_data + json.loads(response.read())
     # endfor
 
@@ -126,12 +126,12 @@ if __name__ == '__main__':
     args    = parser.parse_args()
 
     if args.__dict__['list']:
-        print 'Exchange List : {}'.format(exchg_l)
-        print 'Type List     : {}'.format(itype_l)
+        print('Exchange List : {}'.format(exchg_l))
+        print('Type List     : {}'.format(itype_l))
         sys.exit(0)
     # endif
     if not args.__dict__['name']:
-        print '--name is required !!'
+        print('--name is required !!')
         sys.exit(-1)
     # endif
 
