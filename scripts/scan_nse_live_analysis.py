@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author    : Vikas Chouhan (presentisgood@gmail.com)
 # Copyright : Vikas Chouhan (presentisgood@gmail.com)
 # License   : GPLv2
@@ -54,7 +54,7 @@ def populate_sym_dict(invs_dict_file, in_sec_dict):
             not_f_l.append(sec_this)
         # endif
     # endfor
-    print Back.RED + '{} not found in investing.com db'.format(not_f_l) + Back.RESET
+    print(Back.RED + '{} not found in investing.com db'.format(not_f_l) + Back.RESET)
 
     return sec_dict
 # enddef
@@ -119,26 +119,26 @@ if __name__ == '__main__':
 
     if not args.__dict__["invs"]:
         if dot_invs_py_exists:
-            print 'Using {} as Investing.com database file.'.format(dot_invs_py)
+            print('Using {} as Investing.com database file.'.format(dot_invs_py))
             invs_db_file = dot_invs_py
         else:
-            print "--invs is required !!"
+            print("--invs is required !!")
             sys.exit(-1)
         # endif
     else:
-        print 'Using {} as Investing.com database file.'.format(args.__dict__["invs"])
+        print('Using {} as Investing.com database file.'.format(args.__dict__["invs"]))
         invs_db_file = args.__dict__["invs"]
 
         # Copy the passed file to dot_invs_py
-        print 'Copying {} to {} ..'.format(invs_db_file, dot_invs_py)
+        print('Copying {} to {} ..'.format(invs_db_file, dot_invs_py))
         shutil.copyfile(os.path.expanduser(invs_db_file), os.path.expanduser(dot_invs_py))
     # endif
     if not args.__dict__["ofile"]:
-        print "--ofile is required !!"
+        print("--ofile is required !!")
         sys.exit(-1)
     # endif
     if not args.__dict__["key"]:
-        print "--key is required !!"
+        print("--key is required !!")
         sys.exit(-1)
     # endif
 
@@ -154,12 +154,12 @@ if __name__ == '__main__':
     out_file   = args.__dict__["ofile"]
 
     # Get security list from screener.in using default screen_no=17942
-    print 'Found {} securities.'.format(len(sec_dict))
+    print('Found {} securities.'.format(len(sec_dict)))
     sec_tick_d = populate_sym_dict(invs_db_f, sec_dict)
-    print 'Found {} securities in investing_com database.'.format(len(sec_tick_d))
+    print('Found {} securities in investing_com database.'.format(len(sec_tick_d)))
 
     # Write this info in output file
-    print 'Writing security info to {}'.format(out_file)
+    print('Writing security info to {}'.format(out_file))
     with open(out_file, 'w') as f_out:
         f_out.write('nse_eqlist_m\n')
         f_out.write('SYMBOL, NAME OF COMPANY\n')
