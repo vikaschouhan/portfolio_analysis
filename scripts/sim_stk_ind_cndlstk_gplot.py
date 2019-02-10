@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Author  : Vikas Chouhan (presentisgood@gmail.com)
 # License : GPLv2
 
-import urllib, urllib2, json
+import json
+from   urllib.request import urlopen
 import datetime
 import pandas
 import argparse
@@ -32,10 +33,10 @@ ema_mode    = 'c'
 macd_mode   = 'c'
 
 # pandas display options
-pandas.set_option('display.max_rows',    999)
-pandas.set_option('display.max_columns', 500)
-pandas.set_option('display.height',      500)
-pandas.set_option('display.width',       500)
+#pandas.set_option('display.max_rows',    999)
+#pandas.set_option('display.max_columns', 500)
+#pandas.set_option('display.height',      500)
+#pandas.set_option('display.width',       500)
 
 # User info
 # NOTE:
@@ -85,19 +86,19 @@ def chk_rng2(v, nv, pts):
 
 def g_sock():
     urlt = g_burlb()
-    with contextlib.closing(urllib2.urlopen(urlt)) as s:
-        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read()).groups())
+    with contextlib.closing(urlopen(urlt)) as s:
+        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read().decode('utf-8')).groups())
     # endwith
     assert(False)
 # enddef
 
 def init_credentials():
     if "EMAIL" not in os.environ:
-        print "export EMAIL=youremail@host"
+        print("export EMAIL=youremail@host")
         sys.exit(-1)
     # endif
     if "EMAIL_PWD" not in os.environ:
-        print "export EMAIL_PWD=youremailpassword"
+        print("export EMAIL_PWD=youremailpassword")
         sys.exit(-1)
     # endif
     global gm_sender, gm_receiver, gm_passwd
@@ -127,9 +128,9 @@ def send_email(user, pwd, recipient, body, subject="Sent from sim_stk_ind.py"):
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, msg.as_string())
         server.close()
-        print "Mail sent to {}".format(recipient)
+        print("Mail sent to {}".format(recipient))
     except:
-        print "Failed to send the mail !!"
+        print("Failed to send the mail !!")
 # enddef
 
 def g_burlb():
@@ -161,11 +162,11 @@ def fetch_data(sym, resl, t_from=None):
         t_to     = unixdate_now()
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym_tbl[sym], res_tbl[resl], t_from, t_to)
 
-        print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
+        print("{} : Fetching {}".format(strdate_now(), this_url))
+        response = urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
-            print "{} : Not able to fetch.".format(strdate_now())
+            print("{} : Not able to fetch.".format(strdate_now()))
         else:
             break
         # endif
@@ -173,7 +174,7 @@ def fetch_data(sym, resl, t_from=None):
     # endwhile
 
     if (t_indx >= ftch_tout):
-        print "{} : Retries exceeded !!".format(strdate_now())
+        print("{} : Retries exceeded !!".format(strdate_now()))
         # Alert user by sending mail
         send_email(gm_sender, gm_passwd, gm_receiver, "Unable to fetch sym info. Killing process !!")
         # Exit
@@ -203,7 +204,7 @@ def fetch_data(sym, resl, t_from=None):
         return d_frame
     # enddef
 
-    print "{} : Fetched data. done !!".format(strdate_now())
+    print("{} : Fetched data. done !!".format(strdate_now()))
     return g_pdbase(j_data)
 # enddef
 
@@ -259,7 +260,7 @@ def gen_gplot_file(x_l, **kwargs):
     y_lb_l  = []
     y_vl_l  = []
 
-    for key, value in kwargs.iteritems():
+    for key, value in kwargs.items():
         y_lb_l.append(str(key))
         y_vl_l.append(value)
     # endfor
@@ -294,7 +295,7 @@ def g_rmean_f(**kwargs):
     if se_st == 's':
         return lambda s, t: pandas.rolling_mean(s, t)
     elif se_st == 'e':
-        return lambda s, t: pandas.ewma(s, span=t, adjust=False)
+        return lambda s, t: s.ewm(span=t, adjust=False).mean()
     else:
         assert(False)
     # endif
@@ -305,7 +306,7 @@ def g_rmean_f(**kwargs):
 def s_mode(f_frame, mode='c'):
     m_list = ['o', 'c', 'h', 'l', 'hl2', 'hlc3', 'ohlc4']
     if not mode in m_list:
-        print "mode should be one of {}".format(m_list)
+        print("mode should be one of {}".format(m_list))
         sys.exit(-1)
     # endif
 
@@ -395,7 +396,7 @@ def run_macd(o_frame, mode='c'):
             #print d_frame[-25:].to_string(col_space=10)
         # endif
     else:
-        print "Not sending mail as market is closed !!"
+        print("Not sending mail as market is closed !!")
     # endif
 
     return d_frame
@@ -430,7 +431,7 @@ def time_sig_loop(res, sym, p_data):
    while True:
        #tm_now = datetime.datetime.now().minute
        #if tm_now % pau_tm:
-       print "{} : Sleeping for {} {}.".format(strdate_now(), pau_tm, t_unit)
+       print("{} : Sleeping for {} {}.".format(strdate_now(), pau_tm, t_unit))
        time.sleep(pau_ts)
        # endif
        j_ndata = fetch_data(sym, res)
@@ -497,7 +498,7 @@ if __name__ == '__main__':
     # endif
     if args.__dict__["tunit"]:
         if args.__dict__["tunit"] not in time_d.keys():
-            print "--tunit should be {}".format(time_d.keys())
+            print("--tunit should be {}".format(time_d.keys()))
             sys.exit(-1)
         # endif
         t_unit = args.__dict__["tunit"]
@@ -514,7 +515,7 @@ if __name__ == '__main__':
 
     # get socket
     sock = g_sock()
-    print "sock = {}".format(sock)
+    print("sock = {}".format(sock))
 
     # RUN macd
     j_data = fetch_data(sym, res)
@@ -530,10 +531,10 @@ if __name__ == '__main__':
         # Concatenate them
         m_data    = macd_data.join(ema_data).join(prc_data)
         # Display table
-        print str_dbase(m_data, nlr)
+        print(str_dbase(m_data, nlr))
         if pcndl:
             # Display cndlstk
-            print str_cndlstk(j_data, nlr)
+            print(str_cndlstk(j_data, nlr))
         # endif
         # Check for loop cond.
         if not args.__dict__["loop"]:

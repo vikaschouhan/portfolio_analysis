@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Author   : Vikas Chouhan
 # email    : presentisgood@gmail.com
 # License  : GPLv2
 # NOTE     : This script pulls ticker information for all nse &/or bse stocks from http://www.investing.com.
 
-import urllib, urllib2, json
+import json
+from   urllib.request import urlopen, Request
 import datetime
 import pandas
 import argparse
@@ -18,7 +19,7 @@ import re
 import os
 import math
 import contextlib, warnings
-from   StringIO import StringIO
+from   io import StringIO
 import zipfile, csv
 import pprint
 from   email.mime.multipart import MIMEMultipart
@@ -34,7 +35,7 @@ sock = "bcbf3d08f70aaf07b860dc2f481beee5/1473605026"
 
 def assertm(cond, msg):
     if not cond:
-        print msg
+        print(msg)
         sys.exit(-1) 
     # endif
 # enddef
@@ -58,8 +59,8 @@ def chk_rng2(v, nv, pts):
 
 def g_sock():
     urlt = g_burlb()
-    with contextlib.closing(urllib2.urlopen(urlt)) as s:
-        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read()).groups())
+    with contextlib.closing(urlopen(urlt)) as s:
+        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read().decode('utf-8')).groups())
     # endwith
     assert(False)
 # enddef
@@ -89,8 +90,8 @@ def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'X', 'XC', 'XT', 'XD'])
     shift    = datetime.timedelta(max(1,(date_y.weekday() + 6) % 7 - 3))
     date_y   = date_y - shift
     url_this = "http://www.bseindia.com/download/BhavCopy/Equity/EQ_ISINCODE_{:02d}{:02d}{:02d}.ZIP".format(date_y.day, date_y.month, date_y.year % 2000)
-    print "Fetching BSE Bhavcopy from {}".format(url_this)
-    d_data   = urllib.urlopen(url_this)
+    print("Fetching BSE Bhavcopy from {}".format(url_this))
+    d_data   = urlopen(url_this)
     l_file   = StringIO(d_data.read())
     
     # Read zip file
@@ -145,11 +146,11 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
     year_y   = date_y.year
     #url_this = "http://www.bseindia.com/download/BhavCopy/Equity/EQ{:02d}{:02d}{:02d}_CSV.ZIP".format(date_y.day, date_y.month, date_y.year % 2000)
     url_this  = "https://www.nseindia.com/content/historical/EQUITIES/{}/{}/cm{:02d}{}{}bhav.csv.zip".format(year_y, month_y, day_y, month_y, year_y)
-    print "Fetching NSE Bhavcopy from {}".format(url_this)
+    print("Fetching NSE Bhavcopy from {}".format(url_this))
     #print "Fetching BSE Bhavcopy from {}".format(url_this)
-    u_req    = urllib2.Request(url_this)
+    u_req    = Request(url_this)
     u_req.add_header('User-agent', 'Mozilla 5.10')
-    d_data   = urllib2.urlopen(u_req)
+    d_data   = urlopen(u_req)
     l_file   = StringIO(d_data.read())
     
     # Read zip file
@@ -190,7 +191,7 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
 # Scan for securities
 def scan_securities(name, exchange, n_sleep=N_SLEEP, n_timeout=N_TIMEOUT, n_tryouts=N_TRYOUTS):
     if exchange not in ['NS', 'BO']:
-        print "Exchange could only be {}".format(['NS', 'BO'])
+        print("Exchange could only be {}".format(['NS', 'BO']))
         sys.exit(-1)
     # endif
     this_url = g_bsurl(sock) + "query={}&type=Stock&exchange={}".format(name, exchange)
@@ -198,10 +199,10 @@ def scan_securities(name, exchange, n_sleep=N_SLEEP, n_timeout=N_TIMEOUT, n_tryo
     #print "{} : Fetching {}".format(strdate_now(), this_url)
     for to_this in range(n_tryouts):   # n tryouts
         try:
-            response = urllib2.urlopen(this_url, timeout=n_timeout)
+            response = urlopen(this_url, timeout=n_timeout)
             break
         except socket.timeout:
-            print ' >>Request timed out !! Sleeping for {} seconds.'.format(n_sleep)
+            print(' >>Request timed out !! Sleeping for {} seconds.'.format(n_sleep))
             time.sleep(n_sleep)
             to_this = to_this + 1
             continue
@@ -210,7 +211,7 @@ def scan_securities(name, exchange, n_sleep=N_SLEEP, n_timeout=N_TIMEOUT, n_tryo
 
     # Check for timeouts
     if to_this == n_tryouts:
-        print 'Retried timed out. Skipping !!'
+        print('Retried timed out. Skipping !!')
         return None
     # endif
 
@@ -266,8 +267,8 @@ if __name__ == '__main__':
     isin_list = invs_d.keys()
 
     # Info
-    print "sock = {}".format(sock)
-    print "Found {} ISINs in checkpoint file.".format(len(isin_list))
+    print("sock = {}".format(sock))
+    print("Found {} ISINs in checkpoint file.".format(len(isin_list)))
 
     # Iterate over all keys of nse
     if fetch_nse:
@@ -369,10 +370,10 @@ if __name__ == '__main__':
     # endif
 
     # write to file
-    print "Writing to file {}".format(output_f)
+    print("Writing to file {}".format(output_f))
     with open(output_f, "w") as fout:
         pprint.pprint(invs_d, fout)
     # endwith
 
-    print "Done !!"
+    print("Done !!")
 # enddef
