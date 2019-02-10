@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Author  : Vikas Chouhan (presentisgood@gmail.com
 # License : GPLv2
 
@@ -7,7 +8,7 @@ from   bs4 import BeautifulSoup
 import csv
 import datetime
 import argparse
-import ConfigParser
+from   configparser import ConfigParser
 
 script_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_path)
@@ -18,18 +19,18 @@ from   zerodha_download_dmat_statement import download_zerodha_dp_statement
 def get_zerodha_data(config):
     # Check for Zerodha Questions
     if 'Zerodha Questions' not in config.sections():
-        print '[Zerodha] section found, but no [Zerodha Questions] section found. Both are mandatory !!.'
+        print('[Zerodha] section found, but no [Zerodha Questions] section found. Both are mandatory !!.')
         sys.exit(-1)
     # endif
 
     login_data = dict(config.items(section='Zerodha'))
     questions  = dict(config.items(section='Zerodha Questions'))
     if 'user_name' not in login_data.keys() or 'passwd' not in login_data.keys():
-        print 'Zerodha section should have keys : user_name and passwd'
+        print('Zerodha section should have keys : user_name and passwd')
         sys.exit(-1)
     # endif
 
-    print 'Pulling dmat data from zerodha !!'
+    print('Pulling dmat data from zerodha !!')
     data = download_zerodha_dp_statement(login_data['user_name'], login_data['passwd'], questions, gen_report=False)
     return data
 # enddef
@@ -38,20 +39,20 @@ def get_sharekhan_data(config):
     login_data = dict(config.items(section='Sharekhan'))
     if 'user_name' not in login_data.keys() or 'br_passwd' not in login_data.keys() or \
                 'tr_passwd' not in login_data.keys():
-        print 'Sharekhan section should have keys : user_name and passwd'
+        print('Sharekhan section should have keys : user_name and passwd')
         sys.exit(-1)
     # endif
 
-    print 'Pulling data from sharekhan !!'
+    print('Pulling data from sharekhan !!')
     data = download_sharekhan_dp_statement(login_data['user_name'], login_data['br_passwd'], login_data['tr_passwd'], gen_report=False)
     return data
 # enddef
 
 def get_scrips_list(config_file):
-    print 'Using config file {}'.format(config_file)
+    print('Using config file {}'.format(config_file))
 
     # parse config_file
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser()
     config.optionxform = str
     
     config.read(config_file)
@@ -68,7 +69,7 @@ def get_scrips_list(config_file):
             # endfor
         # endif
     except:
-        print 'Sharekhan timeout !!'
+        print('Sharekhan timeout !!')
     # endtry
     # Try zerodha if available
     if en_ze:
@@ -92,14 +93,14 @@ if __name__ == '__main__':
 
     # Check if config_file is present
     if not os.path.isfile(config_file):
-        print '{} is not present. Ensure that this file is there with proper configuration data !!'.format(config_file)
+        print('{} is not present. Ensure that this file is there with proper configuration data !!'.format(config_file))
         sys.exit(-1)
     # endif
 
     scrips_l = get_scrips_list(config_file)
-    print 'Security List populated = {}'.format(scrips_l)
+    print('Security List populated = {}'.format(scrips_l))
 
-    print 'Writing report to {}'.format(output_file)
+    print('Writing report to {}'.format(output_file))
     with open(output_file, 'w') as f_out:
         f_out.write('sym_name_list\n')
         f_out.write('#Symbol, Name\n')

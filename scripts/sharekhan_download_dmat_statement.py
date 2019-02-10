@@ -47,12 +47,12 @@ def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~
 
     # Check if file was downloaded
     if not os.path.isfile(bin_file):
-        print '{} does not exist !!. Download failed.'.format(bin_file)
+        print('{} does not exist !!. Download failed.'.format(bin_file))
         sys.exit(-1)
     # endif
 
     if gen_report:
-        with open(os.path.expanduser(file_name), 'w') as f_out:
+        with open(os.path.expanduser(file_name), 'wb') as f_out:
             f_out.write(open(bin_file, 'rb').read())
         # endwith
         return 'Report downloaded to {} !!'.format(file_name)
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     args    = parser.parse_args()
 
     if not args.__dict__['auth']:
-        print '--auth is required !!'
+        print('--auth is required !!')
         sys.exit(-1)
     # endif
     if not args.__dict__['filename']:
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     auth_l = args.__dict__['auth'].replace(' ', '').split(',')
     if len(auth_l) != 3:
-        print '--auth should be in format "loginid,brpwd,trpwd"'
+        print('--auth should be in format "loginid,brpwd,trpwd"')
         sys.exit(-1)
     # endif
 
@@ -111,6 +111,6 @@ if __name__ == '__main__':
     brshow = True
 
     # Download
-    print download_sharekhan_dp_statement(auth_l[0], auth_l[1], auth_l[2], \
-              file_name, args.__dict__['genrep'], brshow, args.__dict__['timeout'])
+    print(download_sharekhan_dp_statement(auth_l[0], auth_l[1], auth_l[2], \
+              file_name, args.__dict__['genrep'], brshow, args.__dict__['timeout']))
 # endif

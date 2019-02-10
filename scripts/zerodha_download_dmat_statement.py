@@ -37,12 +37,12 @@ def download_zerodha_dp_statement(user_name, password, questions_dict, file_name
     ques1 = str(driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/div/label').text)
     ques2 = str(driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/div/label').text)
     if ques1 not in questions_dict :
-        print 'Answer to question "{}" is not present in Zerodha Questions.'.format(ques1)
+        print('Answer to question "{}" is not present in Zerodha Questions.'.format(ques1))
         driver.close()
         sys.exit(-1)
     # endif
     if ques2 not in questions_dict :
-        print 'Answer to question "{}" is not present in Zerodha Questions.'.format(ques1)
+        print('Answer to question "{}" is not present in Zerodha Questions.'.format(ques1))
         driver.close()
         sys.exit(-1)
     # endif
@@ -76,7 +76,7 @@ def download_zerodha_dp_statement(user_name, password, questions_dict, file_name
 
         next_btn = html_page.find('a', {'id' : 'holdings-table_next'})
         if next_btn.attrs['class'][2] != 'disabled':
-            print 'On page {} \n'.format(next_btn.attrs['tabindex'])
+            print('On page {} \n'.format(next_btn.attrs['tabindex']))
             driver.find_element_by_xpath('//*[@id="holdings-table_next"]')
         else:
             break
@@ -90,7 +90,7 @@ def download_zerodha_dp_statement(user_name, password, questions_dict, file_name
     #browser.close()
 
     if gen_report:
-        print 'Writing report file to {}'.format(file_name)
+        print('Writing report file to {}'.format(file_name))
         with open(os.path.expanduser(file_name), 'w') as f_out:
             csv_writer = csv.writer(f_out, delimiter=',')
             csv_writer.writerow(header_l)
