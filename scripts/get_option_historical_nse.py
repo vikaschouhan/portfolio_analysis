@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from   modules.invs_core import option_historical
 from   tabulate import tabulate
 import argparse
