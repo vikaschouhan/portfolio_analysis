@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Author  : Vikas Chouhan (presentisgood@gmail.com)
 # License : GPLv2
 
-import urllib, urllib2, json
+import json
+from   urllib.request import urlopen, Request
 import datetime
 import pandas
 import argparse
@@ -19,7 +20,7 @@ from   email.mime.multipart import MIMEMultipart
 from   email.mime.text import MIMEText
 from   email.mime.application import MIMEApplication
 import matplotlib
-from   matplotlib.finance import candlestick2_ohlc, volume_overlay
+from   mpl_finance import candlestick2_ohlc, volume_overlay
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
@@ -83,17 +84,17 @@ def send_email(user, pwd, recipient, body='', subject="Sent from sim_stk_ind.py"
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, msg.as_string())
         server.close()
-        print "Mail sent to {} at {}".format(recipient, datetime.datetime.now())
+        print("Mail sent to {} at {}".format(recipient, datetime.datetime.now()))
     except:
-        print "Failed to send the mail !!"
+        print("Failed to send the mail !!")
 # enddef
 
 ###############################################################
 # Helper functions for Investing.com access
 def g_sock():
     urlt = g_burlb()
-    with contextlib.closing(urllib2.urlopen(urlt)) as s:
-        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read()).groups())
+    with contextlib.closing(urlopen(urlt)) as s:
+        return '/'.join(re.search('carrier=(\w+)&time=(\d+)&', s.read().decode('utf-8')).groups())
     # endwith
     assert(False)
 # enddef
@@ -121,10 +122,10 @@ def scan_security_by_symbol(sym):
     this_url = g_surl(sock) + "query={}".format(sym)
 
     #print "{} : Fetching {}".format(strdate_now(), this_url)
-    response = urllib.urlopen(this_url)
+    response = urlopen(this_url)
     j_data   = json.loads(response.read())
     if not bool(j_data):
-        print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
+        print("{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data))
         sys.exit(-1)
     else:
         return j_data[0]["description"]
@@ -139,7 +140,7 @@ def scan_security_by_name(name, exchg_list=['NS', 'BO', 'MCX', 'NCDEX']):
     for exchg_this in exchg_list:
         this_url = this_url_fmt.format(name, exchg_this)
         #print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
+        response = urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
             continue
@@ -161,13 +162,13 @@ def process_watchlist_file(wfile):
             try:
                 ma_list =  [ int(x) for x in e_a[2].split(',') ]
             except:
-                print '{} does not look like a period list seperated by commas.'.format(e_a[2].split(','))
+                print('{} does not look like a period list seperated by commas.'.format(e_a[2].split(',')))
                 sys.exit(-1)
             # endtry
             try:
                 num_bars = int(e_a[3])
             except:
-                print '{} does not look like an integer.'.format(e_a[3].replace(' ', ''))
+                print('{} does not look like an integer.'.format(e_a[3].replace(' ', '')))
                 sys.exit(-1)
             # endtry
             w_list.append({
@@ -207,10 +208,10 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
 
         #print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
+        response = urlopen(this_url)
         j_data   = json.loads(response.read())
         if not bool(j_data):
-            print "{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data)
+            print("{} : Not able to fetch. Returned data = {}".format(strdate_now(), j_data))
             t_indx   = t_indx + 1
             continue
         # endif
@@ -222,14 +223,14 @@ def fetch_data(sym, resl, t_from=None, sym_name=None):
         this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(sym, res_tbl[resl], t_from, t_to)
 
         #print "{} : Fetching {}".format(strdate_now(), this_url)
-        response = urllib.urlopen(this_url)
+        response = urlopen(this_url)
         j_data   = json.loads(response.read())
         break
     # endwhile
 
     if (t_indx >= ftch_tout):
         msg_err = "{} : Retries exceeded !!".format(strdate_now())
-        print msg_err
+        print(msg_err)
         # Alert user by sending mail
         #send_email(gm_sender, gm_passwd, gm_receiver, "Unable to fetch sym info. Killing process !!")
         # Exit
@@ -377,7 +378,7 @@ def g_rmean_f(**kwargs):
     if se_st == 's':
         return lambda s, t: pandas.rolling_mean(s, t)
     elif se_st == 'e':
-        return lambda s, t: pandas.ewma(s, span=t, adjust=False)
+        return lambda s, t: s.ewm(span=t, adjust=False).mean()
     else:
         assert(False)
     # endif
@@ -386,7 +387,7 @@ def g_rmean_f(**kwargs):
 def s_mode(f_frame, mode='c'):
     m_list = ['o', 'c', 'h', 'l', 'hl2', 'hlc3', 'ohlc4']
     if not mode in m_list:
-        print "mode should be one of {}".format(m_list)
+        print("mode should be one of {}".format(m_list))
         sys.exit(-1)
     # endif
 
@@ -424,21 +425,21 @@ if __name__ == '__main__':
 
     ### Symbol
     if args.__dict__["wfile"] == None:
-        print '--wfile is required !!'
+        print('--wfile is required !!')
         sys.exit(-1)
     else:
         # Check if file exists
         if os.path.isfile(os.path.expanduser(args.__dict__["wfile"])):
             wfile = args.__dict__["wfile"]
         else:
-            print '--wfile is not a file !!'
+            print('--wfile is not a file !!')
             sys.exit(-1)
         # endif
     # endif
 
     # get socket
     sock = g_sock()
-    print "sock = {}".format(sock)
+    print("sock = {}".format(sock))
 
     wlist_l  = process_watchlist_file(wfile)
     pdir     = '~/candles' if not args.__dict__["pdir"] else args.__dict__["pdir"]
@@ -471,12 +472,12 @@ if __name__ == '__main__':
     for i_this in sec_full_l:
         sym_desc = i_this['description'].replace(' ', '_') + '_{}_{}'.format(i_this['resolution'], i_this['num_bars'])
         pfile = pdir + '/' + sym_desc + '.png'
-        print 'Plotting {} for resolution {} to {}. Using {} bars'.format(i_this['description'], i_this['resolution'], pfile, i_this['num_bars'])
+        print('Plotting {} for resolution {} to {}. Using {} bars'.format(i_this['description'], i_this['resolution'], pfile, i_this['num_bars']))
         # Fetch data and generate plot file
         j_data, sec_name = fetch_data(i_this['symbol'], i_this['resolution'], sym_name=sym_desc)
         # Check for any error
         if j_data is None:
-            print 'Could not fetch {}.'.format(sec_name)
+            print('Could not fetch {}.'.format(sec_name))
             sys.exit(-1)
         # endif
         gen_candlestick(j_data, period_list=i_this['ema_period_list'], title=sec_name, file_name=pfile, plot_period=i_this['num_bars'])
