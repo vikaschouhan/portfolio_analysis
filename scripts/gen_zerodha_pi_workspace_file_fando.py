@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import os, sys
 from   modules import invs_parsers
@@ -12,7 +13,7 @@ if __name__ == '__main__':
     args    = parser.parse_args()
 
     if args.__dict__['sfile'] == None:
-        print '--sfile required !!'
+        print('--sfile required !!')
         sys.exit(-1)
     # endif
 
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     # endfor
 
     # Write to workspace file
-    print 'Writing to {}'.format(out_file)
+    print('Writing to {}'.format(out_file))
     with open(out_file, 'w') as ofile_hndl:
         ofile_hndl.write(ofile_hdr)
         ofile_hndl.write('\n')
