@@ -19,7 +19,7 @@ import re
 import os
 import math
 import contextlib, warnings
-from   io import StringIO
+from   io import StringIO, BytesIO, TextIOWrapper
 import zipfile, csv
 import pprint
 from   email.mime.multipart import MIMEMultipart
@@ -92,11 +92,12 @@ def bse_latest_bhavcopy_info(incl_groups=['A', 'B', 'D', 'X', 'XC', 'XT', 'XD'])
     url_this = "http://www.bseindia.com/download/BhavCopy/Equity/EQ_ISINCODE_{:02d}{:02d}{:02d}.ZIP".format(date_y.day, date_y.month, date_y.year % 2000)
     print("Fetching BSE Bhavcopy from {}".format(url_this))
     d_data   = urlopen(url_this)
-    l_file   = StringIO(d_data.read())
+    l_file   = BytesIO(d_data.read())
     
     # Read zip file
     zip_f    = zipfile.ZipFile(l_file)
-    csv_f    = csv.reader(zip_f.open(zip_f.namelist()[0]))
+    items_f  = TextIOWrapper(zip_f.open(zip_f.namelist()[0]))
+    csv_f    = csv.reader(items_f)
     bse_dict = {}
     ctr      = 0
 
@@ -151,11 +152,12 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
     u_req    = Request(url_this)
     u_req.add_header('User-agent', 'Mozilla 5.10')
     d_data   = urlopen(u_req)
-    l_file   = StringIO(d_data.read())
+    l_file   = BytesIO(d_data.read())
     
     # Read zip file
     zip_f    = zipfile.ZipFile(l_file)
-    csv_f    = csv.reader(zip_f.open(zip_f.namelist()[0]))
+    items_f  = TextIOWrapper(zip_f.open(zip_f.namelist()[0]))
+    csv_f    = csv.reader(items_f)
     nse_dict = {}
     ctr      = 0
 
@@ -264,7 +266,7 @@ if __name__ == '__main__':
     sock = g_sock()
     # Get checkpoint list
     invs_d    = parse_ckpt_file(ckpt_f)
-    isin_list = invs_d.keys()
+    isin_list = list(invs_d.keys())
 
     # Info
     print("sock = {}".format(sock))
