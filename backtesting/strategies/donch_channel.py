@@ -1,3 +1,5 @@
+# Author : Vikas Chouhan
+# Simple Donchian Channel Breakout
 import backtrader as bt
 import datetime
 import backtrader.indicators as btind

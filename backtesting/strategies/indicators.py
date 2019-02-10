@@ -1,7 +1,12 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+# This file defines custom indicators
+
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import backtrader as bt
 
+# RenTrend Indicator.
 class Ren3(bt.Indicator):
     lines      = ('ren_ind',)
     params     = (('atr_period', 14), ('ma_period', 2), )
@@ -30,6 +35,7 @@ class Ren3(bt.Indicator):
     # enddef
 # endclass
 
+# 2nd variant of RenTrend Indicator
 class Ren3F(bt.Indicator):
     lines      = ('ren_ind',)
     params     = (('step_size', 5), ('ma_period', 2),)
@@ -58,6 +64,7 @@ class Ren3F(bt.Indicator):
     # enddef
 # endclass
 
+# 3rd variant (heikinashi version) of RenTrend Indicator.
 class Ren3H(bt.Indicator):
     lines      = ('ren_ind',)
     params     = (('atr_period', 14),)

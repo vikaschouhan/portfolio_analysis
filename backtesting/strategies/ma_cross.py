@@ -1,3 +1,6 @@
+# Author : Vikas Chouhan
+# Simple Long/Short Moving Average Crossover
+
 import backtrader as bt
 import datetime
 import backtrader.indicators as btind

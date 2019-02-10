@@ -1,3 +1,6 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+# EMA-EMA(EMA) crossover
+
 import backtrader as bt
 import datetime
 import backtrader.indicators as btind

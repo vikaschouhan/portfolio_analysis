@@ -1,3 +1,8 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+# NOTE   : This file defines crossover algorithms based on variants of RenTrend.
+#          The name is a play on Renko charts, since the indicator algorithm
+#          uses something similar to Renko charts (but not same) for defining trends.
+# RenTrend Crossovers
 import backtrader as bt
 import datetime
 import backtrader.indicators as btind
