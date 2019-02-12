@@ -224,8 +224,8 @@ class Cerebro(backtrader.Cerebro):
         plot_figs = [equity_fig, ret_fig] + main_figs
         save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
-    def save_equity_curve_plot(self, plot_file, width=16, height=9):
-        plot_figs = [self.plot_equity_curve_pts()]
+    def save_equity_curve_plot(self, plot_file, width=16, height=9, ma_len=None):
+        plot_figs = [self.plot_equity_curve_pts(ma_len=ma_len)]
         save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
 # endclass

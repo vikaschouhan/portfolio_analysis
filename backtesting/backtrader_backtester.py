@@ -120,13 +120,13 @@ if __name__ == '__main__':
     # endif
     mkdir(out_dir)
 
-    if csv_file == None:
-        csv_file = '~/backtester_{}_'.format(strategy)
-        for k_t in opt_dict:
-            csv_file = csv_file + '{}_{}'.format(k_t, opt_dict[k_t])
-        # endfor
-        csv_file = csv_file + '_{}.csv'.format(datetime.datetime.now().strftime('%s'))
-    # endif
+    #if csv_file == None:
+    #    csv_file = '~/backtester_{}_'.format(strategy)
+    #    for k_t in opt_dict:
+    #        csv_file = csv_file + '{}_{}'.format(k_t, opt_dict[k_t])
+    #    # endfor
+    #    csv_file = csv_file + '_{}.csv'.format(datetime.datetime.now().strftime('%s'))
+    ## endif
 
     files = glob.glob('{}/*.csv'.format(csv_dir))
     if len(files) == 0:
@@ -170,19 +170,21 @@ if __name__ == '__main__':
         ret_dict[file_t] = cerebro.get_stats0()
 
         # Save plots
-        cerebro.save_equity_curve_plot('{}/{}.png'.format(out_dir, os.path.basename(file_t), width=48, height=27))
+        cerebro.save_equity_curve_plot('{}/{}.png'.format(out_dir, os.path.basename(file_t), width=48, height=27), ma_len=200)
 
         file_ctr += 1
     # endfor
 
-    print('Writing csv report to {}'.format(csv_file))
-    with open(rp(csv_file), 'w') as f_out:
-        f_out.write('file,returns,sqn_score, profit_per_drawdown,drawdown_len\n')
-        for k_t in ret_dict:
-            sqn_score = ret_dict[k_t]['sqn_score']
-            profit_per_ddown = ret_dict[k_t]['net_profit']/ret_dict[k_t]['max_drawdown']
-            max_ddown_len = ret_dict[k_t]['max_drawdown_len']
-            f_out.write('{},{},{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], sqn_score, profit_per_ddown, max_ddown_len))
-        # endfor
-    # endwith
+    if csv_file:
+        print('Writing csv report to {}'.format(csv_file))
+        with open(rp(csv_file), 'w') as f_out:
+            f_out.write('file,returns,sqn_score, profit_per_drawdown,drawdown_len\n')
+            for k_t in ret_dict:
+                sqn_score = ret_dict[k_t]['sqn_score']
+                profit_per_ddown = ret_dict[k_t]['net_profit']/ret_dict[k_t]['max_drawdown']
+                max_ddown_len = ret_dict[k_t]['max_drawdown_len']
+                f_out.write('{},{},{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], sqn_score, profit_per_ddown, max_ddown_len))
+            # endfor
+        # endwith
+    # endif
 # enddef
