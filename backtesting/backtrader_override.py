@@ -38,10 +38,12 @@ class Cerebro(backtrader.Cerebro):
         self.addanalyzer(bt.analyzers.DrawDown, _name="myDrawDown")
         self.log('Adding AnnualReturn analyzer')
         self.addanalyzer(bt.analyzers.AnnualReturn, _name="myReturn")
-        self.log('Adding TradeAnalyzer.')
+        self.log('Adding Trade analyzer.')
         self.addanalyzer(bt.analyzers.TradeAnalyzer, _name="myTradeAnalysis")
         self.log('Adding SQN analyzer.')
         self.addanalyzer(bt.analyzers.SQN, _name="mySqn")
+        self.log('Adding Transactions analyzer.')
+        self.addanalyzer(bt.analyzers.Transactions, _name="myTransactions")
         if self.en_pyfolio:
             self.log('Adding pyFolio analyzer')
             self.addanalyzer(bt.analyzers.PyFolio, _name='myPyFolio')
@@ -97,6 +99,11 @@ class Cerebro(backtrader.Cerebro):
         ret_dict['max_drawdown'] =  ddown['max']['moneydown']
         ret_dict['max_drawdown_len'] = ddown['max']['len']
         ret_dict['net_profit'] = ta['pnl']['net']['total']
+
+        tsactions = strat.analyzers.myTransactions.get_analysis()
+        last_tsac = tsactions.popitem(last=True)
+        ret_dict['last_trade'] = 'buy' if (last_tsac[1][0][0] > 0) else 'sell'
+        ret_dict['last_trade_time'] = last_tsac[0]
         return ret_dict
     # enddef
 
@@ -228,4 +235,10 @@ class Cerebro(backtrader.Cerebro):
         plot_figs = [self.plot_equity_curve_pts(ma_len=ma_len)]
         save_multiple_figs_to_image_file(plot_figs, plot_file, width=width, height=height)
     # enddef
+    def save_main_plot(self, plot_file, width=16, height=9, period=None):
+        start     = max(0, len(self.datas[0]) - period) if period else 0
+        plt.figure(figsize=(width, height))
+        main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1, start=start)[0][0]
+        main_fig.savefig(plot_file)
+        plt.close()
 # endclass

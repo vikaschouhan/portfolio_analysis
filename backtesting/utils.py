@@ -6,6 +6,8 @@ import pdf2image.pdf2image
 import numpy as np
 import sys
 import uuid
+import itertools
+import shutil
 
 def rp(path):
     return os.path.expanduser(path)
@@ -31,6 +33,12 @@ def u4():
 
 def to_precision(x, precision=2):
     return int(x * 10**precision)/(10**precision * 1.0)
+# enddef
+
+def split_chunks(l, n_chunks):
+    n = int(len(l)/n_chunks)
+    retv = [l[i*n:(i+1)*n] for i in range(int(len(l)/n)+1) if l[i*n:(i+1)*n] != []]
+    return retv[0:n_chunks-1] + [list(itertools.chain(*retv[n_chunks-1:]))]
 # enddef
 
 def append_paths(path_list):
@@ -112,10 +120,11 @@ def join_images_vertical(image_list, file_name=None):
 # endif
 
 def save_multiple_figs_to_image_file(fig_list, out_image, width=16, height=9, close_figs=True):
-    tmp_pdf = '/tmp/______tmp_pdf'
+    tmp_pdf = '/tmp/______{}_tmp_pdf'.format(u4())
     save_figs_to_pdf(tmp_pdf, fig_list, width=width, height=height, close_figs=True)
     # Convert pdf to images
     image_list = [np.asarray(x) for x in pdf2image.convert_from_path(tmp_pdf)]
+    os.remove(tmp_pdf)
     # Join images & save file
     join_images_vertical(image_list, out_image)
 # enddef
