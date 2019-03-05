@@ -2,7 +2,7 @@
 import re
 from   colorama import Fore
 import sys
-from   .invs_utils import cint
+from   .invs_utils import cint, parse_dict_file, coloritb
 
 # Function to populate sec csv file in mentioned format to symbol list
 def parse_security_file(sfile, ret_type):
@@ -103,4 +103,73 @@ def populate_sec_list(sfile):
 # enddef
 def populate_sec_dict(sfile):
     return parse_security_file(sfile, ret_type='dict')
+# enddef
+
+def populate_sym_list(invs_dict_file, sec_list):
+    # Convert inv_dot_com_db_list to dict:
+    inv_dot_com_db_dict = parse_dict_file(invs_dict_file)
+    # Generate nse dict
+    nse_dict = {}
+    for item_this in inv_dot_com_db_dict.values():
+        if u'nse_code' in item_this and item_this[u'nse_code']:
+            nse_dict[item_this[u'nse_code']] = item_this
+        # endif
+    # endfor
+    # Generate bse dict
+    bse_dict = {}
+    for item_this in inv_dot_com_db_dict.values():
+        if u'bse_code' in item_this and item_this[u'bse_code']:
+            bse_dict[item_this[u'bse_code']] = item_this
+        # endif
+    # endfor
+
+    # code list
+    nse_keys = nse_dict.keys()
+    bse_keys = [x for x in bse_dict.keys()]
+
+    # Search for tickers
+    sec_dict = {}
+    not_f_l  = []
+    for sec_this in sec_list:
+        sec_code = sec_this['code']
+        sec_name = sec_this['name']
+        sec_lsize = sec_this['lsize'] if 'lsize' in sec_this else None
+        # Search
+        if sec_code in nse_keys:
+            sec_dict[sec_code] = {
+                                     'ticker'    : nse_dict[sec_code][u'ticker'],
+                                     'name'      : nse_dict[sec_code][u'description'],
+                                     'exchange'  : nse_dict[sec_code][u'exchange'],
+                                     'full_name' : nse_dict[sec_code][u'full_name'],
+                                     'isin'      : nse_dict[sec_code][u'isin'],
+                                     'symbol'    : nse_dict[sec_code][u'symbol'],
+                                     'lot_size'  : sec_lsize,
+                                 }
+        elif sec_code in bse_keys:
+            sec_dict[sec_code] = {
+                                     'ticker'    : bse_dict[sec_code][u'ticker'],
+                                     'name'      : bse_dict[sec_code][u'description'],
+                                     'exchange'  : bse_dict[sec_code][u'exchange'],
+                                     'full_name' : bse_dict[sec_code][u'full_name'],
+                                     'isin'      : bse_dict[sec_code][u'isin'],
+                                     'symbol'    : bse_dict[sec_code][u'symbol'],
+                                     'lot_size'  : sec_lsize,
+                                 }
+        else:
+            not_f_l.append(sec_this)
+        # endif
+    # endfor
+    print(coloritb('{} not found in investing.com db'.format(not_f_l), 'red'))
+
+    return sec_dict
+# enddef
+
+def populate_sym_list_from_sec_file(invs_file, sec_file):
+    sec_list   = populate_sec_list(sfile=sec_file)
+
+    print('Found {} securities.'.format(len(sec_list)))
+    sec_tick_d = populate_sym_list(invs_file, sec_list)
+    print('Found {} securities in investing_com database.'.format(len(sec_tick_d)))
+
+    return sec_tick_d
 # enddef

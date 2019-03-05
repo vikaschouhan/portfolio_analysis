@@ -165,3 +165,57 @@ def cdir(d_path):
 def precision(x, n=2):
     return int(x * 10.0**n)/(10.0**n)
 # enddef
+
+def get_colorama_color_fore(color):
+    color_map = {
+            'red'          : Fore.RED,
+            'blue'         : Fore.BLUE,
+            'black'        : Fore.BLACK,
+            'green'        : Fore.GREEN,
+            'magenta'      : Fore.MAGENTA,
+            'yellow'       : Fore.YELLOW,
+            'cyan'         : Fore.CYAN,
+            'white'        : Fore.WHITE,
+            'lightblack'   : Fore.LIGHTBLACK_EX,
+            'lightblue'    : Fore.LIGHTBLUE_EX,
+            'lightcyan'    : Fore.LIGHTCYAN_EX,
+            'lightgreen'   : Fore.LIGHTGREEN_EX,
+            'lightmagenta' : Fore.LIGHTMAGENTA_EX,
+            'lightred'     : Fore.LIGHTRED_EX,
+            'lightwhite'   : Fore.LIGHTWHITE_EX,
+            'lightyellow'  : Fore.LIGHTYELLOW_EX,
+        }
+    assert color in color_map
+    return color_map[color]
+# enddef
+
+def get_colorama_color_back(color):
+    color_map = {
+            'red'          : Back.RED,
+            'blue'         : Back.BLUE,
+            'black'        : Back.BLACK,
+            'green'        : Back.GREEN,
+            'magenta'      : Back.MAGENTA,
+            'yellow'       : Back.YELLOW,
+            'cyan'         : Back.CYAN,
+            'white'        : Back.WHITE,
+            'lightblack'   : Back.LIGHTBLACK_EX,
+            'lightblue'    : Back.LIGHTBLUE_EX,
+            'lightcyan'    : Back.LIGHTCYAN_EX,
+            'lightgreen'   : Back.LIGHTGREEN_EX,
+            'lightmagenta' : Back.LIGHTMAGENTA_EX,
+            'lightred'     : Back.LIGHTRED_EX,
+            'lightwhite'   : Back.LIGHTWHITE_EX,
+            'lightyellow'  : Back.LIGHTYELLOW_EX,
+        }
+    assert color in color_map
+    return color_map[color]
+# enddef
+
+def coloritf(message, color):
+    return get_colorama_color_fore(color) + message + Fore.RESET
+# enddef
+
+def coloritb(message, color):
+    return get_colorama_color_back(color) + message + Back.RESET
+# enddef
