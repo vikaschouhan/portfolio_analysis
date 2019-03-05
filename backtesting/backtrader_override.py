@@ -314,6 +314,11 @@ class CerebroSC(backtrader.Cerebro):
         last_tsac = tsactions.popitem(last=True)
         ret_dict['last_trade'] = 'buy' if (last_tsac[1][0][0] > 0) else 'sell'
         ret_dict['last_trade_time'] = last_tsac[0]
+
+        high_line = self.datas[0].high
+        low_line  = self.datas[0].low
+        ret_dict['high'] = max(high_line.get(size=high_line.get_idx()))
+        ret_dict['low']  = min(low_line.get(size=low_line.get_idx()))
         return ret_dict
     # enddef
 
