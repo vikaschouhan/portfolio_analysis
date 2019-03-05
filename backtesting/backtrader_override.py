@@ -1,3 +1,5 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+
 import backtrader.cerebro
 import backtrader.plot as plot
 import backtrader as bt
@@ -5,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from   utils import *
 
+# This is for running strategies
 class Cerebro(backtrader.Cerebro):
     def __init__(self, **kwargs):
         self.norm_ref   = kwargs.pop('normalization_reference', 100)
@@ -239,6 +242,93 @@ class Cerebro(backtrader.Cerebro):
         start     = max(0, len(self.datas[0]) - period) if period else 0
         plt.figure(figsize=(width, height))
         main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1, start=start)[0][0]
+        main_fig.savefig(plot_file)
+        plt.close()
+# endclass
+
+# This is for scanners
+class CerebroSC(backtrader.Cerebro):
+    def __init__(self, **kwargs):
+        self.en_debug   = kwargs.pop('enable_debug', False)
+
+        super().__init__(**kwargs)
+        self.add_report_analyzers()
+        self.p.stdstats = False  # Disable broker and cash
+    # enddef
+
+    # Enable debug
+    def enable_debug(self):
+        self.en_debug = True
+    # enddef
+    # Enable log
+    def log(self, message):
+        if self.en_debug:
+            print(message)
+        # endif
+    # enddef
+
+    # Add analyzers according to options passed
+    def add_report_analyzers(self):
+        self.log('Adding Transactions analyzer.')
+        self.addanalyzer(bt.analyzers.Transactions, _name="myTransactions")
+    # enddef
+
+    ####################
+    # Override default cerebro.plot for returning fig objects instead of plotting them
+    def plot(self, plotter=None, numfigs=1, iplot=True, start=None, end=None,
+             width=16, height=9, dpi=300, tight=True, use=None,
+             **kwargs):
+        if self._exactbars > 0:
+            return
+        # endif
+
+        if not plotter:
+            if self.p.oldsync:
+                plotter = plot.Plot_OldSync(**kwargs)
+            else:
+                plotter = plot.Plot(**kwargs)
+            # endif
+        # endif
+
+        figs = []
+        for stratlist in self.runstrats:
+            for si, strat in enumerate(stratlist):
+                rfig = plotter.plot(strat, figid=si * 100,
+                                    numfigs=numfigs, iplot=iplot,
+                                    start=start, end=end, use=use)
+                figs.append(rfig)
+            # endfor
+            #plotter.show()
+        # endfor
+
+        return figs
+    # enddef
+
+    #######################################################
+    # Write a csv report with custom stats
+    def get_stats0(self):
+        strat = self.get_strategy_backtest()
+
+        ret_dict = {}
+        tsactions = strat.analyzers.myTransactions.get_analysis()
+        last_tsac = tsactions.popitem(last=True)
+        ret_dict['last_trade'] = 'buy' if (last_tsac[1][0][0] > 0) else 'sell'
+        ret_dict['last_trade_time'] = last_tsac[0]
+        return ret_dict
+    # enddef
+
+    ##############################################
+    # Much of the below functions have been copied from
+    # https://github.com/Oxylo/btreport
+    # I would like to thank the author of this project for his work.
+    # Add new functions for implementing extra plotting
+    def get_strategy_backtest(self):
+        return self.runstrats[0][0]
+    # enddef
+    def save_main_plot(self, plot_file, width=16, height=9, period=None):
+        start     = max(0, len(self.datas[0]) - period) if period else 0
+        plt.figure(figsize=(width, height))
+        main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=True, numfigs=1, start=start)[0][0]
         main_fig.savefig(plot_file)
         plt.close()
 # endclass

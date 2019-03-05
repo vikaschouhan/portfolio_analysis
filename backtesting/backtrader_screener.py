@@ -53,7 +53,7 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
         # prepare feed
         data = PandasDataCustom(dataname=pd_data)
 
-        cerebro = bto.Cerebro()
+        cerebro = bto.CerebroSC()
         # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
         cerebro.addstrategy(strategy=strategy_map[strategy], **opt_dict)
         cerebro.adddata(data)
@@ -67,7 +67,7 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
         # Set the fees
         cerebro.broker.setcommission(commission=0.00005)
 
-        # Run backtest
+        # Run backtest?!?jedi=0, ?!?        (*_***kwargs*_*) ?!?jedi?!?
         backtest = cerebro.run()
 
         # Get some stats
