@@ -317,8 +317,13 @@ class CerebroSC(backtrader.Cerebro):
 
         high_line = self.datas[0].high
         low_line  = self.datas[0].low
+        close_line = self.datas[0].close
+        date_line = self.datas[0].datetime
         ret_dict['high'] = max(high_line.get(size=high_line.get_idx()))
         ret_dict['low']  = min(low_line.get(size=low_line.get_idx()))
+        ret_dict['close'] = close_line[0]
+        ret_dict['last_time'] = self.datas[0].num2date(date_line[0])
+        ret_dict['time_step'] = ret_dict['last_time'] - self.datas[0].num2date(date_line[-1])
         return ret_dict
     # enddef
 
@@ -335,5 +340,5 @@ class CerebroSC(backtrader.Cerebro):
         plt.figure(figsize=(width, height))
         main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=True, numfigs=1, start=start)[0][0]
         main_fig.savefig(plot_file)
-        plt.close()
+        plt.close(main_fig)
 # endclass

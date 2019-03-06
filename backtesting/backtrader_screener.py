@@ -37,7 +37,7 @@ class PandasDataCustom(btfeeds.PandasData):
     )
 # endclass
 
-def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, opt_dict={}, proc_id=None):
+def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, opt_dict={}, ret_dict={}, proc_id=None):
     file_ctr  = 1
     num_files = len(csv_list)
     proc_id   = 'Unk' if proc_id == None else proc_id
@@ -67,14 +67,19 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
         # Set the fees
         cerebro.broker.setcommission(commission=0.00005)
 
-        # Run backtest?!?jedi=0, ?!?        (*_***kwargs*_*) ?!?jedi?!?
+        # Run backtest
         backtest = cerebro.run()
 
         # Get some stats
-        ret_dict[file_t] = cerebro.get_stats0()
+        ret_stats = cerebro.get_stats0()
 
         # Save plots
-        cerebro.save_main_plot('{}/{}.png'.format(out_dir, os.path.basename(file_t)), width=16, height=9, period=200)
+        plot_file = '{}/{}.png'.format(out_dir, os.path.basename(file_t))
+        plot_dict = {'plot_file' : plot_file}
+        cerebro.save_main_plot(plot_file, width=16, height=9, period=200)
+
+        # Store it
+        ret_dict[file_t] = {**ret_stats, **plot_dict}
 
         file_ctr = file_ctr + 1
     # endfor
@@ -168,14 +173,15 @@ if __name__ == '__main__':
     # endif
 
     ##
-    ret_dict = {}
+    manager = multiprocessing.Manager()
+    ret_dict = manager.dict()
     csv_chunks = split_chunks(files, nthreads)
 
     # Spawn processes
     proc_list = []
     for indx in range(nthreads):
         proc_t = multiprocessing.Process(target=run_cerebro_over_csvs, args=(csv_chunks[indx], strategy,
-            slippage, out_dir, period, opt_dict, indx,))
+            slippage, out_dir, period, opt_dict, ret_dict, indx,))
         proc_list.append(proc_t)
         proc_t.start()
     # endfor
@@ -184,17 +190,23 @@ if __name__ == '__main__':
     for indx in range(nthreads):
         proc_list[indx].join()
     # endfor
+    
+    import pickle
+    pickle.dump(ret_dict.items(), open('/tmp/a.pkl', 'wb'))
 
-    #if csv_file:
-    #    print('Writing csv report to {}'.format(csv_file))
-    #    with open(rp(csv_file), 'w') as f_out:
-    #        f_out.write('file,returns,sqn_score, profit_per_drawdown,drawdown_len\n')
-    #        for k_t in ret_dict:
-    #            sqn_score = ret_dict[k_t]['sqn_score']
-    #            profit_per_ddown = ret_dict[k_t]['net_profit']/ret_dict[k_t]['max_drawdown']
-    #            max_ddown_len = ret_dict[k_t]['max_drawdown_len']
-    #            f_out.write('{},{},{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], sqn_score, profit_per_ddown, max_ddown_len))
-    #        # endfor
-    #    # endwith
-    ## endif
+    if csv_file:
+        print('Writing csv report to {}'.format(csv_file))
+        with open(rp(csv_file), 'w') as f_out:
+            f_out.write('file,trade,peak_to_tough,last_trade_time,plot_file\n')
+            for k_t in ret_dict:
+                file_t = k_t
+                ltrade = ret_dict[k_t]['last_trade']
+                pk2to  = (ret_dict[k_t]['high'] - ret_dict[k_t]['close'])/ret_dict[k_t]['high']
+                lttime = ret_dict[k_t]['last_trade_time']
+                plotf  = os.path.abspath(os.path.expanduser(ret_dict[k_t]['plot_file']))
+                hplotf = 'file:///' + plotf
+                f_out.write('{},{},{},{},{}\n'.format(k_t, ltrade, pk2to, lttime, '=HYPERLINK("{}")'.format(hplotf)))
+            # endfor
+        # endwith
+    # endif
 # enddef
