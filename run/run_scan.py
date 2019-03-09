@@ -133,11 +133,14 @@ if __name__ == '__main__':
         subprocess.call(shlex.split(py_cmd))
     # endif
 
-    print('Running backtester...')
-    strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
-    py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
-        --outdir {plots_dir} --nthreads {num_threads} --period 200  --repfile {report_file} {strat_arg}'.format(
-            csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
-            report_file=report_file, strat_arg=strat_arg)
-    subprocess.call(shlex.split(py_cmd))
+    # Run backtester only when strategy is specified.
+    if strategy:
+        print('Running backtester...')
+        strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
+        py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
+            --outdir {plots_dir} --nthreads {num_threads} --period 200  --repfile {report_file} {strat_arg}'.format(
+                csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
+                report_file=report_file, strat_arg=strat_arg)
+        subprocess.call(shlex.split(py_cmd))
+    # endif
 # enddef
