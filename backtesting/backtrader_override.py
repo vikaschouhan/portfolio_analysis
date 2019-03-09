@@ -319,11 +319,18 @@ class CerebroSC(backtrader.Cerebro):
         low_line  = self.datas[0].low
         close_line = self.datas[0].close
         date_line = self.datas[0].datetime
+
+        # Find index
+        date_array = date_line.get(size=date_line.idx)
+        last_tnum  = self.datas[0].date2num(last_tsac[0])
+        gg_indx    = date_line.idx - date_array.index(last_tnum)
+
         ret_dict['high'] = max(high_line.get(size=high_line.get_idx()))
         ret_dict['low']  = min(low_line.get(size=low_line.get_idx()))
         ret_dict['close'] = close_line[0]
         ret_dict['last_time'] = self.datas[0].num2date(date_line[0])
         ret_dict['time_step'] = ret_dict['last_time'] - self.datas[0].num2date(date_line[-1])
+        ret_dict['num_step']  = gg_indx
         return ret_dict
     # enddef
 

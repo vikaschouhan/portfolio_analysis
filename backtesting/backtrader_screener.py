@@ -86,6 +86,8 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
 
         file_ctr = file_ctr + 1
     # endfor
+
+    return cerebro
 # enddef
 
 if __name__ == '__main__':
@@ -99,7 +101,9 @@ if __name__ == '__main__':
     parser.add_argument('--slippage',  help='Slippage (fixed)', type=float, default=1.0)
     parser.add_argument('--outdir',    help='Output Directory.', type=str, default=None)
     parser.add_argument('--period',    help='Time period for plots.', type=int, default=None)
+    parser.add_argument('--lag',       help='Lag period (multiple of resolution).', type=int, default=4)
     parser.add_argument('--nthreads',  help='Number of threads to process.', type=int, default=4)
+    parser.add_argument('--debug',     help='Enable debug mode.', action='store_true')
     args = parser.parse_args()
 
     # Append paths
@@ -161,7 +165,9 @@ if __name__ == '__main__':
     out_dir  = args.__dict__['outdir']
     slippage = args.__dict__['slippage']
     nthreads = args.__dict__['nthreads']
+    tlag     = args.__dict__['lag']
     period   = args.__dict__['period']
+    debug    = args.__dict__['debug']
 
     if out_dir == None:
         print('--outdir should be valid.')
@@ -177,38 +183,41 @@ if __name__ == '__main__':
 
     ##
 
-    ret_dict = manager.dict()
-    csv_chunks = split_chunks(files, nthreads)
+    if not debug:
+        ret_dict = manager.dict()
+        csv_chunks = split_chunks(files, nthreads)
 
-    # Spawn processes
-    proc_list = []
-    for indx in range(nthreads):
-        proc_t = multiprocessing.Process(target=run_cerebro_over_csvs, args=(csv_chunks[indx], strategy,
-            slippage, out_dir, period, opt_dict, ret_dict, indx,))
-        proc_list.append(proc_t)
-        proc_t.start()
-    # endfor
+        # Spawn processes
+        proc_list = []
+        for indx in range(nthreads):
+            proc_t = multiprocessing.Process(target=run_cerebro_over_csvs, args=(csv_chunks[indx], strategy,
+                slippage, out_dir, period, opt_dict, ret_dict, indx,))
+            proc_list.append(proc_t)
+            proc_t.start()
+        # endfor
 
-    # Wait for all processes to end
-    for indx in range(nthreads):
-        proc_list[indx].join()
-    # endfor
+        # Wait for all processes to end
+        for indx in range(nthreads):
+            proc_list[indx].join()
+        # endfor
+    else:
+        cerebro_ins = run_cerebro_over_csvs(files, strategy, slippage, out_dir, period, opt_dict)
+    # endif
     
-    import pickle
-    pickle.dump(ret_dict.items(), open('/tmp/a.pkl', 'wb'))
-
-    if csv_file:
+    if csv_file and not debug:
         print('Writing csv report to {}'.format(csv_file))
         with open(rp(csv_file), 'w') as f_out:
-            f_out.write('file,trade,peak_to_tough,last_trade_time,plot_file\n')
+            f_out.write('file,trade,peak_to_tough,last_trade_time,last_step,take_trade,plot_file\n')
             for k_t in ret_dict:
                 file_t = k_t
                 ltrade = ret_dict[k_t]['last_trade']
                 pk2to  = (ret_dict[k_t]['high'] - ret_dict[k_t]['close'])/ret_dict[k_t]['high']
                 lttime = ret_dict[k_t]['last_trade_time']
                 plotf  = os.path.abspath(os.path.expanduser(ret_dict[k_t]['plot_file']))
+                lstep  = ret_dict[k_t]['num_step']
+                ttrade = 'take' if ret_dict[k_t]['num_step'] < tlag else 'ignore'
                 hplotf = 'file:///' + plotf
-                f_out.write('{},{},{},{},{}\n'.format(k_t, ltrade, pk2to, lttime, '=HYPERLINK("{}")'.format(hplotf)))
+                f_out.write('{},{},{},{},{},{},{}\n'.format(k_t, ltrade, pk2to, lttime, lstep, ttrade, '=HYPERLINK("{}")'.format(hplotf)))
             # endfor
         # endwith
     # endif
