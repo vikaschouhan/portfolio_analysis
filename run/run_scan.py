@@ -80,8 +80,8 @@ if __name__ == '__main__':
 
     output_dir  = rp(get_key(config_json, 'out_dir', cast_to=str))
     resolution  = get_key(config_json, 'resolution', cast_to=str)
-    invs_file   = get_key(config_json, 'invs_file', cast_to=str)
-    sec_file    = get_key(config_json, 'db_file', cast_to=str)
+    invs_file   = rp(get_key(config_json, 'invs_file', cast_to=str))
+    sec_file    = rp(get_key(config_json, 'db_file', cast_to=str))
     down_csvs   = get_key(config_json, 'download_csvs', False, cast_to=bool)
     n_threads   = get_key(config_json, 'num_threads', 2, cast_to=int)
     strategy    = get_key(config_json, 'strategy', cast_to=str)
