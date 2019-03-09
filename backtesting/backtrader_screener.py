@@ -12,6 +12,9 @@ import backtrader_override as bto
 import multiprocessing
 from   utils import *
 
+# Process manager
+manager = multiprocessing.Manager()
+
 class PandasDataCustom(btfeeds.PandasData):
     params = (
         ('nocase', True),
@@ -173,7 +176,7 @@ if __name__ == '__main__':
     # endif
 
     ##
-    manager = multiprocessing.Manager()
+
     ret_dict = manager.dict()
     csv_chunks = split_chunks(files, nthreads)
 
