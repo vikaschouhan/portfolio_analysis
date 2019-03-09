@@ -5,5 +5,6 @@
 	"db_file"         : "scripts/db/bse_group_A.csv",
 	"strategy"        : "ma_cross",
        	"download_csvs"   : false,
-       	"num_threads"     : 8
+       	"num_threads"     : 8,
+	"look_back"       : 4
 }

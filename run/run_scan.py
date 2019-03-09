@@ -87,6 +87,7 @@ if __name__ == '__main__':
     strategy    = get_key(config_json, 'strategy', cast_to=str)
     strat_opts  = get_key(config_json, 'strategy_opts', cast_to=str)
     csv_backup  = get_key(config_json, 'csv_backup', True, cast_to=bool)
+    look_back   = get_key(config_json, 'look_back', 4, cast_to=int)
 
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
@@ -117,12 +118,14 @@ if __name__ == '__main__':
     print('report_file       = {}'.format(report_file))
     print('strategy          = {}'.format(strategy))
     print('strat_opts        = {}'.format(strat_opts))
+    print('look_back         = {}'.format(look_back))
 
     if down_csvs:
         print('Generating CSV files....')
         py_cmd = 'python3 scripts/gen_csvs_technical.py --invs {invs_file} \
                 --res {resolution} --sfile {sec_file} --odir {out_dir}'.format(invs_file=invs_file,
                     resolution=resolution, sec_file=sec_file, out_dir=csv_dir)
+        print('Running CMD: {}'.format(py_cmd))
         subprocess.call(shlex.split(py_cmd))
     # endif
 
@@ -130,6 +133,7 @@ if __name__ == '__main__':
     if csv_backup:
         print('Taking csv files backup.')
         py_cmd = 'tar -cvjf {backup_file}.tar.bz2 {csv_dir}'.format(backup_file=csv_dir, csv_dir=csv_dir)
+        print('Running CMD: {}'.format(py_cmd))
         subprocess.call(shlex.split(py_cmd))
     # endif
 
@@ -138,9 +142,11 @@ if __name__ == '__main__':
         print('Running backtester...')
         strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
         py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
-            --outdir {plots_dir} --nthreads {num_threads} --period 200  --repfile {report_file} {strat_arg}'.format(
+            --outdir {plots_dir} --nthreads {num_threads} --period 200  --repfile {report_file} {strat_arg} \
+            --lag {look_back}'.format(
                 csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
-                report_file=report_file, strat_arg=strat_arg)
+                report_file=report_file, strat_arg=strat_arg, look_back=look_back)
+        print('Running CMD: {}'.format(py_cmd))
         subprocess.call(shlex.split(py_cmd))
     # endif
 # enddef
