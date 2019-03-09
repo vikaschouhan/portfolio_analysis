@@ -35,7 +35,7 @@ def parse_security_file(sfile, ret_type):
         # endif
     # enddef
 
-    with open(sfile, 'r') as file_h:
+    with open(sfile, 'r', encoding='ISO-8859-1') as file_h:
         for l_this in file_h:
             l_ctr = l_ctr + 1
             if l_ctr == 1:

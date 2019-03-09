@@ -31,7 +31,7 @@ def get_key(conf_dict, key, def_val=None, cast_to=None):
     # endif
 
     if cast_to is bool:
-        return distutils.util.strtobool(value)
+        return distutils.util.strtobool(value) if isinstance(value, str) else value
     else:
         return cast_to(value)
     # endif
@@ -82,10 +82,11 @@ if __name__ == '__main__':
     resolution  = get_key(config_json, 'resolution', cast_to=str)
     invs_file   = get_key(config_json, 'invs_file', cast_to=str)
     sec_file    = get_key(config_json, 'db_file', cast_to=str)
-    down_csvs   = get_key(config_json, 'download_csvs', True, cast_to=bool)
+    down_csvs   = get_key(config_json, 'download_csvs', False, cast_to=bool)
     n_threads   = get_key(config_json, 'num_threads', 2, cast_to=int)
     strategy    = get_key(config_json, 'strategy', cast_to=str)
     strat_opts  = get_key(config_json, 'strategy_opts', cast_to=str)
+    csv_backup  = get_key(config_json, 'csv_backup', True, cast_to=bool)
 
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
@@ -122,6 +123,13 @@ if __name__ == '__main__':
         py_cmd = 'python3 scripts/gen_csvs_technical.py --invs {invs_file} \
                 --res {resolution} --sfile {sec_file} --odir {out_dir}'.format(invs_file=invs_file,
                     resolution=resolution, sec_file=sec_file, out_dir=csv_dir)
+        subprocess.call(shlex.split(py_cmd))
+    # endif
+
+    # Take backup if suggested
+    if csv_backup:
+        print('Taking csv files backup.')
+        py_cmd = 'tar -cvjf {backup_file}.tar.bz2 {csv_dir}'.format(backup_file=csv_dir, csv_dir=csv_dir)
         subprocess.call(shlex.split(py_cmd))
     # endif
 

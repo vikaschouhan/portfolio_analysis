@@ -2,7 +2,7 @@
 	"out_dir"         : "~/sc_db_github_files",
        	"resolution"      : "1W",
        	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
-	"db_file"         : "scripts/db/bse_group_A.csv",
+	"db_file"         : "scripts/db/nse_all_eq.csv",
 	"strategy"        : "ma_cross",
        	"download_csvs"   : false,
        	"num_threads"     : 8

@@ -4,6 +4,6 @@
        	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
 	"db_file"         : "scripts/db/bse_group_A.csv",
 	"strategy"        : "ma_cross",
-       	"download_csvs"   : true,
+       	"download_csvs"   : false,
        	"num_threads"     : 8
 }
