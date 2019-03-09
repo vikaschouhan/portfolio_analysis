@@ -311,9 +311,16 @@ class CerebroSC(backtrader.Cerebro):
 
         ret_dict = {}
         tsactions = strat.analyzers.myTransactions.get_analysis()
-        last_tsac = tsactions.popitem(last=True)
-        ret_dict['last_trade'] = 'buy' if (last_tsac[1][0][0] > 0) else 'sell'
-        ret_dict['last_trade_time'] = last_tsac[0]
+        try:
+            last_tsac = tsactions.popitem(last=True)
+            ret_dict['last_trade'] = 'buy' if (last_tsac[1][0][0] > 0) else 'sell'
+            ret_dict['last_trade_time'] = last_tsac[0]
+            no_key = False
+        except KeyError:
+            ret_dict['last_trade'] = 'NIL'
+            ret_dict['last_trade_time'] = 'NIL'
+            no_key = True
+        # endtry
 
         high_line = self.datas[0].high
         low_line  = self.datas[0].low
@@ -321,16 +328,18 @@ class CerebroSC(backtrader.Cerebro):
         date_line = self.datas[0].datetime
 
         # Find index
-        date_array = date_line.get(size=date_line.idx)
-        last_tnum  = self.datas[0].date2num(last_tsac[0])
-        gg_indx    = date_line.idx - date_array.index(last_tnum)
+        if not no_key:
+            date_array = date_line.get(size=date_line.idx)
+            last_tnum  = self.datas[0].date2num(last_tsac[0])
+            gg_indx    = date_line.idx - date_array.index(last_tnum)
+        # endif
 
         ret_dict['high'] = max(high_line.get(size=high_line.get_idx()))
         ret_dict['low']  = min(low_line.get(size=low_line.get_idx()))
         ret_dict['close'] = close_line[0]
         ret_dict['last_time'] = self.datas[0].num2date(date_line[0])
         ret_dict['time_step'] = ret_dict['last_time'] - self.datas[0].num2date(date_line[-1])
-        ret_dict['num_step']  = gg_indx
+        ret_dict['num_step']  = 10000 if no_key else gg_indx
         return ret_dict
     # enddef
 
