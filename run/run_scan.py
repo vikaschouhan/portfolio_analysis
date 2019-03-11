@@ -92,10 +92,10 @@ if __name__ == '__main__':
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
         results_dir = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + \
-                '_{}_{}'.format(resolution, strategy) + '_{}'.format(strat_opts.replace(',', '_'))
+                '__{}__{}'.format(resolution, strategy) + '__{}'.format(strat_opts.replace('=', '_'))
     else:
         results_dir = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + \
-                '_{}_{}'.format(resolution, strategy)
+                '__{}__{}'.format(resolution, strategy)
     # endif
     plots_dir   = results_dir + '/plots'
     report_file = results_dir + '/report.csv'

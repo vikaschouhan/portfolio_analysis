@@ -1,0 +1,11 @@
+{
+	"out_dir"         : "~/sc_db_github_files",
+       	"resolution"      : "1W",
+       	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
+	"db_file"         : "scripts/db/bse_group_A.csv",
+	"strategy"        : "donch_channel",
+	"strategy_opts"   : "period=4",
+       	"download_csvs"   : false,
+       	"num_threads"     : 8,
+	"look_back"       : 4
+}
