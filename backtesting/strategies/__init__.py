@@ -7,6 +7,7 @@ from   ma_cross import LongShortEMA
 from   donch_channel import Donch
 from   ema_ema1_cross import EMA_EMA1
 from   ren3_cross import Ren3Cross, Ren3FCross, Ren3HCross
+from   supertrend_rsi import SupertrendRSILong, SupertrendRSIShort
 
 strategy_map = {
             'ma_cross'                          : LongShortEMA,
@@ -15,4 +16,6 @@ strategy_map = {
             'ren3_cross'                        : Ren3Cross,
             'ren3h_cross'                       : Ren3HCross,
             'ren3f_cross'                       : Ren3FCross,
+            'supertrend_rsi_long'               : SupertrendRSILong,
+            'supertrend_rsi_short'              : SupertrendRSIShort,
         }

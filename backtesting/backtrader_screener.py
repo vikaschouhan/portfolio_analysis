@@ -79,7 +79,7 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
         # Save plots
         plot_file = '{}/{}.png'.format(out_dir, os.path.basename(file_t))
         plot_dict = {'plot_file' : plot_file}
-        cerebro.save_main_plot(plot_file, width=16, height=9, period=200)
+        cerebro.save_main_plot(plot_file, width=16, height=9, period=period)
 
         # Store it
         ret_dict[file_t] = {**ret_stats, **plot_dict}

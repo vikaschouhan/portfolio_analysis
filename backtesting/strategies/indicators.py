@@ -92,3 +92,57 @@ class Ren3H(bt.Indicator):
         self.l.ren_ind[0] = self.heikin.ha_open[0]
     # enddef
 # endclass
+
+
+# SuperTrend Indicator
+class Supertrend(bt.Indicator):
+    lines      = ('supertrend', 'final_up', 'final_down', 'close',)
+    params     = (('atr_period', 14), ('atr_multiplier', 4),)
+    plotinfo   = dict(subplot=False)
+    plotlines  = dict(
+                     supertrend=dict(_fill_lt=('close', 'g'),
+                                     _fill_gt=('close', 'r'),
+                                     _plotskip=False),
+                     final_up=dict(_plotskip=True),
+                     final_down=dict(_plotskip=True),
+                     close=dict(_plotskip=True)
+                 )
+    _nextforce = True
+
+    def __init__(self):
+        self.atr_t  = bt.indicators.ATR(self.data, period=self.p.atr_period)
+        self.avg_t  = (self.data.high + self.data.low)/2
+        self.bas_u  = self.avg_t - self.p.atr_multiplier * self.atr_t
+        self.bas_l  = self.avg_t + self.p.atr_multiplier * self.atr_t
+        self.l.close = self.data.close
+        super(Supertrend, self).__init__()
+    # enddef
+
+    def next(self):
+        if (self.data.close[-1] > self.l.final_up[-1]):
+            self.l.final_up[0] = max(self.bas_u[0], self.l.final_up[-1])
+        else:
+            self.l.final_up[0] = self.bas_u[0]
+        # endif
+        if (self.data.close[-1] < self.l.final_down[-1]):
+            self.l.final_down[0] = min(self.bas_l[0], self.l.final_down[-1])
+        else:
+            self.l.final_down[0] = self.bas_l[0]
+        # endif
+     
+        if self.data.close[0] > self.final_down[-1]:
+            self.l.supertrend[0] = self.l.final_up[0]
+        elif self.data.close[0] < self.final_up[-1]:
+            self.l.supertrend[0] = self.l.final_down[0]
+        else:
+            self.l.supertrend[0] = self.l.supertrend[-1]
+        # endif
+        
+    # enddef
+
+    def prenext(self):
+        # seed recursive value
+        self.l.final_up[0]   = 0
+        self.l.final_down[0] = 0
+    # enddef
+# endclass

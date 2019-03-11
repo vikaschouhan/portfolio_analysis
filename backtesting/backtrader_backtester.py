@@ -170,7 +170,8 @@ if __name__ == '__main__':
         ret_dict[file_t] = cerebro.get_stats0()
 
         # Save plots
-        cerebro.save_equity_curve_plot('{}/{}.png'.format(out_dir, os.path.basename(file_t), width=48, height=27), ma_len=200)
+        cerebro.save_equity_curve_plot('{}/{}_equity.png'.format(out_dir, os.path.basename(file_t), width=48, height=27), ma_len=200)
+        cerebro.save_main_plot('{}/{}_main.png'.format(out_dir, os.path.basename(file_t)), width=48, height=27, period=200)
 
         file_ctr += 1
     # endfor
