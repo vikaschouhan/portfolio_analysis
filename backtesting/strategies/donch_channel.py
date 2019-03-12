@@ -5,22 +5,15 @@ import datetime
 import backtrader.indicators as btind
 import itertools
 import os, sys
+from   common import StrategyOverride
 
-class Donch(bt.Strategy):
+class Donch(StrategyOverride):
     params = dict(
         period=20,
         stake=1,
         printout=False,
         mtrade=False,
     )
-
-    def log(self, txt, dt=None):
-        if self.p.printout:
-            dt = dt or self.data.datetime[0]
-            dt = bt.num2date(dt)
-            print('%s, %s' % (dt.isoformat(), txt))
-        # endif
-    # enddef
 
     def __init__(self):
         # To control operation entries
@@ -34,11 +27,7 @@ class Donch(bt.Strategy):
         self.data_hhv  = btind.Highest(self.data.high, period=self.p.period, subplot=False)
         self.data_llv  = btind.Lowest(self.data.low, period=self.p.period, subplot=False)
 
-        # To alternate amongst different tradeids
-        if self.p.mtrade:
-            self.tradeid = itertools.cycle([0, 1, 2])
-        else:
-            self.tradeid = itertools.cycle([0])
+        self.init_tradeid()
         # endif
     # enddef
 
@@ -113,19 +102,5 @@ class Donch(bt.Strategy):
 
         # Allow new orders
         self.order = None
-    # enddef
-
-    def notify_trade(self, trade):
-        if trade.isclosed:
-            self.log('TRADE PROFIT, GROSS %.2f, NET %.2f' %
-                     (trade.pnl, trade.pnlcomm))
-        elif trade.justopened:
-            self.log('TRADE OPENED, SIZE %2d' % trade.size)
-        # endif
-    # enddef
-
-    def stop(self):
-        #pnl = round(self.broker.getvalue() - self.startcash,2)
-        self.log('Period: {} Final PnL Points: {}'.format(self.p.period, int(self.accpoints)))
     # enddef
 # endclass

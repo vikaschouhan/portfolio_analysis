@@ -9,10 +9,11 @@ import backtrader.indicators as btind
 import itertools
 import os, sys
 import indicators as myind
+from   common import StrategyOverride
 
 #############################################
 # based on Ren3 Indicator
-class Ren3Cross(bt.Strategy):
+class Ren3Cross(StrategyOverride):
     params = dict(
         atr_period=14,
         ma_period1=2,
@@ -22,14 +23,6 @@ class Ren3Cross(bt.Strategy):
         onlylong=False,
         mtrade=False,
     )
-
-    def log(self, txt, dt=None):
-        if self.p.printout:
-            dt = dt or self.data.datetime[0]
-            dt = bt.num2date(dt)
-            print('%s, %s' % (dt.isoformat(), txt))
-        # endif
-    # enddef
 
     def __init__(self):
         # To control operation entries
@@ -45,12 +38,7 @@ class Ren3Cross(bt.Strategy):
         # Create a CrossOver Signal from close an moving average
         self.signal = btind.CrossOver(ren3_sig, ren3_sig_ema)
 
-        # To alternate amongst different tradeids
-        if self.p.mtrade:
-            self.tradeid = itertools.cycle([0, 1, 2])
-        else:
-            self.tradeid = itertools.cycle([0])
-        # endif
+        self.init_tradeid()
     # enddef
 
     def next(self):
@@ -80,52 +68,11 @@ class Ren3Cross(bt.Strategy):
                 self.sell(size=self.p.stake, tradeid=self.curtradeid)
             # endif
         # endif
-
-    def notify_order(self, order):
-        if order.status in [bt.Order.Submitted, bt.Order.Accepted]:
-            return  # Await further notifications
-        # endif
-
-        if order.status == order.Completed:
-            if order.isbuy():
-                self.accpoints += (self.lastprice - order.executed.price) if self.lastprice else 0
-                buytxt = 'BUY COMPLETE, %.2f' % order.executed.price
-                self.log(buytxt, order.executed.dt)
-                self.lastorder = order.executed.price
-            else:
-                self.accpoints += (order.executed.price - self.lastprice) if self.lastprice else 0
-                selltxt = 'SELL COMPLETE, %.2f' % order.executed.price
-                self.log(selltxt, order.executed.dt)
-                self.lastprice = order.executed.price
-            # endif
-
-        elif order.status in [order.Expired, order.Canceled, order.Margin]:
-            self.log('%s ,' % order.Status[order.status])
-            pass  # Simply log
-        # endif
-
-        # Allow new orders
-        self.order = None
-    # enddef
-
-    def notify_trade(self, trade):
-        if trade.isclosed:
-            self.log('TRADE PROFIT, GROSS %.2f, NET %.2f' %
-                     (trade.pnl, trade.pnlcomm))
-        elif trade.justopened:
-            self.log('TRADE OPENED, SIZE %2d' % trade.size)
-        # endif
-    # enddef
-
-    def stop(self):
-        #pnl = round(self.broker.getvalue() - self.startcash,2)
-        self.log('Final PnL Points: {}'.format(int(self.accpoints)))
-    # enddef
 # endclass
 
 ###########################################################
 # Based on Ren3F indicator
-class Ren3FCross(bt.Strategy):
+class Ren3FCross(StrategyOverride):
     params = dict(
         step_size=2,
         ma_period1=2,
@@ -135,14 +82,6 @@ class Ren3FCross(bt.Strategy):
         onlylong=False,
         mtrade=False,
     )
-
-    def log(self, txt, dt=None):
-        if self.p.printout:
-            dt = dt or self.data.datetime[0]
-            dt = bt.num2date(dt)
-            print('%s, %s' % (dt.isoformat(), txt))
-        # endif
-    # enddef
 
     def __init__(self):
         # To control operation entries
@@ -158,12 +97,7 @@ class Ren3FCross(bt.Strategy):
         # Create a CrossOver Signal from close an moving average
         self.signal = btind.CrossOver(ren3_sig, ren3_sig_ema)
 
-        # To alternate amongst different tradeids
-        if self.p.mtrade:
-            self.tradeid = itertools.cycle([0, 1, 2])
-        else:
-            self.tradeid = itertools.cycle([0])
-        # endif
+        self.init_tradeid()
     # enddef
 
     def next(self):
@@ -193,52 +127,11 @@ class Ren3FCross(bt.Strategy):
                 self.sell(size=self.p.stake, tradeid=self.curtradeid)
             # endif
         # endif
-
-    def notify_order(self, order):
-        if order.status in [bt.Order.Submitted, bt.Order.Accepted]:
-            return  # Await further notifications
-        # endif
-
-        if order.status == order.Completed:
-            if order.isbuy():
-                self.accpoints += (self.lastprice - order.executed.price) if self.lastprice else 0
-                buytxt = 'BUY COMPLETE, %.2f' % order.executed.price
-                self.log(buytxt, order.executed.dt)
-                self.lastorder = order.executed.price
-            else:
-                self.accpoints += (order.executed.price - self.lastprice) if self.lastprice else 0
-                selltxt = 'SELL COMPLETE, %.2f' % order.executed.price
-                self.log(selltxt, order.executed.dt)
-                self.lastprice = order.executed.price
-            # endif
-
-        elif order.status in [order.Expired, order.Canceled, order.Margin]:
-            self.log('%s ,' % order.Status[order.status])
-            pass  # Simply log
-        # endif
-
-        # Allow new orders
-        self.order = None
-    # enddef
-
-    def notify_trade(self, trade):
-        if trade.isclosed:
-            self.log('TRADE PROFIT, GROSS %.2f, NET %.2f' %
-                     (trade.pnl, trade.pnlcomm))
-        elif trade.justopened:
-            self.log('TRADE OPENED, SIZE %2d' % trade.size)
-        # endif
-    # enddef
-
-    def stop(self):
-        #pnl = round(self.broker.getvalue() - self.startcash,2)
-        self.log('Final PnL Points: {}'.format(int(self.accpoints)))
-    # enddef
 # endclass
 
 ###########################################################
 # Based on Ren3H indicator
-class Ren3HCross(bt.Strategy):
+class Ren3HCross(StrategyOverride):
     params = dict(
         atr_period=14,
         ma_period=9,
@@ -247,14 +140,6 @@ class Ren3HCross(bt.Strategy):
         onlylong=False,
         mtrade=False,
     )
-
-    def log(self, txt, dt=None):
-        if self.p.printout:
-            dt = dt or self.data.datetime[0]
-            dt = bt.num2date(dt)
-            print('%s, %s' % (dt.isoformat(), txt))
-        # endif
-    # enddef
 
     def __init__(self):
         # To control operation entries
@@ -271,11 +156,7 @@ class Ren3HCross(bt.Strategy):
         self.signal = btind.CrossOver(ren3_sig, ren3_sig_ema)
 
         # To alternate amongst different tradeids
-        if self.p.mtrade:
-            self.tradeid = itertools.cycle([0, 1, 2])
-        else:
-            self.tradeid = itertools.cycle([0])
-        # endif
+        self.init_tradeid()
     # enddef
 
     def next(self):
@@ -305,46 +186,5 @@ class Ren3HCross(bt.Strategy):
                 self.sell(size=self.p.stake, tradeid=self.curtradeid)
             # endif
         # endif
-
-    def notify_order(self, order):
-        if order.status in [bt.Order.Submitted, bt.Order.Accepted]:
-            return  # Await further notifications
-        # endif
-
-        if order.status == order.Completed:
-            if order.isbuy():
-                self.accpoints += (self.lastprice - order.executed.price) if self.lastprice else 0
-                buytxt = 'BUY COMPLETE, %.2f' % order.executed.price
-                self.log(buytxt, order.executed.dt)
-                self.lastorder = order.executed.price
-            else:
-                self.accpoints += (order.executed.price - self.lastprice) if self.lastprice else 0
-                selltxt = 'SELL COMPLETE, %.2f' % order.executed.price
-                self.log(selltxt, order.executed.dt)
-                self.lastprice = order.executed.price
-            # endif
-
-        elif order.status in [order.Expired, order.Canceled, order.Margin]:
-            self.log('%s ,' % order.Status[order.status])
-            pass  # Simply log
-        # endif
-
-        # Allow new orders
-        self.order = None
-    # enddef
-
-    def notify_trade(self, trade):
-        if trade.isclosed:
-            self.log('TRADE PROFIT, GROSS %.2f, NET %.2f' %
-                     (trade.pnl, trade.pnlcomm))
-        elif trade.justopened:
-            self.log('TRADE OPENED, SIZE %2d' % trade.size)
-        # endif
-    # enddef
-
-    def stop(self):
-        #pnl = round(self.broker.getvalue() - self.startcash,2)
-        self.log('Final PnL Points: {}'.format(int(self.accpoints)))
-    # enddef
 # endclass
 
