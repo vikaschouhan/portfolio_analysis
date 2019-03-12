@@ -1,0 +1,12 @@
+{
+	"out_dir"         : "~/sc_db_github_files",
+       	"resolution"      : "5m",
+       	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
+	"db_file"         : "scripts/db/fo_mktlots.csv",
+	"strategy"        : "supertrend_rsi_long",
+	"csv_backup"      : false,
+       	"download_csvs"   : true,
+       	"num_threads"     : 2,
+	"look_back"       : 10,
+	"fno_keys"        : ["fno_losers"]
+}
