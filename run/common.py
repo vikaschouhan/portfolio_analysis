@@ -7,6 +7,9 @@ import shutil
 import subprocess
 import shlex
 import uuid
+import pandas as pd
+import copy
+import openpyxl
 
 def rp(path):
     return os.path.expanduser(path)
@@ -124,6 +127,9 @@ def run_scanner(config_json):
         subprocess.call(shlex.split(py_cmd))
     # endif
 
+    # Prepare final_sheet
+    prepare_final_sheet(report_file)
+
     return report_file
 # enddef
 
@@ -179,3 +185,34 @@ def run_scanner_main(config_json):
         run_scanner(config_json)
     # endif
 # enddef
+
+# Trim final report. Remove ignore columns
+def prepare_final_sheet(report_file, sort_by='peak_to_tough'):
+    dframe = pd.read_csv(report_file)
+    dframe_org = copy.copy(dframe)
+    dframe = dframe[dframe['take_trade'] == 'take']
+    
+    # sort
+    if sort_by and sort_by in dframe.columns:
+        dframe.sort_values(by=[sort_by], ascending=False, inplace=True)
+    # endif
+
+    fmt_dict = { 
+        'buy': 'background-color: green', 
+        'sell': 'background-color: red', 
+    } 
+    def fmt(data, fmt_dict): 
+        return data.replace(fmt_dict)
+    # enddef
+                                                                                                                                                                
+    styled = dframe.style.apply(fmt, fmt_dict=fmt_dict, subset=['trade'])                                                                                           
+    # Write to excel
+    final_rep_file = os.path.splitext(report_file)[0] + '_trimmed.xlsx'
+    print('Writing final report to {}'.format(final_rep_file))
+
+    with pd.ExcelWriter(final_rep_file, engine='openpyxl') as xls_writer:
+        styled.to_excel(xls_writer, sheet_name='trimmed', startrow=0, startcol=0)
+        dframe_org.to_excel(xls_writer,sheet_name='full',startrow=0 , startcol=0)
+    # endwith
+# endif
+
