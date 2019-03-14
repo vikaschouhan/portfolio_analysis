@@ -209,7 +209,7 @@ if __name__ == '__main__':
         with open(rp(csv_file), 'w') as f_out:
             f_out.write('file,trade,peak_to_tough,last_trade_time,last_step,take_trade,plot_file\n')
             for k_t in ret_dict:
-                file_t = k_t
+                file_t = os.path.splitext(os.path.basename(k_t))[0]
                 ltrade = ret_dict[k_t]['last_trade']
                 pk2to  = (ret_dict[k_t]['high'] - ret_dict[k_t]['close'])/ret_dict[k_t]['high']
                 lttime = ret_dict[k_t]['last_trade_time']
@@ -217,7 +217,7 @@ if __name__ == '__main__':
                 lstep  = ret_dict[k_t]['num_step']
                 ttrade = 'take' if ret_dict[k_t]['num_step'] < tlag else 'ignore'
                 hplotf = 'file:///' + plotf
-                f_out.write('{},{},{},{},{},{},{}\n'.format(k_t, ltrade, pk2to, lttime, lstep, ttrade, '=HYPERLINK("{}")'.format(hplotf)))
+                f_out.write('{},{},{},{},{},{},{}\n'.format(file_t, ltrade, pk2to, lttime, lstep, ttrade, '=HYPERLINK("{}")'.format(hplotf)))
             # endfor
         # endwith
     # endif

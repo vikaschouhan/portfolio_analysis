@@ -128,9 +128,10 @@ def run_scanner(config_json):
     # endif
 
     # Prepare final_sheet
-    prepare_final_sheet(report_file)
+    final_rep_file = os.path.splitext(report_file)[0] + '_final.xlsx'
+    prepare_final_sheet(report_file, final_rep_file)
 
-    return report_file
+    return final_rep_file
 # enddef
 
 def run_scanner_fno_keys(config_json):
@@ -179,15 +180,15 @@ def run_scanner_fno_keys(config_json):
 def run_scanner_main(config_json):
     if 'fno_keys' in config_json:
         print('fno_keys found in config. Running "run_scanner_fno_keys()".')
-        run_scanner_fno_keys(config_json)
+        return run_scanner_fno_keys(config_json)
     else:
         print('Running "run_scanner()"')
-        run_scanner(config_json)
+        return run_scanner(config_json)
     # endif
 # enddef
 
 # Trim final report. Remove ignore columns
-def prepare_final_sheet(report_file, sort_by='peak_to_tough'):
+def prepare_final_sheet(report_file, final_report_file=None, sort_by='peak_to_tough'):
     dframe = pd.read_csv(report_file)
     dframe_org = copy.copy(dframe)
     dframe = dframe[dframe['take_trade'] == 'take']
@@ -207,7 +208,8 @@ def prepare_final_sheet(report_file, sort_by='peak_to_tough'):
                                                                                                                                                                 
     styled = dframe.style.apply(fmt, fmt_dict=fmt_dict, subset=['trade'])                                                                                           
     # Write to excel
-    final_rep_file = os.path.splitext(report_file)[0] + '_trimmed.xlsx'
+    final_rep_file = os.path.splitext(report_file)[0] + '_trimmed.xlsx' \
+            if final_report_file == None else final_report_file
     print('Writing final report to {}'.format(final_rep_file))
 
     with pd.ExcelWriter(final_rep_file, engine='openpyxl') as xls_writer:
