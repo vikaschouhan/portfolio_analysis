@@ -23,11 +23,13 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
     down_csvs     = egui.get_yes_or_no('Download csv files ??')
+    take_backup   = egui.get_yes_or_no('Backup downloaded csv files ?')
     open_final    = egui.get_yes_or_no('Open final report file ?')
 
     # Override
     config_json   = json.load(open(config_path + '/' + config_t))
     config_json['download_csvs'] = down_csvs
+    config_json['csv_backup'] = take_backup
     
     # Checks
     check_config(config_json)
