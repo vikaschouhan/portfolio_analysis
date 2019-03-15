@@ -240,8 +240,8 @@ class Cerebro(backtrader.Cerebro):
     # enddef
     def save_main_plot(self, plot_file, width=16, height=9, period=None):
         start     = max(0, len(self.datas[0]) - period) if period else 0
-        plt.figure(figsize=(width, height))
         main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1, start=start)[0][0]
+        main_fig.set_size_inches(width, height)
         main_fig.savefig(plot_file)
         plt.close()
 # endclass
@@ -353,8 +353,8 @@ class CerebroSC(backtrader.Cerebro):
     # enddef
     def save_main_plot(self, plot_file, width=16, height=9, period=None):
         start     = max(0, len(self.datas[0]) - period) if period else 0
-        plt.figure(figsize=(width, height))
         main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=True, numfigs=1, start=start)[0][0]
+        main_fig.set_size_inches(width, height)
         main_fig.savefig(plot_file)
         plt.close(main_fig)
 # endclass
