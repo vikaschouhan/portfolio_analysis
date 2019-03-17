@@ -65,6 +65,7 @@ def run_scanner(config_json):
     strat_opts  = get_key(config_json, 'strategy_opts', cast_to=str)
     csv_backup  = get_key(config_json, 'csv_backup', True, cast_to=bool)
     look_back   = get_key(config_json, 'look_back', 4, cast_to=int)
+    plot_period = get_key(config_json, 'plot_period', 500, cast_to=int)
 
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
@@ -119,10 +120,10 @@ def run_scanner(config_json):
         print('Running backtester...')
         strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
         py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
-            --outdir {plots_dir} --nthreads {num_threads} --period 200  --repfile {report_file} {strat_arg} \
+            --outdir {plots_dir} --nthreads {num_threads} --period {plot_period}  --repfile {report_file} {strat_arg} \
             --lag {look_back}'.format(
                 csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
-                report_file=report_file, strat_arg=strat_arg, look_back=look_back)
+                plot_period=plot_period, report_file=report_file, strat_arg=strat_arg, look_back=look_back)
         print('Running CMD: {}'.format(py_cmd))
         subprocess.call(shlex.split(py_cmd))
     # endif

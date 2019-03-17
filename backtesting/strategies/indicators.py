@@ -146,3 +146,24 @@ class Supertrend(bt.Indicator):
         self.l.final_down[0] = 0
     # enddef
 # endclass
+
+
+# Donchian Indicator
+class DonchianChannel(bt.Indicator):
+    lines      = ('hhv', 'llv', 'bas',)
+    params     = (('period', 20),)
+    plotinfo   = dict(subplot=False)
+    plotlines  = dict(
+                     hhv=dict(_plotskip=True),
+                     llv=dict(_plotskip=True),
+                     bas=dict(_plotskip=False),
+                 )
+    _nextforce = True
+
+    def __init__(self):
+        self.l.hhv  = bt.indicators.Highest(self.data.high, period=self.p.period)
+        self.l.llv  = bt.indicators.Lowest(self.data.low, period=self.p.period)
+        self.l.bas  = (self.l.hhv + self.l.llv)/2.0
+        super(DonchianChannel, self).__init__()
+    # enddef
+# endclass
