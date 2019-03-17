@@ -7,7 +7,8 @@ import time
 import argparse
 import datetime
 import shutil
-from selenium import webdriver
+from   selenium import webdriver
+import pandas as pd
 
 def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~/sharekhan_mydp.xls', gen_report=True, brshow=True, timeout=60):
     login_url = 'https://newtrade.sharekhan.com/rmmweb/login/OldLoginPage.jsp'
@@ -59,20 +60,13 @@ def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~
         return 'Report downloaded to {} !!'.format(file_name)
     else:
         # Get header and rows fro xls data
-        # TODO
-        from bs4 import BeautifulSoup
-        soup_t = BeautifulSoup(open(bin_file, 'rb').read(), 'lxml')
-        table_t = soup_t.find('table', {'border':1})
-        row_l = table_t.find_all('tr')
-        # Pop last row as it's some useless information
-        row_l.pop(-1)
-        # Pop header
-        header_r = row_l.pop(0)
-        header_l = [x.text for x in header_r.find_all('td')]
+        data_frame = pd.read_html(bin_file, header=0)[0] # Take first table
+        data_frame = data_frame[:-1] # NOTE: Drop last row as it's not valid
+        header_l   = list(data_frame.keys())
         # Extract rows
         scrip_l = []
-        for r_t in row_l:
-           scrip_l.append([x.text.replace('\t', '').replace('\r', '').replace('\n', '') for x in r_t.find_all('td')])
+        for i_t, r_t in data_frame.iterrows():
+           scrip_l.append(list(r_t))
         # endfor
 
         # Remove dir

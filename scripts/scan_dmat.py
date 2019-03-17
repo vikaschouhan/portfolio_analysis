@@ -61,16 +61,12 @@ def get_scrips_list(config_file):
 
     scrips_l = []
     # Try sharekhan if available
-    try:
-        if en_sh:
-            sh_data, sh_hdr = get_sharekhan_data(config)
-            for item_t in sh_data:
-                scrips_l.append(item_t[1])
-            # endfor
-        # endif
-    except:
-        print('Sharekhan timeout !!')
-    # endtry
+    if en_sh:
+        sh_data, sh_hdr = get_sharekhan_data(config)
+        for item_t in sh_data:
+            scrips_l.append(item_t[1])
+        # endfor
+    # endif
     # Try zerodha if available
     if en_ze:
         ze_data, ze_hdr = get_zerodha_data(config)
