@@ -10,6 +10,7 @@ import uuid
 import pandas as pd
 import copy
 import openpyxl
+import shutil
 
 def rp(path):
     return os.path.expanduser(path)
@@ -55,17 +56,17 @@ def check_config(conf_dict):
 # enddef
 
 def run_scanner(config_json):
-    output_dir  = rp(get_key(config_json, 'out_dir', cast_to=str))
-    resolution  = get_key(config_json, 'resolution', cast_to=str)
-    invs_file   = rp(get_key(config_json, 'invs_file', cast_to=str))
-    sec_file    = rp(get_key(config_json, 'db_file', cast_to=str))
-    down_csvs   = get_key(config_json, 'download_csvs', False, cast_to=bool)
-    n_threads   = get_key(config_json, 'num_threads', 2, cast_to=int)
-    strategy    = get_key(config_json, 'strategy', cast_to=str)
-    strat_opts  = get_key(config_json, 'strategy_opts', cast_to=str)
-    csv_backup  = get_key(config_json, 'csv_backup', True, cast_to=bool)
-    look_back   = get_key(config_json, 'look_back', 4, cast_to=int)
-    plot_period = get_key(config_json, 'plot_period', 500, cast_to=int)
+    output_dir  = rp(get_key(config_json,      'out_dir', cast_to=str))
+    resolution  = get_key(config_json,         'resolution', cast_to=str)
+    invs_file   = rp(get_key(config_json,      'invs_file', cast_to=str))
+    sec_file    = rp(get_key(config_json,      'db_file', cast_to=str))
+    down_csvs   = get_key(config_json,         'download_csvs', False, cast_to=bool)
+    n_threads   = get_key(config_json,         'num_threads', 2, cast_to=int)
+    strategy    = get_key(config_json,         'strategy', cast_to=str)
+    strat_opts  = get_key(config_json,         'strategy_opts', cast_to=str)
+    csv_backup  = get_key(config_json,         'csv_backup', True, cast_to=bool)
+    look_back   = get_key(config_json,         'look_back', 4, cast_to=int)
+    plot_period = get_key(config_json,         'plot_period', 500, cast_to=int)
 
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
@@ -77,6 +78,7 @@ def run_scanner(config_json):
     # endif
     plots_dir   = results_dir + '/plots'
     report_file = results_dir + '/report.csv'
+    fplot_dir   = results_dir + '/final_plots'
 
     if down_csvs:
         rmtree(csv_dir)
@@ -131,6 +133,15 @@ def run_scanner(config_json):
     # Prepare final_sheet
     final_rep_file = os.path.splitext(report_file)[0] + '_final.xlsx'
     prepare_final_sheet(report_file, final_rep_file)
+
+    # Copy relevant plots
+    dframe = pd.read_csv(report_file)
+    def filter_fn(x):
+        x = x[x['take_trade'] == 'take']
+        return x
+    # enddef
+    print('Copying relevant plots to {}'.format(fplot_dir))
+    copy_relevant_plots(dframe, fplot_dir, cond_fn=filter_fn)
 
     return final_rep_file
 # enddef
@@ -219,3 +230,35 @@ def prepare_final_sheet(report_file, final_report_file=None, sort_by='peak_to_to
     # endwith
 # endif
 
+
+def copy_relevant_plots(report_frame, out_dir, cond_fn=None):
+    def parse_hyplink(hyplnk):
+        return hyplnk.split('"')[1].split('file:///')[1]
+    # enddef
+
+    if not isinstance(report_frame, pd.DataFrame):
+        raise ValueError('input report_frame should be of type pandas.DataFrame !!')
+    # endif
+
+    out_dir_buy  = out_dir + '/buy'
+    out_dir_sell = out_dir + '/sell'
+    if not os.path.isdir(out_dir_buy):
+        os.makedirs(out_dir_buy, exist_ok=True)
+    # endif
+    if not os.path.isdir(out_dir_sell):
+        os.makedirs(out_dir_sell, exist_ok=True)
+    # endif
+
+    # Apply condition function if applicable
+    dframe = cond_fn(report_frame) if cond_fn else report_frame
+    for indx_t, row_t in dframe.iterrows():
+        file_t   = row_t['plot_file']
+        src_file = parse_hyplink(file_t)
+        if row_t['trade'] == 'buy':
+            dst_file = out_dir_buy + '/' + os.path.basename(src_file)
+        else:
+            dst_file = out_dir_sell + '/' + os.path.basename(src_file)
+        # endif
+        shutil.copy(src_file, dst_file)
+    # endfor
+# enddef
