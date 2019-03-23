@@ -154,8 +154,8 @@ class DonchianChannel(bt.Indicator):
     params     = (('period', 20),)
     plotinfo   = dict(subplot=False)
     plotlines  = dict(
-                     hhv=dict(_plotskip=True),
-                     llv=dict(_plotskip=True),
+                     hhv=dict(_plotskip=False),
+                     llv=dict(_plotskip=False),
                      bas=dict(_plotskip=False),
                  )
     _nextforce = True
