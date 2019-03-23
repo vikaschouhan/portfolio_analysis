@@ -1,0 +1,12 @@
+{
+	"out_dir"         : "~/sc_db_github_files",
+       	"resolution"      : "1D",
+       	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
+	"db_file"         : "scripts/db/ind_niftynext50list.csv",
+	"strategy"        : "donch_breakout_long_bascross_short",
+	"strategy_opts"   : "period=100",
+       	"download_csvs"   : true,
+       	"num_threads"     : 2,
+        "look_back"       : 100,
+	"back_test"       : true
+}
