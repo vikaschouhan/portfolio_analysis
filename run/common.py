@@ -67,6 +67,7 @@ def run_scanner(config_json):
     csv_backup  = get_key(config_json,         'csv_backup', True, cast_to=bool)
     look_back   = get_key(config_json,         'look_back', 4, cast_to=int)
     plot_period = get_key(config_json,         'plot_period', 500, cast_to=int)
+    back_test   = get_key(config_json,         'back_test', False, cast_to=bool)
 
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
@@ -99,6 +100,7 @@ def run_scanner(config_json):
     print('strategy          = {}'.format(strategy))
     print('strat_opts        = {}'.format(strat_opts))
     print('look_back         = {}'.format(look_back))
+    print('back_test         = {}'.format(back_test))
 
     if down_csvs:
         print('Generating CSV files....')
@@ -119,31 +121,45 @@ def run_scanner(config_json):
 
     # Run backtester only when strategy is specified.
     if strategy:
-        print('Running backtester...')
-        strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
-        py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
-            --outdir {plots_dir} --nthreads {num_threads} --period {plot_period}  --repfile {report_file} {strat_arg} \
-            --lag {look_back}'.format(
-                csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
-                plot_period=plot_period, report_file=report_file, strat_arg=strat_arg, look_back=look_back)
-        print('Running CMD: {}'.format(py_cmd))
-        subprocess.call(shlex.split(py_cmd))
+        if back_test:
+            print('Running backtester...')
+            strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
+            py_cmd = 'python3 backtesting/backtrader_backtester.py --csvdir {csv_dir} --strategy {strategy} \
+                --outdir {plots_dir} --repfile {report_file} {strat_arg}'.format(
+                    csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir,
+                    report_file=report_file, strat_arg=strat_arg)
+            print('Running CMD: {}'.format(py_cmd))
+            subprocess.call(shlex.split(py_cmd))
+
+            return report_file
+        # endif
+        else:
+            print('Running screener...')
+            strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
+            py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
+                --outdir {plots_dir} --nthreads {num_threads} --period {plot_period}  --repfile {report_file} {strat_arg} \
+                --lag {look_back}'.format(
+                    csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
+                    plot_period=plot_period, report_file=report_file, strat_arg=strat_arg, look_back=look_back)
+            print('Running CMD: {}'.format(py_cmd))
+            subprocess.call(shlex.split(py_cmd))
+
+            # Prepare final_sheet
+            final_rep_file = os.path.splitext(report_file)[0] + '_final.xlsx'
+            prepare_final_sheet(report_file, final_rep_file)
+
+            # Copy relevant plots
+            dframe = pd.read_csv(report_file)
+            def filter_fn(x):
+                x = x[x['take_trade'] == 'take']
+                return x
+            # enddef
+            print('Copying relevant plots to {}'.format(fplot_dir))
+            copy_relevant_plots(dframe, fplot_dir, cond_fn=filter_fn)
+
+            return final_rep_file
+        # endif
     # endif
-
-    # Prepare final_sheet
-    final_rep_file = os.path.splitext(report_file)[0] + '_final.xlsx'
-    prepare_final_sheet(report_file, final_rep_file)
-
-    # Copy relevant plots
-    dframe = pd.read_csv(report_file)
-    def filter_fn(x):
-        x = x[x['take_trade'] == 'take']
-        return x
-    # enddef
-    print('Copying relevant plots to {}'.format(fplot_dir))
-    copy_relevant_plots(dframe, fplot_dir, cond_fn=filter_fn)
-
-    return final_rep_file
 # enddef
 
 def run_scanner_fno_keys(config_json):
