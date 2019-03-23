@@ -9,7 +9,11 @@ import argparse
 import os, sys
 import glob
 import backtrader_override as bto
+import multiprocessing
 from   utils import *
+
+# Process manager
+manager = multiprocessing.Manager()
 
 class PandasDataCustom(btfeeds.PandasData):
     params = (
@@ -36,6 +40,58 @@ class PandasDataCustom(btfeeds.PandasData):
     )
 # endclass
 
+def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, opt_dict={}, ret_dict={}, proc_id=None):
+    file_ctr  = 1
+    num_files = len(csv_list)
+    proc_id   = 'Unk' if proc_id == None else proc_id
+
+    for file_t in csv_list:
+        print('{:<4}:[{:<4}:{:<4}] Analysing {}'.format(proc_id, file_ctr, num_files, os.path.basename(file_t)))
+        pd_data  = pd.read_csv(file_t, index_col='t', parse_dates=['t'])
+
+        # drop all rows with close=0,open=0,high=0,low=0
+        pd_data  = pd_data.drop(pd_data[(pd_data.c == 0.0) & (pd_data.o == 0.0) & (pd_data.h == 0.0) & (pd_data.l == 0.0)].index)
+
+        # prepare feed
+        data = PandasDataCustom(dataname=pd_data)
+
+        cerebro = bto.Cerebro()
+        # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
+        cerebro.addstrategy(strategy=strategy_map[strategy], **opt_dict)
+        cerebro.adddata(data)
+ 
+        # no slippage
+        cerebro.broker.set_slippage_fixed(slippage, slip_open=True, slip_match=True, slip_out=False)
+        # 20 000$ cash initialization
+        cerebro.broker.setcash(20000.0)
+        # Add a FixedSize sizer according to the stake
+        cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+        # Set the fees
+        cerebro.broker.setcommission(commission=0.00005)
+
+        # Run backtest
+        backtest = cerebro.run()
+
+        # Get some stats
+        ret_stats = cerebro.get_stats0()
+
+        # Save plots
+        plot_eq_file     = '{}/{}_equity.png'.format(out_dir, os.path.basename(file_t))
+        plot_main_file   = '{}/{}_main.png'.format(out_dir, os.path.basename(file_t))
+        plot_dict        = {
+                               'plot_eq_file'      : plot_eq_file,
+                               'plot_file'         : plot_main_file,
+                           } 
+        cerebro.save_equity_curve_plot(plot_eq_file, width=36, height=12, ma_len=200)
+        cerebro.save_main_plot(plot_main_file, width=36, height=12, period=period)
+
+        # Store it
+        ret_dict[file_t] = {**ret_stats, **plot_dict}
+
+        file_ctr += 1
+    # endfor
+# enddef
+
 if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument('--csvdir',    help='Csv files directory', type=str, default=None)
@@ -49,6 +105,9 @@ if __name__ == '__main__':
     parser.add_argument('--outdir',    help='Output Directory.', type=str, default=None)
     parser.add_argument('--python_path',
                                        help='External python module paths to be used.', type=str, default=None)
+    parser.add_argument('--period',    help='Plot period.', type=int, default=None)
+    parser.add_argument('--nthreads',  help='Number of parallel threads to spawn.', type=int, default=2)
+    parser.add_argument('--debug',     help='Debug mode. Multithreading is disabled.', action='store_true')
     args = parser.parse_args()
 
     # Append paths
@@ -107,12 +166,16 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
 
-    strategy = args.__dict__['strategy']
-    csv_dir  = args.__dict__['csvdir']
-    csv_dir  = cdir(csv_dir)
-    csv_file = args.__dict__['repfile']
+    strategy   = args.__dict__['strategy']
+    csv_dir    = args.__dict__['csvdir']
+    csv_dir    = cdir(csv_dir)
+    csv_file   = args.__dict__['repfile']
     en_pyfolio = args.__dict__['pyfolio']
     out_dir    = args.__dict__['outdir']
+    period     = args.__dict__['period']
+    debug      = args.__dict__['debug']
+    nthreads   = args.__dict__['nthreads']
+    slippage   = args.__dict__['slippage']
 
     if out_dir == None:
         print('--outdir should be valid.')
@@ -120,71 +183,51 @@ if __name__ == '__main__':
     # endif
     mkdir(out_dir)
 
-    #if csv_file == None:
-    #    csv_file = '~/backtester_{}_'.format(strategy)
-    #    for k_t in opt_dict:
-    #        csv_file = csv_file + '{}_{}'.format(k_t, opt_dict[k_t])
-    #    # endfor
-    #    csv_file = csv_file + '_{}.csv'.format(datetime.datetime.now().strftime('%s'))
-    ## endif
-
+    # Read files
     files = glob.glob('{}/*.csv'.format(csv_dir))
     if len(files) == 0:
         print('No csv files found.')
         sys.exit(-1)
     # endif
 
-    ##
-    ret_dict = {}
-    file_ctr  = 1
-    num_files = len(files)
+    if not debug:
+        ret_dict = manager.dict()
+        csv_chunks = split_chunks(files, nthreads)
 
-    for file_t in files:
-        print('[{:<4}:{:<4}] Analysing {}.......................................'.format(file_ctr, num_files, file_t), end='\r')
-        pd_data  = pd.read_csv(file_t, index_col='t', parse_dates=['t'])
+        # Spawn processes
+        proc_list = []
+        for indx in range(nthreads):
+            proc_t = multiprocessing.Process(target=run_cerebro_over_csvs, args=(csv_chunks[indx], strategy,
+                slippage, out_dir, period, opt_dict, ret_dict, indx,))
+            proc_list.append(proc_t)
+            proc_t.start()
+        # endfor
 
-        # drop all rows with close=0,open=0,high=0,low=0
-        pd_data  = pd_data.drop(pd_data[(pd_data.c == 0.0) & (pd_data.o == 0.0) & (pd_data.h == 0.0) & (pd_data.l == 0.0)].index)
-
-        # prepare feed
-        data = PandasDataCustom(dataname=pd_data)
-
-        cerebro = bto.Cerebro()
-        # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
-        cerebro.addstrategy(strategy=strategy_map[strategy], **opt_dict)
-        cerebro.adddata(data)
- 
-        # no slippage
-        cerebro.broker.set_slippage_fixed(args.__dict__['slippage'], slip_open=True, slip_match=True, slip_out=False)
-        # 20 000$ cash initialization
-        cerebro.broker.setcash(20000.0)
-        # Add a FixedSize sizer according to the stake
-        cerebro.addsizer(bt.sizers.FixedSize, stake=1)
-        # Set the fees
-        cerebro.broker.setcommission(commission=0.00005)
-
-        # Run backtest
-        backtest = cerebro.run()
-
-        # Get some stats
-        ret_dict[file_t] = cerebro.get_stats0()
-
-        # Save plots
-        cerebro.save_equity_curve_plot('{}/{}_equity.png'.format(out_dir, os.path.basename(file_t), width=48, height=27), ma_len=200)
-        cerebro.save_main_plot('{}/{}_main.png'.format(out_dir, os.path.basename(file_t)), width=48, height=27, period=200)
-
-        file_ctr += 1
-    # endfor
-
-    if csv_file:
+        # Wait for all processes to end
+        for indx in range(len(proc_list)):
+            proc_list[indx].join()
+        # endfor
+    else:
+        cerebro_ins = run_cerebro_over_csvs(files, strategy, slippage, out_dir, period, opt_dict)
+    # endif
+    
+    if csv_file and not debug:
         print('Writing csv report to {}'.format(csv_file))
         with open(rp(csv_file), 'w') as f_out:
-            f_out.write('file,returns,sqn_score, profit_per_drawdown,drawdown_len\n')
+            f_out.write('file,returns,sqn_score, profit_per_drawdown,drawdown_len,plot_file, plot_eq_file\n')
             for k_t in ret_dict:
-                sqn_score = ret_dict[k_t]['sqn_score']
+                file_t           = os.path.splitext(os.path.basename(k_t))[0]
+                returns          = ret_dict[k_t]['rets']
+                sqn_score        = ret_dict[k_t]['sqn_score']
                 profit_per_ddown = ret_dict[k_t]['net_profit']/ret_dict[k_t]['max_drawdown']
-                max_ddown_len = ret_dict[k_t]['max_drawdown_len']
-                f_out.write('{},{},{},{},{}\n'.format(k_t, ret_dict[k_t]['rets'], sqn_score, profit_per_ddown, max_ddown_len))
+                max_ddown_len    = ret_dict[k_t]['max_drawdown_len']
+                plot_file        = os.path.abspath(os.path.expanduser(ret_dict[k_t]['plot_file']))
+                plot_eq_file     = os.path.abspath(os.path.expanduser(ret_dict[k_t]['plot_eq_file']))
+                hyp_lnk_plotf    = 'file:///' + plot_file
+                hyp_lnk_plot_eqf = 'file:///' + plot_eq_file
+                f_out.write('{},{},{},{},{},{},{}\n'.format(file_t, returns, sqn_score,
+                    profit_per_ddown, max_ddown_len, '=HYPERLINK("{}")'.format(hyp_lnk_plotf),
+                    '=HYPERLINK("{}")'.format(hyp_lnk_plot_eqf)))
             # endfor
         # endwith
     # endif

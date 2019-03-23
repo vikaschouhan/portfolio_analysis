@@ -125,9 +125,9 @@ def run_scanner(config_json):
             print('Running backtester...')
             strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
             py_cmd = 'python3 backtesting/backtrader_backtester.py --csvdir {csv_dir} --strategy {strategy} \
-                --outdir {plots_dir} --repfile {report_file} {strat_arg}'.format(
-                    csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir,
-                    report_file=report_file, strat_arg=strat_arg)
+                --outdir {plots_dir} --nthreads {num_threads} --period {plot_period} --repfile {report_file} {strat_arg}'.format(
+                    csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
+                    plot_period=plot_period, report_file=report_file, strat_arg=strat_arg)
             print('Running CMD: {}'.format(py_cmd))
             subprocess.call(shlex.split(py_cmd))
 
