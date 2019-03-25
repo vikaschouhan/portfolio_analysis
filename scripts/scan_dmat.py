@@ -17,21 +17,16 @@ from   sharekhan_download_dmat_statement import download_sharekhan_dp_statement
 from   zerodha_download_dmat_statement import download_zerodha_dp_statement
 #
 def get_zerodha_data(config):
-    # Check for Zerodha Questions
-    if 'Zerodha Questions' not in config.sections():
-        print('[Zerodha] section found, but no [Zerodha Questions] section found. Both are mandatory !!.')
-        sys.exit(-1)
-    # endif
-
     login_data = dict(config.items(section='Zerodha'))
-    questions  = dict(config.items(section='Zerodha Questions'))
-    if 'user_name' not in login_data.keys() or 'passwd' not in login_data.keys():
-        print('Zerodha section should have keys : user_name and passwd')
+    if 'user_name' not in login_data.keys() or 'user_passwd' not in login_data.keys() or \
+            'user_pin' not in login_data.keys():
+        print('Zerodha section should have keys : user_name, user_passwd & user_pin')
         sys.exit(-1)
     # endif
 
     print('Pulling dmat data from zerodha !!')
-    data = download_zerodha_dp_statement(login_data['user_name'], login_data['passwd'], questions, gen_report=False)
+    data = download_zerodha_dp_statement(login_data['user_name'], login_data['user_passwd'],
+            login_data['user_pin'], gen_report=False)
     return data
 # enddef
 
@@ -71,7 +66,7 @@ def get_scrips_list(config_file):
     if en_ze:
         ze_data, ze_hdr = get_zerodha_data(config)
         for item_t in ze_data:
-            scrips_l.append(item_t[1])
+            scrips_l.append(item_t[0])
         # endfor
         #print 'Zerodha Q backoffice login has changed. Thus our old login menthod no longer works !! It will be supported in future.'
     # endif

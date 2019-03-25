@@ -8,99 +8,95 @@ import csv
 import datetime
 import argparse
 import time
+import shutil
+import pandas as pd
 from   selenium import webdriver
 
-def download_zerodha_dp_statement(user_name, password, questions_dict, file_name='~/zerodha_dp_statement.csv', gen_report=True, brshow=False):
+def download_zerodha_dp_statement(user_name, user_pwd, user_pin, file_name='~/zerodha_dp_statement.csv', gen_report=True, brshow=True):
     #print questions_dict
 
     row_l    = []
     login_url  = 'https://kite.zerodha.com'
-    base_url   = 'https://q.zerodha.com/'
-    hold_url   = 'https://q.zerodha.com/holdings/display/'
+    hold_url   = 'https://kite.zerodha.com/holdings'
+
+    down_dir  = '/tmp/chrome-downloads'
 
     options = webdriver.ChromeOptions()
     if not brshow:
         options.add_argument('headless')
     # endif
+    options.add_experimental_option("prefs", {
+        "download.default_directory"       : down_dir,
+        "download.prompt_for_download"     : False,
+        "download.directory_upgrade"       : True,
+    })
+
     driver = webdriver.Chrome(chrome_options=options)
+
+    # Create dir
+    try:
+        os.makedirs(down_dir)
+    except:
+        shutil.rmtree(down_dir)
+        os.makedirs(down_dir)
+    # endtry
 
     # Login
     driver.get(login_url)
-    time.sleep(1)
-    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/input').send_keys(user_name)
-    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/input').send_keys(password)
-    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[4]/button').click()
     time.sleep(2)
-    
-    # Questions page
-    # Assuming only two questions
-    ques1 = str(driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/div/label').text)
-    ques2 = str(driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/div/label').text)
-    if ques1 not in questions_dict :
-        print('Answer to question "{}" is not present in Zerodha Questions.'.format(ques1))
-        driver.close()
-        sys.exit(-1)
-    # endif
-    if ques2 not in questions_dict :
-        print('Answer to question "{}" is not present in Zerodha Questions.'.format(ques1))
-        driver.close()
-        sys.exit(-1)
-    # endif
 
-    # Answer
-    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[2]/div/input').send_keys(questions_dict[ques1])
-    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[3]/div/input').send_keys(questions_dict[ques2])
+    # Enter username/password
+    input_fields = driver.find_elements_by_tag_name('input')
+    input_fields[0].send_keys(user_name)
+    input_fields[1].send_keys(user_pwd)
+    # Click
+    driver.find_element_by_tag_name('button').click()
+    time.sleep(4)
 
-    # Click continue button
-    driver.find_element_by_xpath('//*[@id="container"]/div/div/div/form/div[4]/button').click()
+    # Enter PIN
+    input_field = driver.find_element_by_tag_name('input')
+    input_field.send_keys(user_pin)
+    driver.find_element_by_tag_name('button').click()
+    time.sleep(3)
 
-    # Goto backoffice page
-    driver.get(base_url)
-    time.sleep(1)
-    driver.find_element_by_xpath('//*[@id="login"]/div/center/a').click()
-
-    # Goto holdings
+    # Go to holdings page
     driver.get(hold_url)
-    time.sleep(1)
-    browser_html = driver.page_source
+    time.sleep(6)
+    # Click download holdings report
+    driver.find_element_by_class_name('download').click()
+    time.sleep(2)
 
-    while True:
-        html_page = BeautifulSoup(browser_html, 'html.parser')
-        hld_table = html_page.find('table', {'id' : 'holdings-table'})
-        header_l  =  [ x.text for x in hld_table.find('tr').find_all('th') ]
+    # Close driver
+    driver.close()
 
-        # Go over all the rows
-        for item_this in hld_table.find('tbody').find_all('tr'):
-            row_l.append([ x.text.replace('\t', '').replace('\n', '').replace('?', '') for x in item_this.find_all('td')])
-        # endfor
+    # Filename
+    bin_file = '{}/holdings.csv'.format(down_dir)
 
-        next_btn = html_page.find('a', {'id' : 'holdings-table_next'})
-        if next_btn.attrs['class'][2] != 'disabled':
-            print('On page {} \n'.format(next_btn.attrs['tabindex']))
-            driver.find_element_by_xpath('//*[@id="holdings-table_next"]')
-        else:
-            break
-        # endif
-    # endwhile
-   
-    # NOTE: On enabling these, spynner is throwing some error like
-    #        >> AttributeError: 'Browser' object has no attribute 'manager' 
-    #       Disabling for now
-    #browser.destroy_webview() 
-    #browser.close()
-
+    # Check if file was downloaded
+    if not os.path.isfile(bin_file):
+        print('{} does not exist !!. Download failed.'.format(bin_file))
+        sys.exit(-1)
+    # endif
+    
     if gen_report:
         print('Writing report file to {}'.format(file_name))
-        with open(os.path.expanduser(file_name), 'w') as f_out:
-            csv_writer = csv.writer(f_out, delimiter=',')
-            csv_writer.writerow(header_l)
-            for item_this in row_l:
-                csv_writer.writerow(item_this)
-            # endfor
+        with open(os.path.expanduser(file_name), 'wb') as f_out:
+            f_out.write(open(bin_file, 'rb').read())
         # endwith
-        return 'Report downloaded to {}'.format(file_name)
+        return 'Report downloaded to {} !!'.format(file_name)
     else:
-        return row_l, header_l
+        data_frame = pd.read_csv(bin_file, header=0)
+        header_l   = list(data_frame.keys())
+        # Extract rows
+        scrip_l = []
+        for i_t, r_t in data_frame.iterrows():
+           scrip_l.append(list(r_t))
+        # endfor
+
+        # Remove dir
+        shutil.rmtree(down_dir)
+
+        return scrip_l, header_l
     # endif
 # enddef
 

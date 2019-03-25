@@ -53,6 +53,9 @@ def download_sharekhan_dp_statement(login_id, br_passwd, tr_passwd, file_name='~
         sys.exit(-1)
     # endif
 
+    # Close driver
+    driver.close()
+
     if gen_report:
         with open(os.path.expanduser(file_name), 'wb') as f_out:
             f_out.write(open(bin_file, 'rb').read())
