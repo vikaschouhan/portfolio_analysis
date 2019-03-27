@@ -9,6 +9,7 @@ import csv
 import datetime
 import argparse
 from   configparser import ConfigParser
+from   modules.invs_utils import rp, cdir
 
 script_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_path)
@@ -55,32 +56,48 @@ def get_scrips_list(config_file):
     en_ze  = False if 'Zerodha' not in config.sections() else True
 
     scrips_l = []
+    scrips_m = {}
     # Try sharekhan if available
     if en_sh:
+        scrips_m['Sharekhan'] = []
         sh_data, sh_hdr = get_sharekhan_data(config)
         for item_t in sh_data:
             scrips_l.append(item_t[1])
+            scrips_m['Sharekhan'].append(item_t[1])
         # endfor
     # endif
     # Try zerodha if available
     if en_ze:
+        scrips_m['Zerodha'] = []
         ze_data, ze_hdr = get_zerodha_data(config)
         for item_t in ze_data:
             scrips_l.append(item_t[0])
+            scrips_m['Zerodha'].append(item_t[0])
         # endfor
         #print 'Zerodha Q backoffice login has changed. Thus our old login menthod no longer works !! It will be supported in future.'
     # endif
 
-    return scrips_l 
+    return scrips_l, scrips_m
 # enddef
 
 if __name__ == '__main__':
+    parser  = argparse.ArgumentParser()
+    parser.add_argument('--out_dir',        help='Output directory.',        type=str, default='~/sc_db_github_files/')
+    args    = parser.parse_args()
+
+    if args.__dict__['out_dir'] == None:
+        print('--out_dir is required !!')
+        sys.exit(-1)
+    # endif
+    
+    out_dir     = rp(args.__dict__['out_dir'])
+    cdir(out_dir)
     # config_file
-    config_file = '~/.dmat.cfg'
-    config_file = os.path.expanduser(config_file)
+    config_file = rp('~/.dmat.cfg')
     # Target file
-    output_file = '~/dmat_sym_name_list.csv'
-    output_file = os.path.expanduser(output_file)
+    output_file = '{}/dmat_sym_name_list.csv'.format(out_dir)
+    out_file_sh = '{}/dmat_sym_name_sharekhan_list.csv'.format(out_dir)
+    out_file_ze = '{}/dmat_sym_name_zerodha_list.csv'.format(out_dir)
 
     # Check if config_file is present
     if not os.path.isfile(config_file):
@@ -88,15 +105,26 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
 
-    scrips_l = get_scrips_list(config_file)
+    scrips_l, scrips_m = get_scrips_list(config_file)
     print('Security List populated = {}'.format(scrips_l))
 
-    print('Writing report to {}'.format(output_file))
-    with open(output_file, 'w') as f_out:
-        f_out.write('sym_name_list\n')
-        f_out.write('#Symbol, Name\n')
-        for item_t in scrips_l:
-            f_out.write('{},{}\n'.format(item_t, item_t))
-        # endfor
-    # endwith
+    def write_report(scrips_list, out_file):
+        print('Writing report to {}'.format(out_file))
+        with open(out_file, 'w') as f_out:
+            f_out.write('sym_name_list\n')
+            f_out.write('#Symbol, Name\n')
+            for item_t in scrips_list:
+                f_out.write('{},{}\n'.format(item_t, item_t))
+            # endfor
+        # endwith
+    # enddef
+
+    write_report(scrips_l, output_file)
+
+    if 'Sharekhan' in scrips_m:
+        write_report(scrips_m['Sharekhan'], out_file_sh)
+    # endif
+    if 'Zerodha' in scrips_m:
+        write_report(scrips_m['Zerodha'], out_file_ze)
+    # endif
 # endef
