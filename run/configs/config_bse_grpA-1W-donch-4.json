@@ -4,8 +4,8 @@
        	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
 	"db_file"         : "scripts/db/bse_group_A.csv",
 	"strategy"        : "donch_channel",
-	"strategy_opts"   : "period=4",
+	"strategy_opts"   : "period=40",
        	"download_csvs"   : false,
        	"num_threads"     : 2,
-	"look_back"       : 4
+	"look_back"       : 10
 }
