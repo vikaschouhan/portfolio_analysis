@@ -70,8 +70,12 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
         # Set the fees
         cerebro.broker.setcommission(commission=0.00005)
 
-        # Run backtest
-        backtest = cerebro.run()
+        try:
+            # Run backtest
+            backtest = cerebro.run()
+        except IndexError:
+            continue
+        # endtry
 
         # Get some stats
         ret_stats = cerebro.get_stats0()
