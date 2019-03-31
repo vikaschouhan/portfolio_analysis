@@ -3,9 +3,10 @@
        	"resolution"      : "1M",
        	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
 	"db_file"         : "scripts/db/bse_group_A.csv",
-	"strategy"        : "donch_channel",
+	"strategy"        : "donch_bas_cross",
 	"strategy_opts"   : "period=24",
        	"download_csvs"   : false,
        	"num_threads"     : 2,
-	"look_back"       : 8
+	"look_back"       : 10,
+	"plot_period"     : 500
 }

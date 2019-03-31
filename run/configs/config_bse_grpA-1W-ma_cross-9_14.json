@@ -6,5 +6,5 @@
 	"strategy"        : "ma_cross",
        	"download_csvs"   : false,
        	"num_threads"     : 2,
-	"look_back"       : 4
+	"look_back"       : 8
 }
