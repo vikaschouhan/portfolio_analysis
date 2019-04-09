@@ -243,7 +243,8 @@ class Cerebro(backtrader.Cerebro):
         main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=False, numfigs=1, start=start)[0][0]
         main_fig.set_size_inches(width, height)
         main_fig.savefig(plot_file)
-        plt.close()
+        main_fig.clf()
+        plt.close('all')
 # endclass
 
 # This is for scanners
@@ -356,5 +357,6 @@ class CerebroSC(backtrader.Cerebro):
         main_fig  = self.plot(style='candlestick', barup='green', bardown='red', volume=True, numfigs=1, start=start)[0][0]
         main_fig.set_size_inches(width, height)
         main_fig.savefig(plot_file)
-        plt.close(main_fig)
+        main_fig.clf()
+        plt.close('all')
 # endclass
