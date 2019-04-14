@@ -21,8 +21,8 @@ def screener_in_populate_company_list(user, passwd, screener_url='/23210/walter-
         csv_report_file = rp(csv_report_file)
     # endif
 
-    print 'Using screen {}'.format(screener_url)
-    print 'Using csv report file {}'.format(csv_report_file)
+    print('Using screen {}'.format(screener_url))
+    print('Using csv report file {}'.format(csv_report_file))
 
     login_url = 'https://www.screener.in/login/'
     options = selenium.webdriver.ChromeOptions()
@@ -70,7 +70,7 @@ def screener_in_populate_company_list(user, passwd, screener_url='/23210/walter-
     driver.close()
     
     # Write csv file
-    print 'Writing to {}'.format(csv_report_file)
+    print('Writing to {}'.format(csv_report_file))
     with open(csv_report_file, 'w') as f_out:
         f_out.write('sym_name_list\n')
         f_out.write('#Symbol, Name\n')
@@ -92,11 +92,11 @@ if __name__ == '__main__':
     args    = parser.parse_args()
 
     if not args.__dict__["auth"]:
-        print "--auth is required !!"
+        print("--auth is required !!")
         sys.exit(-1)
     # endif
     if not args.__dict__["screen_url"] == None:
-        print "--screen_url is None. Using default value {}".format(default_screen_url)
+        print("--screen_url is None. Using default value {}".format(default_screen_url))
         screen_url = default_screen_url
     else:
         screen_url = default_screen_url
