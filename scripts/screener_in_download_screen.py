@@ -9,24 +9,23 @@ from   bs4 import BeautifulSoup
 import os
 import argparse
 import sys
+from   modules.invs_utils import rp, url_norm
 
-def rp(x):
-    return os.path.expanduser(x)
-# enddef
 
-def screener_in_populate_company_list(user, passwd, screener_url='/23210/walter-schloss', csv_report_file=None):
+def screener_in_populate_company_list(user, passwd, screener_url=None, csv_report_file=None, headless=True):
     if csv_report_file == None:
         csv_report_file = rp('~/') + '_'.join(screener_url.split('/')) + '.csv'
     else:
         csv_report_file = rp(csv_report_file)
     # endif
 
-    print('Using screen {}'.format(screener_url))
     print('Using csv report file {}'.format(csv_report_file))
 
-    login_url = 'https://www.screener.in/login/'
-    options = selenium.webdriver.ChromeOptions()
-    driver  = selenium.webdriver.Chrome(options=options)
+    login_url  = 'https://www.screener.in/login/'
+    screen_url = 'https://www.screener.in/screens'
+    options    = selenium.webdriver.ChromeOptions()
+    options.headless = headless
+    driver     = selenium.webdriver.Chrome(options=options)
     
     # Login
     driver.get(login_url)
@@ -34,12 +33,54 @@ def screener_in_populate_company_list(user, passwd, screener_url='/23210/walter-
     driver.find_element_by_xpath('//*[@id="id_username"]').send_keys(user)
     driver.find_element_by_xpath('//*[@id="id_password"]').send_keys(passwd)
     driver.find_element_by_xpath('//*[@id="main-area"]/form/p[1]/button').click()
+
+    # Try to read all screens
+    list_screens = None
+    panel_eles   = driver.find_elements_by_class_name('panel')
+    for panel_t in panel_eles:
+        if panel_t.find_element_by_class_name('title').text == 'YOUR SCREENS':
+            list_screens = panel_t.find_elements_by_tag_name('li')
+            break
+        # endif
+    # endfor
+
+    if list_screens == None:
+        print('No screens found !! Please create one or more screens on www.screener.in.')
+        driver.close()
+        sys.exit(-1)
+    # endif
+
+    # Open options
+    list_screens_new = [(x.text, url_norm(x.find_element_by_tag_name('a').get_attribute('href'))) for x in list_screens]
+    list_screen_urls = [x[1] for x in list_screens_new]
+    if screener_url:
+        full_screen_url = url_norm(screener_url)
+        if full_screen_url not in list_screen_urls:
+            print('Url {} not found. Please select one of {}'.format(full_screen_url, list_screen_urls))
+            sys.exit(-1)
+        # endif
+    else:
+        inp_choice  = None
+        # Print options
+        for index_t, screen_t in enumerate(list_screens_new):
+            print('{}. {} ({})'.format(index_t, screen_t[0], screen_t[1]))
+        # endfor
+        while True:
+            inp_choice  = int(input('Enter choice : '))
+            if inp_choice >= 0 and inp_choice < len(list_screens_new):
+                break
+            # endif
+            print('Wrong choice.')
+        # endwhile
+        full_screen_url = list_screens_new[inp_choice][1]
+    # endif
     
+    print('Using screener url = {}'.format(full_screen_url)) 
     page_no = 1
     company_list = []
     
     while True:
-        screener_url_p = 'https://www.screener.in/screens/' + screener_url + '/?page={}'.format(page_no)
+        screener_url_p = full_screen_url + '/?page={}'.format(page_no)
         driver.get(screener_url_p)
         time.sleep(1)
     
@@ -83,8 +124,6 @@ def screener_in_populate_company_list(user, passwd, screener_url='/23210/walter-
 # enddef
 
 if __name__ == '__main__':
-    default_screen_url = '/17942/Growth-PE-Screener/'
-
     parser  = argparse.ArgumentParser()
     parser.add_argument("--auth",           help="Screener.in authentication in form user,passwd", type=str, default=None)
     parser.add_argument("--screen_url",     help="Screen's url", type=str, default=None)
@@ -95,13 +134,8 @@ if __name__ == '__main__':
         print("--auth is required !!")
         sys.exit(-1)
     # endif
-    if not args.__dict__["screen_url"] == None:
-        print("--screen_url is None. Using default value {}".format(default_screen_url))
-        screen_url = default_screen_url
-    else:
-        screen_url = default_screen_url
-    # endif
 
+    screen_url = args.__dict__["screen_url"]
     auth_info  = args.__dict__["auth"].replace(' ', '').split(',')
 
     # Call scrappper

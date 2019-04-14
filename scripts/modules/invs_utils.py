@@ -13,6 +13,7 @@ import requests
 from   bs4 import BeautifulSoup
 import pandas
 import os
+import url_normalize
 
 ###########################################################################################
 # File system handling
@@ -218,4 +219,8 @@ def coloritf(message, color):
 
 def coloritb(message, color):
     return get_colorama_color_back(color) + message + Back.RESET
+# enddef
+
+def url_norm(url):
+    return url_normalize.url_normalize(url.rstrip('/'))
 # enddef
