@@ -94,6 +94,7 @@ def screener_in_populate_company_list(user, passwd, screener_url=None, csv_repor
         html_page   = BeautifulSoup(page_source, 'html.parser')
         html_table  = html_page.find('table')
         table_rows  = html_table.find_all('tr')
+        table_hdrs  = ['Code'] + [' '.join(x.text.rstrip().lstrip().replace('\n', '').replace('\t', '').split()) for x in html_table.find_all('th')][1:]
         for row_t in table_rows:
             table_columns = row_t.find_all('td')
             if len(table_columns) == 0:
@@ -102,7 +103,8 @@ def screener_in_populate_company_list(user, passwd, screener_url=None, csv_repor
     
             company_name = table_columns[1].text.replace('\t', '').replace('\n', '').lstrip().rstrip()
             company_code = table_columns[1].find('a').attrs['href'].split('/')[2]
-            company_list.append((company_code, company_name))
+            final_rows   = [company_code, company_name] + [x.text for x in table_columns[2:]]
+            company_list.append(final_rows)
         # endfor
     
         page_no = page_no + 1
@@ -114,9 +116,9 @@ def screener_in_populate_company_list(user, passwd, screener_url=None, csv_repor
     print('Writing to {}'.format(csv_report_file))
     with open(csv_report_file, 'w') as f_out:
         f_out.write('sym_name_list\n')
-        f_out.write('#Symbol, Name\n')
+        f_out.write(','.join(table_hdrs) + '\n')
         for item_t in company_list:
-            f_out.write('{},{}\n'.format(item_t[0], item_t[1]))
+            f_out.write(','.join([str(x) for x in item_t]) + '\n')
         # endfor
     # endwith
 
