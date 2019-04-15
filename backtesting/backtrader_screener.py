@@ -40,6 +40,40 @@ class PandasDataCustom(btfeeds.PandasData):
     )
 # endclass
 
+def run_cerebro_over_pd_data(file_t, pd_data, stretagy, slippage, out_dir, period=None, opt_dict={}, ret_dict={}):
+    cerebro = bto.CerebroSC()
+    # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
+    cerebro.addstrategy(strategy=strategy_map[strategy], **opt_dict)
+    cerebro.adddata(pd_data)
+ 
+    # no slippage
+    cerebro.broker.set_slippage_fixed(slippage, slip_open=True, slip_match=True, slip_out=False)
+    # 20 000$ cash initialization
+    cerebro.broker.setcash(20000.0)
+    # Add a FixedSize sizer according to the stake
+    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    # Set the fees
+    cerebro.broker.setcommission(commission=0.00005)
+
+    try:
+        # Run backtest
+        backtest = cerebro.run()
+    except IndexError:
+        return
+    # endtry
+
+    # Get some stats
+    ret_stats = cerebro.get_stats0()
+
+    # Save plots
+    plot_file = '{}/{}.png'.format(out_dir, os.path.basename(file_t))
+    plot_dict = {'plot_file' : plot_file}
+    cerebro.save_main_plot(plot_file, width=36, height=12, period=period)
+
+    # Store it
+    ret_dict[file_t] = {**ret_stats, **plot_dict}
+# enddef
+
 def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, opt_dict={}, ret_dict={}, proc_id=None):
     file_ctr  = 1
     num_files = len(csv_list)
@@ -55,43 +89,13 @@ def run_cerebro_over_csvs(csv_list, strategy, slippage, out_dir, period=None, op
 
         # prepare feed
         data = PandasDataCustom(dataname=pd_data)
-
-        cerebro = bto.CerebroSC()
-        # Setting my parameters : Stop loss at 1%, take profit at 4%, go short when rsi is 90 and long when 20.
-        cerebro.addstrategy(strategy=strategy_map[strategy], **opt_dict)
-        cerebro.adddata(data)
- 
-        # no slippage
-        cerebro.broker.set_slippage_fixed(slippage, slip_open=True, slip_match=True, slip_out=False)
-        # 20 000$ cash initialization
-        cerebro.broker.setcash(20000.0)
-        # Add a FixedSize sizer according to the stake
-        cerebro.addsizer(bt.sizers.FixedSize, stake=1)
-        # Set the fees
-        cerebro.broker.setcommission(commission=0.00005)
-
-        try:
-            # Run backtest
-            backtest = cerebro.run()
-        except IndexError:
-            continue
-        # endtry
-
-        # Get some stats
-        ret_stats = cerebro.get_stats0()
-
-        # Save plots
-        plot_file = '{}/{}.png'.format(out_dir, os.path.basename(file_t))
-        plot_dict = {'plot_file' : plot_file}
-        cerebro.save_main_plot(plot_file, width=36, height=12, period=period)
-
-        # Store it
-        ret_dict[file_t] = {**ret_stats, **plot_dict}
+        process_t = multiprocessing.Process(target=run_cerebro_over_pd_data, args=(file_t,
+                data, strategy, slippage, out_dir, period, opt_dict, ret_dict,))
+        process_t.start()
+        process_t.join()
 
         file_ctr = file_ctr + 1
     # endfor
-
-    return cerebro
 # enddef
 
 if __name__ == '__main__':
