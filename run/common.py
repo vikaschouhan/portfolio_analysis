@@ -68,6 +68,7 @@ def run_scanner(config_json):
     look_back   = get_key(config_json,         'look_back', 4, cast_to=int)
     plot_period = get_key(config_json,         'plot_period', 500, cast_to=int)
     back_test   = get_key(config_json,         'back_test', False, cast_to=bool)
+    p2k_thr     = get_key(config_json,         'peak_to_tough_threshold', 0.6, cast_to=float)
 
     csv_dir     = output_dir + '/' + os.path.splitext(os.path.basename(sec_file))[0] + '_{}_csv'.format(resolution)
     if strat_opts:
@@ -101,6 +102,7 @@ def run_scanner(config_json):
     print('strat_opts        = {}'.format(strat_opts))
     print('look_back         = {}'.format(look_back))
     print('back_test         = {}'.format(back_test))
+    print('peak_to_tough_threshold = {}'.format(p2k_thr))
 
     if down_csvs:
         print('Generating CSV files....')
@@ -146,7 +148,7 @@ def run_scanner(config_json):
 
             # Prepare final_sheet
             final_rep_file = os.path.splitext(report_file)[0] + '_final.xlsx'
-            prepare_final_sheet(report_file, final_rep_file)
+            prepare_final_sheet(report_file, final_rep_file, peak_to_tough_threshold=p2k_thr)
 
             # Copy relevant plots
             dframe = pd.read_csv(report_file)
@@ -216,7 +218,7 @@ def run_scanner_main(config_json):
 # enddef
 
 # Trim final report. Remove ignore columns
-def prepare_final_sheet(report_file, final_report_file=None, sort_by='peak_to_tough'):
+def prepare_final_sheet(report_file, final_report_file=None, sort_by='peak_to_tough', peak_to_tough_threshold=0.6):
     dframe = pd.read_csv(report_file)
     dframe_org = copy.copy(dframe)
     dframe = dframe[dframe['take_trade'] == 'take']
@@ -225,6 +227,11 @@ def prepare_final_sheet(report_file, final_report_file=None, sort_by='peak_to_to
     if sort_by and sort_by in dframe.columns:
         dframe.sort_values(by=[sort_by], ascending=False, inplace=True)
     # endif
+
+    # NOTE: Add filter to reject peak_to_tough > some threshold.
+    #       We know that stocks with very high peak_to_tough are generally beaten down
+    #       for a resaon and generally they don't have good fundamentals.
+    dframe = dframe[dframe['peak_to_tough'] < peak_to_tough_threshold]
 
     fmt_dict = { 
         'buy': 'background-color: green', 
