@@ -8,5 +8,6 @@
        	"download_csvs"   : true,
        	"num_threads"     : 2,
         "look_back"       : 14,
-	"back_test"       : false
+	"back_test"       : false,
+	"peak_to_tough_threshold" : 1.0
 }
