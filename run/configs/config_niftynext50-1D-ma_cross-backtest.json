@@ -2,11 +2,11 @@
 	"out_dir"         : "~/sc_db_github_files",
        	"resolution"      : "1D",
        	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
-	"db_file"         : "scripts/db/bse_group_A.csv",
+	"db_file"         : "scripts/db/ind_niftynext50list.csv",
 	"strategy"        : "ma_cross",
-	"strategy_opts"   : "fast=50,slow=100",
-       	"download_csvs"   : false,
+	"strategy_opts"   : "fast=9,slow=21,onlylong=True",
+       	"download_csvs"   : true,
        	"num_threads"     : 2,
-        "look_back"       : 14,
-	"plot_period"     : 1000
+        "look_back"       : 100,
+	"back_test"       : true
 }
