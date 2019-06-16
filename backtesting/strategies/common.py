@@ -2,6 +2,10 @@ import backtrader as bt
 import itertools
 
 class StrategyOverride(bt.Strategy):
+    def __init__(self, **kwargs):
+        self.lastprice = None
+    # endif
+
     def log(self, txt, dt=None):
         if self.p.printout:
             dt = dt or self.data.datetime[0]

@@ -10,9 +10,11 @@ from   donch_breakout_long_bascross_short import DonchLongOnly1
 from   ema_ema1_cross import EMA_EMA1
 from   ren3_cross import Ren3Cross, Ren3FCross, Ren3HCross
 from   supertrend_rsi import SupertrendRSILong, SupertrendRSIShort
+from   simple_breakout import SimpleBreakout
 
 strategy_map = {
             'ma_cross'                                                  : LongShortEMA,
+            'simple_breakout'                                           : SimpleBreakout,
             'donch_channel'                                             : Donch,
             'donch_bas_cross'                                           : DonchBasCrossOver,
             'donch_breakout_long_bascross_short'                        : DonchLongOnly1,

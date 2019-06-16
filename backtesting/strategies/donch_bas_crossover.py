@@ -17,6 +17,8 @@ class DonchBasCrossOver(StrategyOverride):
     )
 
     def __init__(self):
+        super(DonchBasCrossOver, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()

@@ -23,11 +23,12 @@ class SupertrendRSILong(StrategyOverride):
     )
 
     def __init__(self):
+        super(SupertrendRSILong, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         # Create SMA on 2nd data
         self.supertrend_sig = myind.Supertrend(self.data, atr_period=self.p.atr_period, atr_multiplier=self.p.atr_multiplier)
@@ -72,11 +73,12 @@ class SupertrendRSIShort(StrategyOverride):
     )
 
     def __init__(self):
+        super(SupertrendRSIShort, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         # Create SMA on 2nd data
         self.supertrend_sig = myind.Supertrend(self.data, atr_period=self.p.atr_period, atr_multiplier=self.p.atr_multiplier)

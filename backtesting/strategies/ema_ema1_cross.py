@@ -19,11 +19,12 @@ class EMA_EMA1(StrategyOverride):
     )
 
     def __init__(self):
+        super(EMA_EMA1, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         # Create SMA on 2nd data
         ema_1   = btind.MovAv.EMA(self.data, period=self.p.ema1)

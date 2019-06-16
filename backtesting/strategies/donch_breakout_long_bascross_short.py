@@ -17,11 +17,12 @@ class DonchLongOnly1(StrategyOverride):
     )
 
     def __init__(self):
+        super(DonchLongOnly1, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         self.donch     = DonchianChannel(self.data, period=self.p.period)
         self.signal    = btind.CrossOver(self.data.close, self.donch.l.bas)

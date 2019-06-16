@@ -16,11 +16,12 @@ class Donch(StrategyOverride):
     )
 
     def __init__(self):
+        super(Donch, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
         self.long = None
 
         # Create SMA on 2nd data

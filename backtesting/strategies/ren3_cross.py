@@ -25,11 +25,12 @@ class Ren3Cross(StrategyOverride):
     )
 
     def __init__(self):
+        super(Ren3Cross, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         # Create SMA on 2nd data
         ren3_sig      = myind.Ren3(self.data, atr_period=self.p.atr_period, ma_period=self.p.ma_period1)
@@ -84,11 +85,12 @@ class Ren3FCross(StrategyOverride):
     )
 
     def __init__(self):
+        super(Ren3FCross, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         # Create SMA on 2nd data
         ren3_sig      = myind.Ren3F(self.data, step_size=self.p.step_size, ma_period=self.p.ma_period1)
@@ -142,11 +144,12 @@ class Ren3HCross(StrategyOverride):
     )
 
     def __init__(self):
+        super(Ren3HCross, self).__init__()
+
         # To control operation entries
         self.order = None
         self.startcash = self.broker.getvalue()
         self.accpoints = 0
-        self.lastprice = None
 
         # Create SMA on 2nd data
         ren3_sig      = myind.Ren3H(self.data, atr_period=self.p.atr_period)
