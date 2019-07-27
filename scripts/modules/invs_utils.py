@@ -2,6 +2,7 @@
 #
 import math
 import csv
+import locale
 import contextlib, warnings
 import shutil
 from   colorama import Fore, Back, Style
@@ -84,6 +85,12 @@ def parse_dict_file(file_name=None):
     # endif
 # endif
 
+def parse_csv_file(csv_file, encoding='iso-8859-1'):
+    encoding   = locale.getpreferredencoding() if encoding == None else encoding
+    csv_reader = csv.reader(open(csv_file, 'r', encoding=encoding))
+    row_list   = [ x for x in csv_reader ]
+    return row_list
+# enddef
 
 def get_arg(args_dict, key, default_value):
     if key not in args_dict:

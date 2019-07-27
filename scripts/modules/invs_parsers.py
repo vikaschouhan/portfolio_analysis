@@ -2,7 +2,7 @@
 import re
 from   colorama import Fore
 import sys
-from   .invs_utils import cint, parse_dict_file, coloritb
+from   .invs_utils import cint, parse_dict_file, parse_csv_file, coloritb
 
 # Function to populate sec csv file in mentioned format to symbol list
 def parse_security_file(sfile, ret_type):
@@ -164,12 +164,62 @@ def populate_sym_list(invs_dict_file, sec_list):
     return sec_dict
 # enddef
 
+def populate_sym_list_kite(kite_csv_file, sec_list):
+    kite_csv_rows = parse_csv_file(kite_csv_file)
+    # Two dicts. One mapping symbol name to entry,
+    # other mapping exchange code to entry
+    symb_dict = {x[2]:x for x in kite_csv_rows}
+    code_dict = {x[1]:x for x in kite_csv_rows}
+
+    # Search for tickers
+    sec_dict = {}
+    not_f_l  = []
+    for sec_this in sec_list:
+        sec_code = sec_this['code']
+        sec_name = sec_this['name']
+        sec_lsize = sec_this['lsize'] if 'lsize' in sec_this else None
+        # Search
+        if sec_code in symb_dict:
+            sec_dict[sec_code] = {
+                                     'ticker'    : symb_dict[sec_code][0],
+                                     'name'      : sec_name,
+                                     'name_aux'  : symb_dict[sec_code][3],
+                                     'symbol'    : symb_dict[sec_code][1],
+                                     'lot_size'  : sec_lsize,
+                                 }
+        elif sec_code in code_dict:
+            sec_dict[sec_code] = {
+                                     'ticker'    : code_dict[sec_code][0],
+                                     'name'      : sec_name,
+                                     'name_aux'  : code_dict[sec_code][3],
+                                     'symbol'    : code_dict[sec_code][1],
+                                     'lot_size'  : sec_lsize,
+                                 }
+        else:
+            not_f_l.append(sec_this)
+        # endif
+    # endfor
+    print(coloritb('{} not found in investing.com db'.format(not_f_l), 'red'))
+
+    return sec_dict
+# enddef
+
 def populate_sym_list_from_sec_file(invs_file, sec_file):
     sec_list   = populate_sec_list(sfile=sec_file)
 
     print('Found {} securities.'.format(len(sec_list)))
     sec_tick_d = populate_sym_list(invs_file, sec_list)
     print('Found {} securities in investing_com database.'.format(len(sec_tick_d)))
+
+    return sec_tick_d
+# enddef
+
+def populate_sym_list_from_sec_file_kite(kite_csv_file, sec_file):
+    sec_list   = populate_sec_list(sfile=sec_file)
+
+    print('Found {} securities.'.format(len(sec_list)))
+    sec_tick_d = populate_sym_list_kite(kite_csv_file, sec_list)
+    print('Found {} securities in kite instruments database.'.format(len(sec_tick_d)))
 
     return sec_tick_d
 # enddef
