@@ -434,3 +434,99 @@ def option_historical(symbol, option_type, month=0, instrument=None, verbose=Fal
 
     return dataframe_t
 # enddef
+
+
+########################################################################################
+# Zerodha Kite functions
+res_tbl_zk = {
+              "1m"     : '1minute',
+              "5m"     : '5minute',
+              "15m"    : '15minute',
+              "30m"    : '30minute',
+              "1h"     : '60minute',
+              "2h"     : '2hour',
+              "4h"     : '4hour',
+              "5h"     : '5hour',
+              "1D"     : 'day',
+              "1W"     : 'week',
+          }
+
+def g_burlb_kite():
+    return "https://kitecharts-aws.zerodha.com/api/chart"
+
+# Fetch from Zerodha Kite
+def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=4):
+    if t_from == None:
+        t_from = "2000-01-01"
+    # endif
+    ftch_tout = 5
+    t_indx    = 0
+
+    assert(resl in res_tbl_zk.keys())
+
+    while t_indx < ftch_tout:
+        t_to     = datetime.datetime.now().strftime('%Y-%m-%d')
+        this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker, res_tbl_zk[resl], t_from, t_to, public_token)
+
+        logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
+        try:
+            this_req = Request(this_url, None, headers)
+            response = urlopen(this_req, timeout=t_timeout)
+            j_data   = json.loads(response.read())
+            if not bool(j_data):
+                logging.debug("{} : Not able to fetch.".format(strdate_now()))
+                logging.debug("{} : Returned {}".format(strdate_now(), j_data))
+            else:
+                break
+            # endif
+        except socket.error:
+            # Just try again after a pause if encountered an 104 error
+            logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
+            time.sleep(sleep_time)
+        except URLError:
+            logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
+            time.sleep(sleep_time)
+        # endtry
+        t_indx   = t_indx + 1
+    # endwhile
+
+    if (t_indx >= ftch_tout):
+        logging.debug("{} : Retries exceeded !!".format(strdate_now()))
+        # Exit
+        sys.exit(-1)
+    # endif
+
+    # Get basic pb_frame
+    def g_pdbase(j_data):
+        data_list = j_data['data']['candles']
+        # Data format = [timestamp, open, high, low, close, volume]
+
+        date_l   = [x[0] for x in data_list]
+        open_l   = [x[1] for x in data_list]
+        high_l   = [x[2] for x in data_list]
+        low_l    = [x[3] for x in data_list]
+        close_l  = [x[4] for x in data_list]
+        vol_l    = [x[5] for x in data_list]
+
+        t_date   = [ datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S%z") for x in date_l ]
+        d_frame  = pandas.DataFrame(index=t_date)
+    
+        d_frame['c'] = close_l
+        d_frame['o'] = open_l
+        d_frame['h'] = high_l
+        d_frame['l'] = low_l
+        d_frame['v'] = vol_l
+
+        return d_frame
+    # enddef
+
+    #print "{} : Fetched data. done !!".format(strdate_now())
+    # Enclosed within try except block to print the data incase some exception happens
+    try:
+        return dropzero(g_pdbase(j_data))
+    except Exception as e:
+        # Debug info
+        print('** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data))
+        return g_pdbase({'c' : [], 'o' : [], 'h' : [], 'l' : [], 'v' : []})
+    # endtry
+# enddef
