@@ -1,0 +1,4 @@
+nse_eqlist
+Company Name,Industry,Symbol,Series,ISIN Code
+Nifty 50 Index,INDEX,NIFTY 50,EQ,
+Nifty Bank Index,INDEX,NIFTY BANK,EQ,
