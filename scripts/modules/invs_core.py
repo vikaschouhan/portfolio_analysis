@@ -508,7 +508,8 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=4):
         close_l  = [x[4] for x in data_list]
         vol_l    = [x[5] for x in data_list]
 
-        t_date   = [ datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S%z") for x in date_l ]
+        # Remove timezone information
+        t_date   = [ datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S%z").strftime("%Y-%m-%d %H:%M:%S") for x in date_l ]
         d_frame  = pandas.DataFrame(index=t_date)
     
         d_frame['c'] = close_l
