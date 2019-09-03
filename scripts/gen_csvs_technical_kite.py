@@ -13,13 +13,14 @@ import argparse
 import sys
 import shutil
 import csv
+import time
 
 # Aliases
 coloritf   = invs_utils.coloritf
 coloritb   = invs_utils.coloritb
 
 # CSV report generator
-def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir):
+def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir, sleep_secs=5):
     ctr = 0
     assert output_dir != None
 
@@ -46,6 +47,12 @@ def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir):
         print('{}. CSV Report for {}'.format(ctr, coloritf(sec_name, 'magenta')))
         d_this.to_csv(csv_file_this)
 
+        # Sleep for some time so as not to overload server
+        if sleep_secs:
+            print('Sleeping for {} seconds'.format(sleep_secs))
+            time.sleep(sleep_secs)
+        # endif
+
         ctr = ctr + 1
     # endfor
 
@@ -71,6 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--sfile',   help='Security csv file. Can be list file or bhavcopy file.', type=str, default=None)
     parser.add_argument('--odir',    help='Output directory where csvs are stored.', type=str, default=None)
     parser.add_argument('--ptok',    help='Public token key.', type=str, default=None)
+    parser.add_argument('--sleep',   help='Sleep for this much time.', type=int, default=None)
     args    = parser.parse_args()
 
     if not args.__dict__['instr']:
@@ -108,7 +116,8 @@ if __name__ == '__main__':
     kis_res    = args.__dict__['res']
     out_dir    = args.__dict__['odir']
     pub_tok    = args.__dict__['ptok']
+    sleep_time = args.__dict__['sleep']
 
     sec_tick_d = invs_parsers.populate_sym_list_from_sec_file_kite(kis_db_f, sec_file)
-    run_csv_gen(sec_tick_d, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'])
+    run_csv_gen(sec_tick_d, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'], sleep_secs=sleep_time)
 # endif

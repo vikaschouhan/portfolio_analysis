@@ -4,6 +4,7 @@ import json
 import pprint
 import sys
 import re
+import http
 import urllib, json
 from   urllib.request import urlopen, Request
 from   urllib.error import URLError
@@ -455,24 +456,24 @@ def g_burlb_kite():
     return "https://kitecharts-aws.zerodha.com/api/chart"
 
 # Fetch from Zerodha Kite
-def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=4):
+def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=25, sleep_time=14):
     if t_from == None:
         t_from = "2000-01-01"
     # endif
-    ftch_tout = 5
+    ftch_tout = 15
     t_indx    = 0
 
     assert(resl in res_tbl_zk.keys())
 
     while t_indx < ftch_tout:
-        t_to     = datetime.datetime.now().strftime('%Y-%m-%d')
-        this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker, res_tbl_zk[resl], t_from, t_to, public_token)
-
-        logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
         try:
-            this_req = Request(this_url, None, headers)
-            response = urlopen(this_req, timeout=t_timeout)
-            j_data   = json.loads(response.read())
+            t_to     = datetime.datetime.now().strftime('%Y-%m-%d')
+            this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker,
+                    res_tbl_zk[resl], t_from, t_to, public_token)
+
+            logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
+            response = requests.get(this_url, timeout=t_timeout, headers=headers)
+            j_data   = json.loads(response.text)
             if not bool(j_data):
                 logging.debug("{} : Not able to fetch.".format(strdate_now()))
                 logging.debug("{} : Returned {}".format(strdate_now(), j_data))
@@ -485,6 +486,13 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=4):
             time.sleep(sleep_time)
         except URLError:
             logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
+            time.sleep(sleep_time)
+        except ValueError:
+            logging.debug('Encountered value error. Retrying after {} seconds..'.format(sleep_time))
+            time.sleep(sleep_time)
+        except http.client.IncompleteRead:
+            #print('ERROR:: Incomplete Read Error.', flush=True)
+            logging.debug('Encountered IncompleteRead error. Retrying after {} seconds..'.format(sleep_time))
             time.sleep(sleep_time)
         # endtry
         t_indx   = t_indx + 1
