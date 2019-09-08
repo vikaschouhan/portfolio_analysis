@@ -20,7 +20,7 @@ coloritf   = invs_utils.coloritf
 coloritb   = invs_utils.coloritb
 
 # CSV report generator
-def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir, sleep_secs=5):
+def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir, sleep_secs=5, verbose=False):
     ctr = 0
     assert output_dir != None
 
@@ -34,7 +34,7 @@ def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir, sleep_secs=5):
     # Iterate over all security dict
     for sec_code in sec_dict.keys():
         # Fetch data
-        d_this   = invs_core.fetch_data_kite(sec_dict[sec_code]['ticker'], kis_res, pub_tok)
+        d_this   = invs_core.fetch_data_kite(sec_dict[sec_code]['ticker'], kis_res, pub_tok, verbose=verbose)
         sec_name = sec_dict[sec_code]['name']
 
         # If dataframe is empty, continue
@@ -79,6 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('--odir',    help='Output directory where csvs are stored.', type=str, default=None)
     parser.add_argument('--ptok',    help='Public token key.', type=str, default=None)
     parser.add_argument('--sleep',   help='Sleep for this much time.', type=int, default=None)
+    parser.add_argument('--verbose', help='Verbose mode', action='store_true')
     args    = parser.parse_args()
 
     if not args.__dict__['instr']:
@@ -117,7 +118,9 @@ if __name__ == '__main__':
     out_dir    = args.__dict__['odir']
     pub_tok    = args.__dict__['ptok']
     sleep_time = args.__dict__['sleep']
+    verbose    = args.__dict__['verbose']
 
     sec_tick_d = invs_parsers.populate_sym_list_from_sec_file_kite(kis_db_f, sec_file)
-    run_csv_gen(sec_tick_d, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'], sleep_secs=sleep_time)
+    run_csv_gen(sec_tick_d, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'],
+            sleep_secs=sleep_time, verbose=verbose)
 # endif

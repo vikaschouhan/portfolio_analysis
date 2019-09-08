@@ -440,7 +440,7 @@ def option_historical(symbol, option_type, month=0, instrument=None, verbose=Fal
 ########################################################################################
 # Zerodha Kite functions
 res_tbl_zk = {
-              "1m"     : '1minute',
+              "1m"     : 'minute',
               "5m"     : '5minute',
               "15m"    : '15minute',
               "30m"    : '30minute',
@@ -456,7 +456,7 @@ def g_burlb_kite():
     return "https://kitecharts-aws.zerodha.com/api/chart"
 
 # Fetch from Zerodha Kite
-def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=25, sleep_time=14):
+def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=25, sleep_time=14, verbose=False):
     if t_from == None:
         t_from = "2000-01-01"
     # endif
@@ -472,6 +472,9 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=25, sleep
                     res_tbl_zk[resl], t_from, t_to, public_token)
 
             logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
+            if verbose:
+                print('Fetching {}'.format(this_url))
+            # endif
             response = requests.get(this_url, timeout=t_timeout, headers=headers)
             j_data   = json.loads(response.text)
             if not bool(j_data):
