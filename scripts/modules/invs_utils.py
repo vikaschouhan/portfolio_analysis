@@ -93,6 +93,17 @@ def parse_csv_file(csv_file, encoding='iso-8859-1'):
     return row_list
 # enddef
 
+def parse_sarg(x, cast_to=str, arg_mod_fn=None, delimiter=','):
+    if x:
+        if arg_mod_fn:
+            return [arg_mod_fn(cast_to(y.rstrip().lstrip())) for y in x.split(',')]
+        else:
+            return [cast_to(y.rstrip().lstrip()) for y in x.split(delimiter)]
+        # endif
+    # endif
+    return None
+# enddef
+
 def get_arg(args_dict, key, default_value):
     if key not in args_dict:
         print('{} not found in {}. Picking default value of {}'.format(key, args_dict, default_value))
