@@ -15,6 +15,7 @@ from   bs4 import BeautifulSoup
 import pandas
 import os
 import url_normalize
+import uuid
 
 ###########################################################################################
 # File system handling
@@ -230,4 +231,22 @@ def coloritb(message, color):
 
 def url_norm(url):
     return url_normalize.url_normalize(url.rstrip('/'))
+# enddef
+
+###############################################################
+def download_kite_instruments():
+    api_url = 'https://api.kite.trade/instruments'
+    resp    = requests.get(api_url)
+    if resp.status_code != 200:
+        print('ERROR:: Encountered error while downloading kite instruments file from {}'.format(api_url))
+        return None
+    # endif
+
+    out_file = '/tmp/' + str(uuid.uuid4()) + '.csv'
+    print('Downloading kite instruments file to {}'.format(out_file))
+    with open(out_file, 'w') as f_out:
+        f_out.write(resp.text)
+    # endwith
+
+    return out_file
 # enddef
