@@ -24,5 +24,11 @@ This work is made available under the terms of Gnu General Public License v2 (Pl
 - python3-plotly
 - python3-tabulate
 - python3-selenium
+- python3-selenium_wire
 - python3-requests
 - python3-pyvirtualdisplay
+
+## Scripts
+* **eq_scan_on_investing_dot_com.py** - Generates an investing.com compatible database of assets with bhavcopy data pulled from [BSE](https://www.bseindia.com) and [NSE](https://www.nseindia.com) and pulling information for each of them from investing.com.
+* **scrape_public_token_from_zerodha_kite.py** - Scrape public token id from zerodha for your account. Authorization has to provided in form of 'LOGIN,PASSWORD,PIN'.
+* **gen_csvs_technical_kite.py** - Pull asset data from zerodha kite platform. This requires the "public token id" mentioned in previous paragraph.
