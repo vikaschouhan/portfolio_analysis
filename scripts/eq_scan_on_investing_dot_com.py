@@ -40,6 +40,16 @@ def assertm(cond, msg):
     # endif
 # enddef
 
+def set_sleep_time(t):
+    global N_SLEEP
+    N_SLEEP = t
+# enddef
+
+def set_sock(s):
+    global sock
+    sock = s
+# enddef
+
 def month_str(m_n):
     assertm(m_n <= 12 and m_n >= 1, "Month number should be between 1 & 12")
     m_str = [ "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" ]
@@ -203,7 +213,7 @@ def scan_securities(name, exchange, n_sleep=N_SLEEP, n_timeout=N_TIMEOUT, n_tryo
         try:
             response = urlopen(this_url, timeout=n_timeout)
             break
-        except socket.timeout:
+        except:
             print(' >>Request timed out !! Sleeping for {} seconds.'.format(n_sleep))
             time.sleep(n_sleep)
             to_this = to_this + 1
@@ -243,6 +253,7 @@ if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument("--ckpt", help="Checkpoint file", type=str, default=None)
     parser.add_argument("--query", help="Query Exchange (bse, nse etc)", type=str, default='bse,nse')
+    parser.add_argument("--sleep", help="Seconds to sleep in case of timeouts.", type=int, default=8)
     args    = parser.parse_args()
 
     # Output file
@@ -251,6 +262,11 @@ if __name__ == '__main__':
     # Vars
     ckpt_f    = args.__dict__['ckpt']
     qe_excg   = args.__dict__['query'].replace(' ', '').split(',')
+    sl_time   = args.__dict__['sleep']
+
+    # Set Sleep time
+    set_sleep_time(sl_time)
+    print('>> Using sleep time = {}s'.format(N_SLEEP))
 
     # Exchange enable/disable
     fetch_nse = False
@@ -263,7 +279,7 @@ if __name__ == '__main__':
     # endif
     
     # get socket
-    sock = g_sock()
+    set_sock(g_sock())
     # Get checkpoint list
     invs_d    = parse_ckpt_file(ckpt_f)
     isin_list = list(invs_d.keys())
