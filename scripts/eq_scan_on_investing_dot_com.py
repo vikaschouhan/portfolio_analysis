@@ -146,7 +146,7 @@ def nse_latest_bhavcopy_info(incl_series=['EQ']):
     day_y    = date_y.day
     year_y   = date_y.year
     #url_this = "http://www.bseindia.com/download/BhavCopy/Equity/EQ{:02d}{:02d}{:02d}_CSV.ZIP".format(date_y.day, date_y.month, date_y.year % 2000)
-    url_this  = "https://www.nseindia.com/content/historical/EQUITIES/{}/{}/cm{:02d}{}{}bhav.csv.zip".format(year_y, month_y, day_y, month_y, year_y)
+    url_this  = "https://www1.nseindia.com/content/historical/EQUITIES/{}/{}/cm{:02d}{}{}bhav.csv.zip".format(year_y, month_y, day_y, month_y, year_y)
     print("Fetching NSE Bhavcopy from {}".format(url_this))
     #print "Fetching BSE Bhavcopy from {}".format(url_this)
     u_req    = Request(url_this)
