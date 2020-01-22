@@ -17,6 +17,19 @@ import os
 import url_normalize
 import uuid
 
+def islist(x):
+    return isinstance(x, list)
+# enddef
+def istuple(x):
+    return isinstance(x, tuple)
+# enddef
+def isdict(x):
+    return isinstance(x, dict)
+# enddef
+def isstring(x):
+    return isinstance(x, str)
+# enddef
+
 ###########################################################################################
 # File system handling
 
@@ -24,7 +37,6 @@ import uuid
 def rp(x):
     return os.path.expanduser(x)
 # enddef
-
 
 ############################################################################################
 
@@ -242,6 +254,59 @@ def coloritb(message, color):
 
 def url_norm(url):
     return url_normalize.url_normalize(url.rstrip('/'))
+# enddef
+
+def incr_days(dt, days=1, op='+'):
+    assert isinstance(dt, datetime.datetime), 'dt={} should be an instance of datetime.datetime'.format(dt)
+    assert op in ['+', '-'], 'op={} should be either + or -'.format(op)
+    if op == '+':
+        return dt + datetime.timedelta(days=days)
+    elif op == '-':
+        return dt - datetime.timedelta(days=days)
+    # endif
+# enddef
+
+def incr_days_str(dt, dt_fmt='%Y-%m-%d', days=1, op='+'):
+    assert isinstance(dt, str), 'dt={} should be a string.'.format(dt)
+    dt = datetime.datetime.strptime(dt, dt_fmt)
+    dt_new = incr_day(dt, days=days, op=op)
+    return dt_new.strftime(dt_fmt)
+# enddef
+
+def split_date_range_into_chunks(date_range, date_fmt=None, range_days=300, order='dec'):
+    assert order in ['inc', 'dec'], 'order={} should be one of ["inc", "dec"]'.format(order)
+    assert (islist(date_range) or istuple(date_range)) and len(date_range) == 2, \
+            'date_range={} should be a list or tuple of 2 elements.'.format(date_range)
+    if date_fmt is None:
+        assert [isinstance(x, datetime.datetime) for x in date_range]
+    else:
+        date_range = [datetime.datetime.strptime(x, date_fmt) for x in date_range]
+    # endif
+
+    to_date     = max(date_range)
+    from_date   = min(date_range)
+    to_date_t   = to_date
+
+    days_list   = []
+    while True:
+        from_date_t = incr_days(to_date_t, days=range_days, op='-')
+        days_list.append((from_date_t, to_date_t))
+        to_date_t   = incr_days(from_date_t, days=1, op='-')
+        if to_date_t < from_date:
+            break
+        # endif
+    # endwhile
+
+    # Sort the order if in increasing order
+    if order == 'inc':
+        days_list   = list(reversed(days_list))
+    # endif
+    # Convert to string format if applicable
+    if date_fmt:
+        days_list = [(x[0].strftime(date_fmt), x[1].strftime(date_fmt)) for x in days_list]
+    # endif
+
+    return days_list
 # enddef
 
 ###############################################################
