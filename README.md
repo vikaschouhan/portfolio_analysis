@@ -1,6 +1,8 @@
 # portfolio_analysis
-Some useful collection of scripts I wrote during my learning of data scraping for quantitative fundamental/technical investing.
-This work is made available under the terms of Gnu General Public License v2 (Please check LICENSE for details)
+Some useful collection of scripts for asset price analysis and scraping them freely from various sources on the web.<br> A backtesting framework based on [backtrader](https://www.backtrader.com/) is also currently implemented and hooked on to some of those scripts for automated backtesting and filtering for techincal investing.
+
+## LICENSE
+This work is made available under the terms of Gnu General Public License v2 (Please check LICENSE file for details)
 
 ## Dependencies
 - python3-distutils
