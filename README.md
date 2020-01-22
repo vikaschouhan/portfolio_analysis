@@ -32,3 +32,6 @@ This work is made available under the terms of Gnu General Public License v2 (Pl
 * **eq_scan_on_investing_dot_com.py** - Generates an investing.com compatible database of assets with bhavcopy data pulled from [BSE](https://www.bseindia.com) and [NSE](https://www.nseindia.com) and pulling information for each of them from investing.com.
 * **scrape_public_token_from_zerodha_kite.py** - Scrape public token id from zerodha for your account. Authorization has to provided in form of 'LOGIN,PASSWORD,PIN'.
 * **gen_csvs_technical_kite.py** - Pull asset data from zerodha kite platform. This requires the "public token id" mentioned in previous paragraph.
+* **gen_csvs_technical.py** - Pull asset data from investing.com (freely available in chart form). No username or password required.
+* **get_option_historical_nse.py** - Pull option chain data for a particular month (only current, next and next to next month supported) for a particular stock or index from [NSE](https://www.nseindia.com)
+* **get_option_historical_nse.py** - Pull historical option data for a particular stock or index for current, next or next to next month.
