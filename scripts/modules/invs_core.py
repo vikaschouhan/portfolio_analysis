@@ -26,8 +26,9 @@ import logging
 from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
+import itertools
 
-from   .invs_utils import dropzero, cfloat, vprint
+from   .invs_utils import dropzero, cfloat, vprint, split_date_range_into_chunks
 from   dateutil.relativedelta import relativedelta, TH
 
 #################################################################
@@ -456,56 +457,81 @@ def g_burlb_kite():
     return "https://kitecharts-aws.zerodha.com/api/chart"
 
 # Fetch from Zerodha Kite
-def fetch_data_kite(ticker, resl, public_token, t_from=None, t_timeout=25, sleep_time=14, verbose=False):
+def fetch_data_kite(ticker, resl, public_token, t_from=None, range_days=400, t_timeout=25, sleep_time=14, verbose=False):
     if t_from == None:
         t_from = "2000-01-01"
     # endif
     ftch_tout = 15
     t_indx    = 0
 
+    t_to      = datetime.datetime.now().strftime('%Y-%m-%d')
+    dt_range  = split_date_range_into_chunks((t_from, t_to), date_fmt="%Y-%m-%d", range_days=range_days, order='dec')
+
     assert(resl in res_tbl_zk.keys())
 
-    while t_indx < ftch_tout:
-        try:
-            t_to     = datetime.datetime.now().strftime('%Y-%m-%d')
-            this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker,
-                    res_tbl_zk[resl], t_from, t_to, public_token)
+    data_list = []
+    finish    = False
+    for drange_t in dt_range:
+        while t_indx < ftch_tout:
+            try:
+                this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker,
+                        res_tbl_zk[resl], drange_t[0], drange_t[1], public_token)
 
-            logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
-            if verbose:
-                print('Fetching {}'.format(this_url))
-            # endif
-            response = requests.get(this_url, timeout=t_timeout, headers=headers)
-            j_data   = json.loads(response.text)
-            if not bool(j_data):
-                logging.debug("{} : Not able to fetch.".format(strdate_now()))
-                logging.debug("{} : Returned {}".format(strdate_now(), j_data))
-            else:
-                break
-            # endif
-        except socket.error:
-            # Just try again after a pause if encountered an 104 error
-            logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
-            time.sleep(sleep_time)
-        except URLError:
-            logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
-            time.sleep(sleep_time)
-        except ValueError:
-            logging.debug('Encountered value error. Retrying after {} seconds..'.format(sleep_time))
-            time.sleep(sleep_time)
-        except http.client.IncompleteRead:
-            #print('ERROR:: Incomplete Read Error.', flush=True)
-            logging.debug('Encountered IncompleteRead error. Retrying after {} seconds..'.format(sleep_time))
-            time.sleep(sleep_time)
-        # endtry
-        t_indx   = t_indx + 1
-    # endwhile
+                logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
+                if verbose:
+                    print('Fetching {}'.format(this_url))
+                # endif
+                response = requests.get(this_url, timeout=t_timeout, headers=headers)
+                j_data   = json.loads(response.text)
+                if not bool(j_data):
+                    logging.debug("{} : Not able to fetch.".format(strdate_now()))
+                    logging.debug("{} : Returned {}".format(strdate_now(), j_data))
+                else:
+                    # If we are returned empty data, flag finish
+                    if len(j_data['data']['candles']) == 0:
+                        finish = True
+                        break
+                    # endif
 
-    if (t_indx >= ftch_tout):
-        logging.debug("{} : Retries exceeded !!".format(strdate_now()))
-        # Exit
-        sys.exit(-1)
-    # endif
+                    # Fetch data in list
+                    data_list.append(j_data['data']['candles'])
+                    break
+                # endif
+            except socket.error:
+                # Just try again after a pause if encountered an 104 error
+                logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
+                time.sleep(sleep_time)
+            except URLError:
+                logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
+                time.sleep(sleep_time)
+            except ValueError:
+                logging.debug('Encountered value error. Retrying after {} seconds..'.format(sleep_time))
+                time.sleep(sleep_time)
+            except http.client.IncompleteRead:
+                #print('ERROR:: Incomplete Read Error.', flush=True)
+                logging.debug('Encountered IncompleteRead error. Retrying after {} seconds..'.format(sleep_time))
+                time.sleep(sleep_time)
+            # endtry
+            t_indx   = t_indx + 1
+        # endwhile
+
+        if (t_indx >= ftch_tout):
+            logging.debug("{} : Retries exceeded !!".format(strdate_now()))
+            # Exit
+            sys.exit(-1)
+        # endif
+
+        # Check finish flag
+        if finish:
+            break
+        # endif
+    # endfor
+
+    # Populate full data
+    data_list = list(reversed(data_list))
+    # Flatten full list
+    data_list = list(itertools.chain(*data_list))
+    j_data['data']['candles'] = data_list
 
     # Get basic pb_frame
     def g_pdbase(j_data):
