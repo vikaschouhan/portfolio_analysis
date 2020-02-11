@@ -21,6 +21,7 @@ except:
     from  mpl_finance import candlestick2_ohlc, volume_overlay
 # entry
 import matplotlib.pyplot as plt
+import seaborn as sns
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import datetime as datetime
@@ -216,4 +217,52 @@ def gen_supp_res(j_data, n_samples=200):
     # endfor
 
     plotly.offline.plot(fig, filename=os.path.expanduser('~/data.html'))
+# enddef
+
+def plot_conf_mat(conf_matd, out_fig, fig_size=(12, 9), font_scale=0.6):
+    # Derive figsize
+    figsize_w = conf_matd.shape[0]
+    konst     = 4.0
+    if fig_size is None:
+        fig_size = (int(konst * figsize_w), int(konst * figsize_w * 3/4.0))
+    # endif
+    print('>> Using figsize of {} for confusion matrix with {} elements'.format(fig_size, figsize_w))
+
+    # Plot confusion matrix
+    sns.set(font_scale=font_scale)
+    fig = plt.figure(figsize=fig_size)
+    #heatmap = sns.heatmap(conf_matd, annot=True, fmt="d")
+    heatmap = sns.heatmap(conf_matd, cmap='RdYlGn')
+    heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right')
+    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right')
+    heatmap.figure.tight_layout()
+    
+    plt.savefig(out_fig, dpi=300)
+    plt.close()
+# enddef
+
+def plot_corr_matrix(df_map, out_fig, filter_col=utils.col_close):
+    df_map = utils.filter_asset_csvs(df_map, filter_col=filter_col)
+    # Calculate correlation
+    corr_mat = df_map.corr(method='pearson')
+    plot_conf_mat(corr_mat, out_fig)
+# enddef
+
+def show_perc_rets(df_map, out_fig, fig_size=(12, 9), font_scale=0.6):
+    rets_map = {}
+    for file_t in df_map:
+        rets_map[file_t] = df_map[file_t][col_close][-1]/df_map[file_t][col_close][0]
+    # endfor
+
+    # Plot confusion matrix
+    sns.set(font_scale=font_scale)
+    fig = plt.figure(figsize=fig_size)
+    x_list = list(rets_map.keys())
+    y_list = [rets_map[x] for x in x_list]
+    ax = sns.barplot(x_list, y_list)
+    ax.xaxis.set_ticklabels(ax.xaxis.get_ticklabels(), rotation=45, ha='right')
+    ax.figure.tight_layout()
+
+    plt.savefig(out_fig, dpi=300)
+    plt.close()
 # enddef

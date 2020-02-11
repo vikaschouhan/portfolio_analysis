@@ -12,13 +12,15 @@ import logging
 from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
-import pandas
 import os
 import url_normalize
 import uuid
 from   PIL import Image
 import glob
 import os
+import pandas as pd
+import multiprocessing
+import itertools
 
 def islist(x):
     return isinstance(x, list)
@@ -47,9 +49,9 @@ def rp(x):
 def g_rmean_f(**kwargs):
     se_st = kwargs.get('type', 's')    # "s" or "e"
     if se_st == 's':
-        return lambda s, t: pandas.rolling_mean(s, t)
+        return lambda s, t: pd.rolling_mean(s, t)
     elif se_st == 'e':
-        return lambda s, t: pandas.Series.ewm(s, span=t, adjust=False).mean()
+        return lambda s, t: pd.Series.ewm(s, span=t, adjust=False).mean()
     else:
         assert(False)
     # endif
@@ -330,6 +332,8 @@ def download_kite_instruments():
     return out_file
 # enddef
 
+#################################################################
+# Utils
 def merge_images(file_list, out_file):
     im_size_list = []
 
@@ -352,6 +356,74 @@ def merge_images(file_list, out_file):
     result.save(os.path.expanduser(out_file))
 # enddef
 
+def rev_map(x):
+    return {v:k for k,v in x.items()}
+# enddef
+
+def search_for(dir_t, file_ext_list=None, full_path=False):
+    file_ext_list = ['*'] if file_ext_list is None else \
+            [file_ext_list] if not isinstance(file_ext_list, list) else file_ext_list
+    file_list = []
+    for ext_t in file_ext_list:
+        file_l_t  = glob.glob1(dir_t, ext_t)
+        # Add dir_t if full_path is required
+        if full_path:
+            file_l_t = ['{}/{}'.format(dir_t, x) for x in file_l_t]
+        # endif
+        file_list = file_list + file_l_t
+    # endfor
+    return file_list
+# enddef
+
+############################################################################
+# Reading csvs of asset prices
+col_map    = {'Open':'o', 'High':'h', 'Low':'l', 'Close':'c', 'Volume':'v'}
+col_close  = 'Close'
+
+def read_asset_csv(csv_file, columns_map=None, resample_period=None):
+    # Reverse
+    columns_map = rev_map(columns_map)
+    # Read
+    df = pd.read_csv(csv_file, index_col=0, infer_datetime_format=True, parse_dates=True)
+    df = df.rename(columns=columns_map) if columns_map else df
+    df = df.resample(resample_period).mean().dropna() if resample_period else df
+    return df
+# enddef
+
+def read_asset_csvs(files_list, resample_period='1D'):
+    # read all dataframes
+    df_map     = {}
+    for indx_t, file_t in enumerate(files_list):
+        print('Loading file {:<4}/{:<4}..'.format(indx_t, len(files_list)), end='\r')
+        df_t   = read_asset_csv(file_t, columns_map=col_map, resample_period=resample_period)
+        df_map[os.path.basename(file_t)] = df_t
+    # endfor
+
+    return df_map
+# enddef
+
+def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period='1D'):
+    files_list = search_for(csv_dir, file_ext_list=['*.csv'], full_path=True)
+    df_map     = spawn_workers(read_asset_csvs, 4,
+                 **{ 'proc_id_key' : None,
+                     'data_keys'   : ['files_list'],
+                     'files_list'  : files_list,
+                     'resample_period' : resample_period
+                   })
+    return df_map
+# enddef
+
+def filter_asset_csvs(df_map, filter_col=col_close):
+    # Read all close prices only
+    df_close_list = []
+    for file_t in df_map:
+        df_close_list.append(df_map[file_t][filter_col].rename(file_t))
+    # endfor
+    com_df     = pd.concat(df_close_list, axis=1)
+    return com_df
+# enddef
+
+
 ###################################################
 # @Decorators
 
@@ -361,4 +433,109 @@ def static(varname, value):
         return func
     # enddef
     return decorate
+# enddef
+
+####################################################
+# Multiprocessing helpers
+# Create single manager
+mp_manager = multiprocessing.Manager()
+
+def split_chunks(l, n_chunks):
+    n = int(len(l)/n_chunks)
+    retv = [l[i*n:(i+1)*n] for i in range(int(len(l)/n)+1) if l[i*n:(i+1)*n] != []]
+    return retv[0:n_chunks-1] + [list(itertools.chain(*retv[n_chunks-1:]))]
+# enddef
+
+def spawn_workers(worker_fn, num_threads, sanitize_results=True, **kwargs):
+    if 'data_keys' not in kwargs:
+        print('**kwargs in spawn_workers need to have named key "data_keys"')
+        sys.exit(-1)
+    # endif
+
+    # Get list of named parameters which need to be divided
+    data_keys = kwargs.pop('data_keys')
+    if not isinstance(data_keys, list):
+        print('kwargs["data_keys"] should be a list of keys which need to be divided across processes.')
+        sys.exit(-1)
+    # endif
+
+    # Check if proc_id is to specified for the worker
+    if 'proc_id_key' in kwargs:
+        proc_id_key = kwargs.pop('proc_id_key')
+    else:
+        proc_id_key = None
+    # endif
+
+    # Divide payloads
+    chunk_map   = {}
+    count_map   = {}
+    for data_key_t in data_keys:
+        if data_key_t not in kwargs:
+            print('FATAL::: {} not found in kwargs for spawn_workers.'.format(data_key_t))
+        # endif
+        # Check if keys are list or not
+        if not isinstance(kwargs[data_key_t], list):
+            print(kwargs[data_key_t], ' is not a list.')
+            sys.exit(-1)
+        # endif
+        data_value_t = kwargs.pop(data_key_t)
+        count_map[data_key_t] = len(data_value_t)  # Get length of this list
+        chunk_map[data_key_t] = split_chunks(data_value_t, num_threads)
+    # endfor
+
+    if len(set(list(count_map.values()))) != 1:
+        print('data_keys in spawn_workers have mismatch in length of parameters : {}'.format(count_map))
+        sys.exit(-1)
+    # endif
+
+    # Define a new worker fn which wraps original worker fn with some customizations
+    def __wrap_worker_fn(return_dict, proc_id, **xkwargs):
+        ret_result = worker_fn(**xkwargs)
+        return_dict[proc_id] = ret_result
+    # enddef
+
+    print('INFO::: Dividing {} jobs across {} threads.'.format(list(count_map.values())[0], num_threads))
+
+    # Deploy
+    result_list  = []
+    process_list = []
+    return_dict  = mp_manager.dict()
+    for i in range(num_threads):
+        # Populate kwargs
+        for data_key_t in chunk_map:
+            kwargs[data_key_t] = chunk_map[data_key_t][i]
+        # endfor
+        if proc_id_key:
+            kwargs[proc_id_key] = i
+        # endif
+        # Spawn new process
+        proc = multiprocessing.Process(target=__wrap_worker_fn, args=(return_dict,i,), kwargs=kwargs)
+        process_list.append(proc)
+        proc.start()
+    # endfor
+
+    # Wait for all processes to end
+    for proc_t in process_list:
+        proc_t.join()
+    # endfor
+
+    print('INFO:: All processes finished !!')
+
+    # Collate all results
+    all_results = []
+    for i in range(num_threads):
+        chunk_result = return_dict[i]
+        all_results.append(chunk_result)
+    # endfor
+
+    # Sanitize all_results
+    if sanitize_results:
+        if isinstance(all_results[0], list):
+            all_results = [x for z in all_results for x in z]
+        elif isinstance(all_results[0], dict):
+            all_results = {x:y for z in all_results for (x,y) in z.items()}
+        # endif
+    # endif
+
+    return all_results
 # enddef
