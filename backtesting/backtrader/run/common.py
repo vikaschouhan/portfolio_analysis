@@ -12,6 +12,8 @@ import copy
 import openpyxl
 import shutil
 
+backtrader_dir = 'backtesting/backtrader/core'
+
 def rp(path):
     return os.path.expanduser(path)
 # enddef
@@ -126,8 +128,9 @@ def run_scanner(config_json):
         if back_test:
             print('Running backtester...')
             strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
-            py_cmd = 'python3 backtesting/backtrader_backtester.py --csvdir {csv_dir} --strategy {strategy} \
+            py_cmd = 'python3 {backtrader_dir}/backtrader_backtester.py --csvdir {csv_dir} --strategy {strategy} \
                 --outdir {plots_dir} --nthreads {num_threads} --period {plot_period} --repfile {report_file} {strat_arg}'.format(
+                    backtrader_dir=backtrader_dir,
                     csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
                     plot_period=plot_period, report_file=report_file, strat_arg=strat_arg)
             print('Running CMD: {}'.format(py_cmd))
@@ -138,9 +141,10 @@ def run_scanner(config_json):
         else:
             print('Running screener...')
             strat_arg = '' if strat_opts == None else '--opt {}'.format(strat_opts)
-            py_cmd = 'python3 backtesting/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
+            py_cmd = 'python3 {backtrader_dir}/backtrader_screener.py --csvdir {csv_dir} --strategy {strategy} \
                 --outdir {plots_dir} --nthreads {num_threads} --period {plot_period}  --repfile {report_file} {strat_arg} \
                 --lag {look_back}'.format(
+                    backtrader_dir=backtrader_dir,
                     csv_dir=csv_dir, strategy=strategy, plots_dir=plots_dir, num_threads=n_threads,
                     plot_period=plot_period, report_file=report_file, strat_arg=strat_arg, look_back=look_back)
             print('Running CMD: {}'.format(py_cmd))

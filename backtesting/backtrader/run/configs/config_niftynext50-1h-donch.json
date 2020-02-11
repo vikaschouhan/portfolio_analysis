@@ -1,8 +1,8 @@
 {
 	"out_dir"         : "~/sc_db_github_files",
        	"resolution"      : "1h",
-       	"invs_file"       : "scripts/db/investing_dot_com_security_dict.py",
-	"db_file"         : "scripts/db/ind_niftynext50list.csv",
+       	"invs_file"       : "data/investing_dot_com_security_dict.py",
+	"db_file"         : "data/ind_niftynext50list.csv",
 	"strategy"        : "donch_channel",
 	"strategy_opts"   : "period=40",
        	"download_csvs"   : true,
