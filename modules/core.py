@@ -28,7 +28,7 @@ import requests
 from   bs4 import BeautifulSoup
 import itertools
 
-from   .invs_utils import dropzero, cfloat, vprint, split_date_range_into_chunks
+from   .utils import dropzero, cfloat, vprint, split_date_range_into_chunks
 from   dateutil.relativedelta import relativedelta, TH
 
 #################################################################

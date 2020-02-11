@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import os, sys
-from   modules import invs_parsers
-from   modules import invs_utils
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+from   modules import parsers as invs_parsers
+from   modules import utils as invs_utils
 
 # Main
 if __name__ == '__main__':

@@ -11,13 +11,6 @@
 # The goal is to find out the right timings for entry in the stocks selected via
 # a technical screener.
 
-from   modules import invs_core
-from   modules import invs_plot
-from   modules import invs_scanners
-from   modules import invs_utils
-from   modules import invs_tools
-from   modules import invs_parsers
-from   modules import invs_indicators
 import logging
 from   colorama import Fore, Back, Style
 import os
@@ -29,6 +22,15 @@ import shutil
 import csv
 import copy
 from   subprocess import check_call
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+from   modules import core as invs_core
+from   modules import plot as invs_plot
+from   modules import scanners as invs_scanners
+from   modules import utils as invs_utils
+from   modules import tools as invs_tools
+from   modules import parsers as invs_parsers
+from   modules import indicators as invs_indicators
 
 # Aliases
 get_arg = invs_utils.get_arg

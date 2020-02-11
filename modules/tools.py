@@ -3,7 +3,7 @@
 from   sklearn.cluster import MeanShift, estimate_bandwidth
 import numpy as np
 import pandas as pd
-from   .invs_utils import d_ema, s_mode
+from   .utils import d_ema, s_mode
 
 # Support resistance lines
 def supp_res(j_data, n_samples=200, mode='c', ema_period=None):

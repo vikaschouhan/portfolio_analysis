@@ -32,10 +32,10 @@ import datetime
 from   sklearn.cluster import MeanShift, estimate_bandwidth
 import copy
 
-import plotly.plotly
+import chart_studio.plotly
 from   plotly.tools import FigureFactory as FF
 
-from   modules import invs_utils
+from   modules import utils
 
 # Switch matplotlib backend
 matplotlib.pyplot.switch_backend('agg')
@@ -90,7 +90,7 @@ def gen_candlestick(d_frame,
 
     # Get date list and rmean function
     xdate     = [datetime.datetime.fromtimestamp(t) for t in d_frame_c['T']]
-    rmean     = invs_utils.g_rmean_f(type='e')
+    rmean     = utils.g_rmean_f(type='e')
 
     def mydate(x,pos):
         try:
@@ -124,7 +124,7 @@ def gen_candlestick(d_frame,
     ## Plot mas
     for period_this in period_list:
         label = 'ema_' + str(period_this)
-        d_s   = invs_utils.s_mode(d_frame_c, mode)
+        d_s   = utils.s_mode(d_frame_c, mode)
         d_frame_c[label] = rmean(d_s, period_this)
         d_frame_c.reset_index(inplace=True, drop=True)
         d_frame_c[label].plot(ax=ax)

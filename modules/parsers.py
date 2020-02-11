@@ -2,7 +2,7 @@
 import re
 from   colorama import Fore
 import sys
-from   .invs_utils import cint, parse_dict_file, parse_csv_file, coloritb
+from   .utils import cint, parse_dict_file, parse_csv_file, coloritb
 
 # Function to populate sec csv file in mentioned format to symbol list
 def parse_security_file(sfile, ret_type):

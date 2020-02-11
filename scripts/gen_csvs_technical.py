@@ -5,14 +5,16 @@
 #
 # csv generator
 
-from   modules import invs_core
-from   modules import invs_utils
-from   modules import invs_parsers
 import os
 import argparse
 import sys
 import shutil
 import csv
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+from   modules import core as invs_core
+from   modules import utils as invs_utils
+from   modules import parsers as invs_parsers
 
 # Aliases
 coloritf   = invs_utils.coloritf

@@ -20,7 +20,7 @@ import logging
 from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
-from   modules import invs_utils
+from   modules import utils
 
 try:
     import ta # ta library for techincal analysis
@@ -31,7 +31,7 @@ except:
 
 ####################################################
 # Aliases
-dindx = invs_utils.dindx
+dindx = utils.dindx
 
 ####################################################
 # SCANNERS
@@ -65,7 +65,7 @@ def c_f_1(ma_p0, ma_p1, lag=30):
 # Add volume moving average to the data frame
 def add_vol_ma(o_frame, period_list):
     of_copy = o_frame.copy()
-    rmean   = invs_utils.g_rmean_f(type='e')
+    rmean   = utils.g_rmean_f(type='e')
     of_copy['v_ma'] = rmean(of_copy['v'], period_list[0])
     return of_copy
 # enddef
@@ -76,8 +76,8 @@ def run_ema(o_frame, mode='c', fast_period=9, slow_period=14, lag=30):
         print('period_list should have only two elements (p0, p1). p0 is smaller time-period & p1 is larger one.')
         sys.exit(-1)
     # endif
-    d_s     = invs_utils.s_mode(o_frame, mode)
-    rmean   = invs_utils.g_rmean_f(type='e')
+    d_s     = utils.s_mode(o_frame, mode)
+    rmean   = utils.g_rmean_f(type='e')
 
     ## Get values
     ma_p0   = rmean(d_s, fast_period)
@@ -88,8 +88,8 @@ def run_ema(o_frame, mode='c', fast_period=9, slow_period=14, lag=30):
 
 # A ema crossover strategy for detecting crossovers on the frame passed
 def run_ema2(o_frame, mode='c', fast_period=9, slow_period=14, lag=30):
-    d_s     = invs_utils.s_mode(o_frame, mode)
-    rmean   = invs_utils.g_rmean_f(type='e')
+    d_s     = utils.s_mode(o_frame, mode)
+    rmean   = utils.g_rmean_f(type='e')
     o_copy  = o_frame.copy()   # Make a copy
     status  = False
     trend_switch = None

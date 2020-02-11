@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-from   modules.invs_core import option_historical
 from   tabulate import tabulate
 import argparse
-import sys
+import sys, os
 import subprocess
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+from   modules.core import option_historical
 ##
 
 if __name__ == '__main__':

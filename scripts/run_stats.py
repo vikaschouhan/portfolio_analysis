@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import argparse
 import os, sys
 import glob
-from   modules.invs_utils import cdir, rp
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
+from   modules.utils import cdir, rp
 
 # Check python version
 sys.version_info >= (3, )
