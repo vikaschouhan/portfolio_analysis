@@ -219,7 +219,7 @@ def gen_supp_res(j_data, n_samples=200):
     plotly.offline.plot(fig, filename=os.path.expanduser('~/data.html'))
 # enddef
 
-def plot_conf_mat(conf_matd, out_fig, fig_size=(12, 9), font_scale=0.6):
+def plot_conf_mat(conf_matd, out_fig, fig_size=(12, 9), font_scale=0.6, vmin=None, vmax=None):
     # Derive figsize
     figsize_w = conf_matd.shape[0]
     konst     = 4.0
@@ -232,7 +232,7 @@ def plot_conf_mat(conf_matd, out_fig, fig_size=(12, 9), font_scale=0.6):
     sns.set(font_scale=font_scale)
     fig = plt.figure(figsize=fig_size)
     #heatmap = sns.heatmap(conf_matd, annot=True, fmt="d")
-    heatmap = sns.heatmap(conf_matd, cmap='RdYlGn')
+    heatmap = sns.heatmap(conf_matd, cmap='RdYlGn', vmin=vmin, vmax=vmax)
     heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right')
     heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right')
     heatmap.figure.tight_layout()
@@ -241,8 +241,7 @@ def plot_conf_mat(conf_matd, out_fig, fig_size=(12, 9), font_scale=0.6):
     plt.close()
 # enddef
 
-def plot_corr_matrix(df_map, out_fig, filter_col=utils.col_close):
-    df_map = utils.filter_asset_csvs(df_map, filter_col=filter_col)
+def plot_corr_matrix(df_map, out_fig, method='pearson'):
     # Calculate correlation
     corr_mat = df_map.corr(method='pearson')
     plot_conf_mat(corr_mat, out_fig)

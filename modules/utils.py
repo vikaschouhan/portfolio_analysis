@@ -21,6 +21,7 @@ import os
 import pandas as pd
 import multiprocessing
 import itertools
+import xlsxwriter
 
 def islist(x):
     return isinstance(x, list)
@@ -38,10 +39,53 @@ def isstring(x):
 ###########################################################################################
 # File system handling
 
-# Resolve path
-def rp(x):
-    return os.path.expanduser(x)
+def mkdir(dir):
+    if dir == None:
+        return None
+    # endif
+    if not os.path.isdir(dir):
+        os.makedirs(dir, exist_ok=True)
+    # endif
 # enddef
+
+def rp(dir):
+    if dir == None:
+        return None
+    # endif
+    if dir[0] == '.':
+        return os.path.normpath(os.getcwd() + '/' + dir)
+    else:
+        return os.path.normpath(os.path.expanduser(dir))
+# enddef
+
+def filename(x, only_name=True):
+    n_tok = os.path.splitext(os.path.basename(x))
+    return n_tok[0] if only_name else n_tok
+# enddef
+
+def chkdir(dir):
+    if not os.path.isdir(dir):
+        print('{} does not exist !!'.format(dir))
+        sys.exit(-1)
+    # endif
+# enddef
+
+def chkfile(file_path, exit=False):
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return True
+    # endif
+    if exit:
+        print('{} does not exist !!'.format(file_path))
+        sys.exit(-1)
+    # endif
+        
+    return False
+# enddef
+
+def npath(path):
+    return os.path.normpath(path) if path else None
+# enddef
+
 
 ############################################################################################
 
@@ -155,9 +199,15 @@ def parse_opt_args(arg_string):
     return opt_args
 # enddef
 
+################################################
+# Pandas functions
 # Get data at index in pandas frame
 def dindx(data_frame, key, index):
     return data_frame.iloc[index][key]
+# enddef
+
+def dropna(data_frame, how='all'):
+    return data_frame.dropna(axis=0, how=how).dropna(axis=1, how=how)
 # enddef
 
 def dropzero(data_frame, columns=['c', 'o', 'h', 'l']):
@@ -166,6 +216,27 @@ def dropzero(data_frame, columns=['c', 'o', 'h', 'l']):
         col_logic = col_logic & (data_frame[col_t] == 0.0)
     # endfor
     return data_frame.drop(data_frame[col_logic].index)
+# enddef
+
+# Write dictionary of dataframes to one single excel workbook
+def df_to_excel(dfs, filename):
+    assert isdict(dfs), 'Input (dfs) should be a dictionary of sheets !!'
+    writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+    for sheetname, df in dfs.items():  # loop through `dict` of dataframes
+        df.to_excel(writer, sheet_name=sheetname)  # send df to writer
+        worksheet = writer.sheets[sheetname]  # pull worksheet object
+        for idx, col in enumerate(df):  # loop through all columns
+            series = df[col]
+            max_len = max((
+                series.astype(str).map(len).max(),  # len of largest item
+                len(str(series.name))  # len of column name/header
+                )) + 1  # adding a little extra space
+            worksheet.set_column(idx+1, idx+1, max_len)  # set column width
+        # endfor
+        # Fix index
+        worksheet.set_column(0, 0, max((df.index.astype(str).map(len).max(), len(str(df.index.name)))))
+    # endfor
+    writer.save()
 # enddef
 
 # Cast to float
@@ -390,7 +461,7 @@ def read_asset_csv(csv_file, columns_map=None, resample_period=None):
     return df
 # enddef
 
-def read_asset_csvs(files_list, resample_period='1D'):
+def read_asset_csvs(files_list, resample_period=None):
     # read all dataframes
     df_map     = {}
     for indx_t, file_t in enumerate(files_list):
@@ -402,7 +473,7 @@ def read_asset_csvs(files_list, resample_period='1D'):
     return df_map
 # enddef
 
-def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period='1D'):
+def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period=None):
     files_list = search_for(csv_dir, file_ext_list=['*.csv'], full_path=True)
     df_map     = spawn_workers(read_asset_csvs, 4,
                  **{ 'proc_id_key' : None,
@@ -411,6 +482,18 @@ def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period='1D'):
                      'resample_period' : resample_period
                    })
     return df_map
+# enddef
+
+def resample_asset_data(dmap, resample_period=None):
+    if resample_period is None:
+        return None
+    # endif
+
+    dmap_t = {}
+    for key_t in dmap.keys():
+        dmap_t[key_t] = dmap[key_t].resample(resample_period).mean().dropna()
+    # endfor
+    return dmap_t
 # enddef
 
 def filter_asset_csvs(df_map, filter_col=col_close):
