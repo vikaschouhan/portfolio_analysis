@@ -473,9 +473,9 @@ def read_asset_csvs(files_list, resample_period=None):
     return df_map
 # enddef
 
-def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period=None):
+def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period=None, num_jobs=4):
     files_list = search_for(csv_dir, file_ext_list=['*.csv'], full_path=True)
-    df_map     = spawn_workers(read_asset_csvs, 4,
+    df_map     = spawn_workers(read_asset_csvs, num_jobs,
                  **{ 'proc_id_key' : None,
                      'data_keys'   : ['files_list'],
                      'files_list'  : files_list,

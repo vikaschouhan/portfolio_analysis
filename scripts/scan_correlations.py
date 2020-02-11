@@ -37,12 +37,13 @@ def write_corr_results(corr_mat, out_dir):
     plot_conf_mat(corr_mat, corr_mat_imfile, vmin=-1.0, vmax=1.0)
 # enddef
 
-def analyse_all(csv_dir, out_dir, ts_list=['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M']):
+def analyse_all(csv_dir, out_dir, ts_list=['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1D', '1W', '1M'],
+        n_jobs=4):
     mkdir(out_dir)
 
     # Read all unsampled data first
     print('>> Reading unsampled data for all csvs from {}'.format(csv_dir))
-    df_map = read_all_asset_csvs(csv_dir, column_map=col_map, resample_period=None)
+    df_map = read_all_asset_csvs(csv_dir, column_map=col_map, resample_period=None, num_jobs=n_jobs)
 
     for ts_t in ts_list:
         print('>> Resampling data for sampling period = {}'.format(ts_t))
@@ -67,15 +68,25 @@ if __name__ == '__main__':
     parser  = argparse.ArgumentParser()
     parser.add_argument('--csv_dir',  help='Csv dir', type=str, default=None)
     parser.add_argument('--out_dir',  help='Output dir', type=str, default=None)
+    parser.add_argument('--tframes',  help='Time frames (separated by comma)', type=str,
+            default='1m,5m,15m,30m,1h,2h,4h,1D,1W,1M')
+    parser.add_argument('--num_jobs', help='Number of parallel reads', type=int, default=4)
     args = parser.parse_args()
 
     csv_dir = rp(args.__dict__['csv_dir'])
     out_dir = rp(args.__dict__['out_dir'])
+    tframes = args.__dict__['tframes']
+    n_jobs  = args.__dict__['num_jobs']
 
-    if csv_fir is None or out_dir is None:
+    if csv_dir is None or out_dir is None or tframes is None:
         print('All arguments required !!')
         sys.exit(-1)
     # endif
 
-    analyse_all(csv_dir, out_dir) 
+    # tframes
+    tframes = parse_sarg(tframes, cast_to=str, arg_mod_fn=None, delimiter=',')
+    print('>> Using time frame list {}'.format(tframes))
+    print('>> Using number of parallel reads = {}'.format(n_jobs))
+
+    analyse_all(csv_dir, out_dir, ts_list=tframes, n_jobs=n_jobs)
 # enddef
