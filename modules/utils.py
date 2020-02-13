@@ -473,12 +473,25 @@ def read_asset_csvs(files_list, resample_period=None):
     return df_map
 # enddef
 
-def read_all_asset_csvs(csv_dir, column_map=col_map, resample_period=None, num_jobs=4):
-    files_list = search_for(csv_dir, file_ext_list=['*.csv'], full_path=True)
+def read_all_asset_csvs(csv_dir, files_list=None, column_map=col_map, resample_period=None, num_jobs=4):
+    def _gfp(_files_list):
+        return ['{}/{}'.format(csv_dir, os.path.basename(x)) for x in _files_list]
+    # enddef
+    fs_list    = search_for(csv_dir, file_ext_list=['*.csv'], full_path=True)
+
+    # Check for files_list == None
+    if files_list:
+        files_list = _gfp(files_list) if islist(files_list) else _gfp([files_list])
+        if len(set(files_list) - set(fs_list)) != 0:
+            raise ValueError('files {} not found in {}'.format(files_list, csv_dir))
+        # endif
+        fs_list = files_list
+    # endif
+
     df_map     = spawn_workers(read_asset_csvs, num_jobs,
                  **{ 'proc_id_key' : None,
                      'data_keys'   : ['files_list'],
-                     'files_list'  : files_list,
+                     'files_list'  : fs_list,
                      'resample_period' : resample_period
                    })
     return df_map
