@@ -64,19 +64,77 @@ def fillna(df):
 
 ############################################################
 # Singnals to Position Generator
-def signals_to_positions(signals, init_pos=0, mode='any',
-        mask=SIGNAL_MASK, pos_type='full'):
+def _take_position_any(sig, pos, long_en, long_ex, short_en, short_ex):
+    # check exit signals
+    if pos != 0:  # if in position
+        if pos > 0 and sig[long_ex]:  # if exit long signal
+            pos -= sig[long_ex]
+        elif pos < 0 and sig[short_ex]:  # if exit short signal
+            pos += sig[short_ex]
+        # endif
+    # endif
+    # check entry (possibly right after exit)
+    if pos == 0:
+        if sig[long_en]:
+            pos += sig[long_en]
+        elif sig[short_en]:
+            pos -= sig[short_en]
+        # endif
+    # endif
+
+    return pos
+# enddef
+
+def _take_position_long(sig, pos, long_en, long_ex):
+    # check exit signals
+    if pos != 0:  # if in position
+        if pos > 0 and sig[long_ex]:  # if exit long signal
+            pos -= sig[long_ex]
+        # endif
+    # endif
+    # check entry (possibly right after exit)
+    if pos == 0:
+        if sig[long_en]:
+            pos += sig[long_en]
+        # endif
+    # endif
+
+    return pos
+# enddef
+
+def _take_position_short(sig, pos, short_en, short_ex):
+    # check exit signals
+    if pos != 0:  # if in position
+        if pos < 0 and sig[short_ex]:  # if exit short signal
+            pos += sig[short_ex]
+        # endif
+    # endif
+    # check entry (possibly right after exit)
+    if pos == 0:
+        if sig[short_en]:
+            pos -= sig[short_en]
+        # endif
+    # endif
+
+    return pos
+# enddef
+
+def _check_signals_to_positions_args(mode, pos_type, mask):
     mode_list = ['long', 'short', 'any']
     pos_types = ['full', 'sparse']
-    
-    # Checks
+
     assert mode in mode_list, 'ERROR:: mode should be one of {}'.format(mode_list)
     assert pos_type in pos_types, 'ERROR:: pos_type should be one of {}'.format(pos_types)
     if mode == 'any':
         assert len(mask) == 4 , 'ERROR:: in "any" mode, mask should be of 4 keys.'
     # endif
     assert len(mask) == 2 or len(mask) == 4, 'ERROR:: mask should be of 2 or 4 keys.'
+# enddef
 
+def signals_to_positions(signals, init_pos=0, mode='any',
+        mask=SIGNAL_MASK, pos_type='full'):
+    # Checks
+    _check_signals_to_positions_args(mode, pos_type, mask)
 
     pos = init_pos
     ps  = pd.Series(0., index=signals.index)
@@ -84,62 +142,24 @@ def signals_to_positions(signals, init_pos=0, mode='any',
     if mode == 'any':
         long_en, long_ex, short_en, short_ex = mask
         for t, sig in signals.iterrows():
-            # check exit signals
-            if pos != 0:  # if in position
-                if pos > 0 and sig[long_ex]:  # if exit long signal
-                    pos -= sig[long_ex]
-                elif pos < 0 and sig[short_ex]:  # if exit short signal
-                    pos += sig[short_ex]
-                # endif
-            # endif
-            # check entry (possibly right after exit)
-            if pos == 0:
-                if sig[long_en]:
-                    pos += sig[long_en]
-                elif sig[short_en]:
-                    pos -= sig[short_en]
-                # endif
-            # endif
+            pos   = _take_position_any(sig, pos, long_en, long_ex, short_en, short_ex)
             ps[t] = pos
         # endfor
     elif mode == 'long':
         long_en, long_ex = mask
         for t, sig in signals.iterrows():
-            # check exit signals
-            if pos != 0:  # if in position
-                if pos > 0 and sig[long_ex]:  # if exit long signal
-                    pos -= sig[long_ex]
-                # endif
-            # endif
-            # check entry (possibly right after exit)
-            if pos == 0:
-                if sig[long_en]:
-                    pos += sig[long_en]
-                # endif
-            # endif
+            pos   = _take_position_long(sig, pos, long_en, long_ex)
             ps[t] = pos
         # endfor
     elif mode == 'short':
         short_en, short_ex = mask
         for t, sig in signals.iterrows():
-            # check exit signals
-            if pos != 0:  # if in position
-                if pos < 0 and sig[short_ex]:  # if exit short signal
-                    pos += sig[short_ex]
-                # endif
-            # endif
-            # check entry (possibly right after exit)
-            if pos == 0:
-                if sig[short_en]:
-                    pos -= sig[short_en]
-                # endif
-            # endif
+            pos   = _take_position_short(sig, pos, short_en, short_ex)
             ps[t] = pos
         # endfor
     # endif
     ps = ps.shift()
     return ps[ps != ps.shift()] if pos_type == 'sparse' else ps
-    # endif
 # enddef
 
 ########################################################
