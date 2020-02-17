@@ -163,6 +163,17 @@ def signals_to_positions(signals, init_pos=0, mode='any',
 # enddef
 
 ########################################################
+# Calculate returns for a portfolio of assets given their
+# individual returns
+def calculate_portfolio_returns(returns, weights_list, log_returns=True):
+    assert isinstance(returns, pd.DataFrame), 'ERROR::: returns should be a pandas dataframe of individual asset returns'
+    assert len(returns.columns) == len(weights_list), 'ERROR:: Dimensions of weights_list should match that of number of columns in returns.'
+
+    crets = np.log(np.dot(np.exp(returns), weights_list)) if log_returns else np.dot(returns, weights_list)
+    return pd.Series(crets, index=returns.index)
+# enddef
+
+########################################################
 # Slippage calculator
 def apply_slippage(pos, slip_perc=0):
     # Apply slippage
