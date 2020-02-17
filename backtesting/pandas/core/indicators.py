@@ -4,17 +4,24 @@ import talib
 
 #######################################
 # Moving average based signals
-def ema(s, window):
+def ema(s: pd.Series, window: int) -> pd.Series:
     return s.ewm(span=window, adjust=False).mean()
 # enddef
 
-def sma(s, window):
+def sma(s: pd.Series, window: int) -> pd.Series:
     return s.rolling(window).mean()
 # enddef
 
 ########################################
 # 
-def supertrend(high, low, close, atr_period, atr_multiplier):
+def supertrend(high: pd.Series, low: pd.Series, close: pd.Series, atr_period: int, atr_multiplier: float) -> pd.Series:
+    # To numpy
+    index  = close.index
+    high   = high.to_numpy()
+    low    = low.to_numpy()
+    close  = close.to_numpy()
+
+    # Base signals
     atr_t  = talib.ATR(high, low, close, timeperiod=atr_period)
     avg_t  = (high + low)/2
     bas_u  = avg_t - atr_multiplier * atr_t
@@ -35,5 +42,6 @@ def supertrend(high, low, close, atr_period, atr_multiplier):
         strend[i]  = f_up[i] if tpos[i] == 1.0 else f_down[i] if tpos[i] == -1.0 else strend[i-1]
     # endfor
 
-    return strend, f_up, f_down
+    return pd.Series(strend, index=index)
 # endclass
+
