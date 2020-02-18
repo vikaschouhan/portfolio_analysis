@@ -57,6 +57,11 @@ def fillna(df):
     return df
 # enddef
 
+def sanitize_datetime(df):
+    df.index = pd.to_datetime(df.index)
+    return df
+# enddef
+
 ################################################################
 # For handling price data
 class Price(object):

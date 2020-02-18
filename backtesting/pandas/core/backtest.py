@@ -53,6 +53,7 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
     pos     = apply_slippage(pos, slippage)
     rets    = np.log(prices['close']).diff()
     nrets   = rets * pos
+    nrets   = sanitize_datetime(rets * pos)
 
     return nrets
 # enddef
