@@ -72,7 +72,7 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
 def backtest_single(strategy: str,
         strat_params: dict,
         prices: pd.DataFrame,
-        report_file: str,
+        report_file: str=None,
         column_map: dict={'close': 'c', 'low': 'l', 'high': 'h', 'open': 'o', 'volume': 'v'},
         run_mode: str='any',
         slippage: float=0.0):
@@ -90,7 +90,9 @@ def backtest_single(strategy: str,
     _prices    = Price(prices[_o], prices[_h], prices[_l], prices[_c], prices[_v])
     print('>> Running strategy "{}" on price data.'.format(strategy))
     returns    = run_strategy_single(strat_fn, strat_params, _prices, run_mode, slippage)
-    print('>> Writing tearsheet to {}'.format(report_file))
-    generate_tearsheet(returns, report_file)
+    if report_file:
+        print('>> Writing tearsheet to {}'.format(report_file))
+        generate_tearsheet(returns, report_file)
+    # endif
     return returns
 # enddef

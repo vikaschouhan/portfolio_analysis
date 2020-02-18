@@ -214,3 +214,7 @@ def apply_slippage(pos, slip_perc=0):
 def generate_tearsheet(rets, out_file):
     qs.reports.html(rets, output=out_file)
 # enddef
+
+def generate_basic_report(rets):
+    qs.reports.metrics(rets)
+# enddef
