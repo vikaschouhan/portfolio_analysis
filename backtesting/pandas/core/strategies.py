@@ -70,3 +70,11 @@ def supertrend_crossover(prices: Price, **params):
     signals        = pd.concat([buy_sig, sell_sig], axis=1)
     return signals
 # enddef
+
+#####################################################################
+# Strat map
+strat_map = {
+        'ema_crossover'            : ema_crossover,
+        'sma_crossover'            : sma_crossover,
+        'supertrend_crossover'     : supertrend_crossover,
+    }

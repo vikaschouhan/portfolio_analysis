@@ -57,3 +57,40 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
 
     return nrets
 # enddef
+
+############################################################################
+# Backtest a strategy on single asset
+# @args
+#        startegy         -> strategy name
+#        strat_params     -> A dictionary of strategy parameters
+#        prices           -> Dataframe of price information
+#        report_file      -> Report file to be generated for the backtest
+#        column_map       -> A dictionary of column mappings
+#        run_mode         -> 'any' for both long and short, 'long' for long only
+#                            'short' for short only
+#        slippage         -> slippage in %centage
+def backtest_single(strategy: str,
+        strat_params: dict,
+        prices: pd.DataFrame,
+        report_file: str,
+        column_map: dict={'close': 'c', 'low': 'l', 'high': 'h', 'open': 'o', 'volume': 'v'},
+        run_mode: str='any',
+        slippage: float=0.0):
+    assert strategy in strat_map, 'ERROR:: Supported strategies = {}'.format(strat_map.keys())
+    strat_fn   = strat_map[strategy]
+
+    # Get appropriate columns in prirce data
+    _o = column_map['open']
+    _h = column_map['high']
+    _l = column_map['low']
+    _c = column_map['close']
+    _v = column_map['volume']
+
+    print('>> Preparing price data.')
+    _prices    = Price(prices[_o], prices[_h], prices[_l], prices[_c], prices[_v])
+    print('>> Running strategy "{}" on price data.'.format(strategy))
+    returns    = run_strategy_single(strat_fn, strat_params, _prices, run_mode, slippage)
+    print('>> Writing tearsheet to {}'.format(report_file))
+    generate_tearsheet(returns, report_file)
+    return returns
+# enddef
