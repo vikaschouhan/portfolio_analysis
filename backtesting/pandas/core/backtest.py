@@ -6,16 +6,15 @@ from .utils import *
 # Run backtest strategy on single instrument.
 #
 # @args 
-#      strat_fn   -> strategy fn of format (prices, **params) where prices is a pandas series of
-#                    close prices (or any other prices which we want to run the backtest on)
+#      strat_fn   -> strategy fn of format (prices, **params) where prices is of Price type
 #      strat_params -> params for strategy_fn (python dictionary)
-#      prices     -> pandas series of prices
+#      prices     -> price data of "Price" type
 #      run_mode   -> 'any' means run both long and short.
 #                    'long' means long only positions
 #                    'short' means short only positions
 #      slippage   -> slippage as percentage of close price
 #
-def run_strategy_single(strat_fn, strat_params, prices, run_mode='any', slippage=0):
+def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any', slippage: float=0.0):
     signals = strat_fn(prices, **strat_params)
 
     # Select appropriate signals first
@@ -52,7 +51,7 @@ def run_strategy_single(strat_fn, strat_params, prices, run_mode='any', slippage
     print('>> Using signal mask {}.'.format(smask))
     pos     = signals_to_positions(signals, mode=run_mode, mask=smask)
     pos     = apply_slippage(pos, slippage)
-    rets    = np.log(prices).diff()
+    rets    = np.log(prices['close']).diff()
     nrets   = rets * pos
 
     return nrets

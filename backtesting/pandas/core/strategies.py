@@ -14,13 +14,14 @@ def __select_ma_fn(ma_type):
     # endif
 # enddef
 
-def __ma_crossover(ma_type, prices, **params):
+def __ma_crossover(ma_type: str, prices: Price, **params):
     short_period = params.get('short_period')
     long_period  = params.get('long_period')
+    price_key    = params.get('price_key', 'close')
     ma_fn        = __select_ma_fn(ma_type)
 
-    short_ma = ma_fn(prices, short_period)
-    long_ma  = ma_fn(prices, long_period)
+    short_ma = ma_fn(prices[price_key], short_period)
+    long_ma  = ma_fn(prices[price_key], long_period)
 
     buy_sig  = crossover(short_ma, long_ma)
     sell_sig = crossunder(short_ma, long_ma)
@@ -31,10 +32,10 @@ def __ma_crossover(ma_type, prices, **params):
     return signals
 # enddef
 
-def sma_crossover(prices, **params):
+def sma_crossover(prices: Price, **params):
     return __ma_crossover('sma', prices, **params)
 # enddef
 
-def ema_crossover(prices, **params):
+def ema_crossover(prices: Price, **params):
     return __ma_crossover('ema', prices, **params)
 # enddef

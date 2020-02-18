@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import quantstats as qs
+from   typing import AnyStr, Callable
 
 ############################################################
 # Constants
@@ -10,12 +11,6 @@ class SIGNAL:
     SHORT  = 'Short'
     COVER  = 'Cover'
 # endclass
-class PRICE:
-    OPEN   = 'Open'
-    CLOSE  = 'Close'
-    HIGH   = 'High'
-    LOW    = 'Low'
-# endclass
 
 # Various kinds of Masks, depending on the naming convention used to define
 # Signals
@@ -24,7 +19,6 @@ SIGNAL_MASK2       = (SIGNAL.BUY, SIGNAL.SELL, SIGNAL.SELL, SIGNAL.BUY)
 SIGNAL_MASK_LONG   = (SIGNAL.BUY, SIGNAL.SELL)
 SIGNAL_MASK_SHORT  = (SIGNAL.SHORT, SIGNAL.COVER)
 SIGNAL_MASK_SHORT2 = (SIGNAL.SELL, SIGNAL.BUY)
-PRICE_MASK         = (PRICE.CLOSE, PRICE.OPEN, PRICE.HIGH, PRICE.LOW)
 
 #############################################################
 # Signal utility functions
@@ -61,6 +55,32 @@ def fillna(df):
     df = df.replace([np.inf, -np.inf], 0)
     return df
 # enddef
+
+################################################################
+# For handling price data
+class Price(object):
+    keys_list = ['open', 'high', 'low', 'close', 'volume', 'all']
+
+    def __init__(self, open: pd.Series, high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series = None):
+        volume      = pd.Series(0, index=close.index) if volume is None else volume
+        open.name   = 'open'
+        close.name  = 'close'
+        high.name   = 'high'
+        low.name    = 'low'
+        volume.name = 'volume'
+        self.data = pd.DataFrame([close, open, high, low, volume]).T
+    # enddef
+
+    def __getitem__(self, key):
+        if key in ['open', 'high', 'low', 'close', 'volume']:
+            return self.data[key]
+        elif key == 'all':
+            return self.data
+        else:
+            raise ValueError('Unsupported key {} in Price[]. Supported keys are = {}'.format(key, self.keys_list))
+        # endif
+    # enddef
+# endclass
 
 ############################################################
 # Singnals to Position Generator
