@@ -138,6 +138,10 @@ def d_ema(f_frame, ema_period, mode='c'):
 ################################################
 # GENERIC
 
+def print_params(params, msg='PARAMS'):
+    print('>> {} = {}'.format(msg, params))
+# enddef
+
 # Function to parse checkpoint file
 def parse_dict_file(file_name=None):
     if file_name == None:

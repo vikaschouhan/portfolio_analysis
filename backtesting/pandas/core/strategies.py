@@ -15,6 +15,8 @@ def __select_ma_fn(ma_type):
 # enddef
 
 def __ma_crossover(ma_type: str, prices: Price, **params):
+    print_params(params)
+
     short_period = params.get('short_period')
     long_period  = params.get('long_period')
     price_key    = params.get('price_key', 'close')
@@ -42,13 +44,26 @@ def ema_crossover(prices: Price, **params):
 
 #########################################################################
 # Supertrend based
-def supertrend_cross(prices: Price, **params):
+def supertrend_crossover(prices: Price, **params):
+    print_params(params)
+
     atr_period     = params.get('atr_period')
     atr_multiplier = params.get('atr_multiplier')
+    ema_length     = params.get('ema_length', None)
+    price_key      = params.get('price_key', 'close')
 
-    strend_sig     = supertrend(prices['high'], prices['low'], prices['close'], atr_period, atr_multiplier)
-    buy_sig        = crossover(prices['close'], strend_sig)
-    sell_sig       = crossunder(prices['close'], strend_sig)
+    if ema_length:
+        print('>> Using EMA Smooth variant of supertrend_crossover.')
+        phigh      = ema(prices['high'], ema_length)
+        plow       = ema(prices['low'], ema_length)
+    else:
+        phigh      = prices['high']
+        plow       = prices['low']
+    # endif
+
+    strend_sig     = supertrend(phigh, plow, prices[price_key], atr_period, atr_multiplier)
+    buy_sig        = crossover(prices[price_key], strend_sig)
+    sell_sig       = crossunder(prices[price_key], strend_sig)
 
     buy_sig        = set_buy(buy_sig)
     sell_sig       = set_sell(sell_sig)

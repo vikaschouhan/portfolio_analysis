@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import quantstats as qs
 from   typing import AnyStr, Callable
+from   modules.utils import *
 
 ############################################################
 # Constants
