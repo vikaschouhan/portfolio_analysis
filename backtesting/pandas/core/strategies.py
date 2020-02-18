@@ -39,3 +39,19 @@ def sma_crossover(prices: Price, **params):
 def ema_crossover(prices: Price, **params):
     return __ma_crossover('ema', prices, **params)
 # enddef
+
+#########################################################################
+# Supertrend based
+def supertrend_cross(prices: Price, **params):
+    atr_period     = params.get('atr_period')
+    atr_multiplier = params.get('atr_multiplier')
+
+    strend_sig     = supertrend(prices['high'], prices['low'], prices['close'], atr_period, atr_multiplier)
+    buy_sig        = crossover(prices['close'], strend_sig)
+    sell_sig       = crossunder(prices['close'], strend_sig)
+
+    buy_sig        = set_buy(buy_sig)
+    sell_sig       = set_sell(sell_sig)
+    signals        = pd.concat([buy_sig, sell_sig], axis=1)
+    return signals
+# enddef
