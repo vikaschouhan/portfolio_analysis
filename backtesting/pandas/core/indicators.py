@@ -1,6 +1,16 @@
 import pandas as pd
 import numpy as np
 import talib
+from   typing import AnyStr, Callable
+
+#######################################
+# Derivatives
+def vatr1_fn(atr_max):
+    def __catr(high, low, close, timeperiod):
+        return 2*atr_max - talib.ATR(high, low, close, timeperiod=timeperiod)
+    # endef
+    return __catr
+# enddef
 
 #######################################
 # Moving average based signals
@@ -14,7 +24,8 @@ def sma(s: pd.Series, window: int) -> pd.Series:
 
 ########################################
 # 
-def supertrend(high: pd.Series, low: pd.Series, close: pd.Series, atr_period: int, atr_multiplier: float) -> pd.Series:
+def supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
+        atr_period: int, atr_multiplier: float, atr_fn: Callable=None) -> pd.Series:
     # To numpy
     index  = close.index
     high   = high.to_numpy()
@@ -22,7 +33,8 @@ def supertrend(high: pd.Series, low: pd.Series, close: pd.Series, atr_period: in
     close  = close.to_numpy()
 
     # Base signals
-    atr_t  = talib.ATR(high, low, close, timeperiod=atr_period)
+    atr_fn = atr_fn if atr_fn else talib.ATR
+    atr_t  = atr_fn(high, low, close, timeperiod=atr_period)
     avg_t  = (high + low)/2
     bas_u  = avg_t - atr_multiplier * atr_t
     bas_l  = avg_t + atr_multiplier * atr_t

@@ -50,6 +50,7 @@ def supertrend_crossover(prices: Price, **params):
     atr_period     = params.get('atr_period')
     atr_multiplier = params.get('atr_multiplier')
     ema_length     = params.get('ema_length', None)
+    atr_max        = params.get('atr_max', None)
     price_key      = params.get('price_key', 'close')
 
     if ema_length:
@@ -61,7 +62,14 @@ def supertrend_crossover(prices: Price, **params):
         plow       = prices['low']
     # endif
 
-    strend_sig     = supertrend(phigh, plow, prices[price_key], atr_period, atr_multiplier)
+    # Choose atr calculation function
+    atr_fn         = None
+    if atr_max:
+        atr_fn     = vatr1_fn(atr_max)
+        print('>> Using Vol adjusted ATR fn {} for atr_max={}'.format(atr_fn, atr_max))
+    # endif
+
+    strend_sig     = supertrend(phigh, plow, prices[price_key], atr_period, atr_multiplier, atr_fn=atr_fn)
     buy_sig        = crossover(prices[price_key], strend_sig)
     sell_sig       = crossunder(prices[price_key], strend_sig)
 
