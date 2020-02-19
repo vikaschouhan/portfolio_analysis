@@ -31,6 +31,11 @@ def __ma_crossover(ma_type: str, prices: Price, **params):
     buy_sig  = set_buy(buy_sig)
     sell_sig = set_sell(sell_sig)
     signals  = pd.concat([buy_sig, sell_sig], axis=1)
+
+    # Attach additional signals
+    signals['0_short_ma'] = short_ma
+    signals['0_long_ma']  = long_ma
+    signals['0_price']    = prices[price_key]
     return signals
 # enddef
 
@@ -76,6 +81,9 @@ def supertrend_crossover(prices: Price, **params):
     buy_sig        = set_buy(buy_sig)
     sell_sig       = set_sell(sell_sig)
     signals        = pd.concat([buy_sig, sell_sig], axis=1)
+
+    signals['0_strend'] = strend_sig
+    signals['0_price']  = prices[price_key]
     return signals
 # enddef
 

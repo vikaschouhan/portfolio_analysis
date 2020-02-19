@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import quantstats as qs
+import re
+import matplotlib.pyplot as plt
 from   typing import AnyStr, Callable
 from   modules.utils import *
 
@@ -186,6 +188,58 @@ def signals_to_positions(signals, init_pos=0, mode='any',
     # endif
     ps = ps.shift()
     return ps[ps != ps.shift()] if pos_type == 'sparse' else ps
+# enddef
+
+########################################################
+# Signals visualization
+def _extract_decision_signals(signals):
+    sig_columns = signals.columns
+    aux_sigcols = list(set(sig_columns) - set(SIGNAL_MASK))
+    psig_list   = list(set(sig_columns) - set(aux_sigcols))
+    psigs       = signals[psig_list]
+    auxsigs     = signals[aux_sigcols]
+    return psigs, auxsigs
+# enddef
+
+def _split_auxiliary_signals(aux_signals):
+    asig_cols   = aux_signals.columns
+    # Search for unique signals to be plotted on same plane
+    sigs_dict   = {'ext': []}
+    for asig_t in asig_cols:
+        _m = re.search("^([\d]+)_", asig_t )
+        if _m:
+            _m = int(_m.groups()[0])
+            if _m not in sigs_dict:
+                sigs_dict[_m] = []
+            # endif
+            sigs_dict[_m].append(asig_t)
+        else:
+            sigs_dict['ext'].append(asig_t)
+        # endif
+    # endfor
+
+    sigs_dict = {k: aux_signals[v] for k,v in sigs_dict.items() if len(v) !=0}
+    return list(sigs_dict.values())
+# enddef
+
+def plot_signals(signals, sharex='all', dec_sig_ratio=0.2):
+    psigs, aux_sigs = _extract_decision_signals(signals)
+    aux_sig_cols    = aux_sigs.columns
+    aux_sigs_list   = _split_auxiliary_signals(aux_sigs)
+    psigs           = psigs.applymap(lambda x: 1 if x is True else 0)
+
+    plots_len   = 1 + len(aux_sigs_list)
+    oth_ax_rs   = (1-dec_sig_ratio)/(plots_len-1)
+    ratios      = [oth_ax_rs] * (plots_len-1) + [dec_sig_ratio]
+    fig, axes   = plt.subplots(plots_len, sharex=sharex, gridspec_kw={'height_ratios' : ratios})
+    ax_ctr      = 0
+
+    for aux_sig_t in aux_sigs_list:
+        aux_sig_t.plot(ax=axes[ax_ctr])
+        ax_ctr += 1
+    # endfor
+    psigs.plot(ax=axes[ax_ctr])
+    return fig
 # enddef
 
 ########################################################

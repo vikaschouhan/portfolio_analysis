@@ -44,10 +44,6 @@ def supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
     tpos   = np.zeros_like(close)
 
     for i, _ in enumerate(close):
-        if i == 0:
-            continue
-        # endif
-
         f_up[i]    = max(bas_u[i], f_up[i-1]) if close[i-1] > f_up[i-1] else bas_u[i]
         f_down[i]  = min(bas_l[i], f_down[i-1]) if close[i-1] < f_down[i-1] else bas_l[i]
         tpos[i]    = 1.0 if close[i] > f_down[i-1] else -1.0 if close[i] < f_up[i-1] else tpos[i-1]
