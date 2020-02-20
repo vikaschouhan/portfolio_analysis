@@ -29,6 +29,7 @@ from   subprocess import call, check_call
 import requests
 from   bs4 import BeautifulSoup
 import itertools
+import nsepy
 
 from   .utils import dropzero, cfloat, vprint, split_date_range_into_chunks
 from   dateutil.relativedelta import relativedelta, TH
@@ -550,4 +551,42 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400,
         print('** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data))
         return g_pdbase({'c' : [], 'o' : [], 'h' : [], 'l' : [], 'v' : []})
     # endtry
+# enddef
+
+###########################################################################
+# Fetch historical data from NSE using nsepy
+def fetch_data_nsepy(symbol, t_from=None, t_to=None, index=False, futures=False,
+        option_type='', t_expiry=None, strike_price='', series='EQ', date_settings=None,
+        months_hist=6, verbose=False):
+    # Some checks
+    if t_from is None and t_expiry is None:
+        raise ValueError('At least one of t_from or t_expiry should not be None.')
+    # endif
+    if option_type not in ['CE', 'PE', '']:
+        raise ValueError('option_type should be one of CE, PE or ""')
+    # endif
+    if option_type in ['CE', 'PE']:
+        if strike_price is None or strike_price == '':
+            raise ValueError('strike price should be an integer when optio_type is valid (PE or CE)')
+        # endif
+    # endif
+
+    # Set from_date automatically if t_expiry is provided. It's calculated by subtracting 6 months before expiry date
+    from_date = dateparser.parse(t_expiry, settings=date_settings) - dateutil.relativedelta.relativedelta(months=months_hist) \
+                    if t_expiry else dateparser.parse(t_from, settings=date_settings)
+    # Set end_date to always "now" if not already set
+    to_date   = dateparser.parse(t_to, settings=date_settings) if t_to else datetime.datetime.now()
+    # Set expiry date
+    _exp_date = dateparser.parse(t_expiry) if t_expiry else None
+    exp_list  = nsepy.get_expiry_date(year=_exp_date.year, month=_exp_date.month, index=index, stock=not index)
+    exp_date  = sorted(list(exp_list))[-1]
+
+    if verbose:
+        print('[start_date, end_date, exp_date] = {}'.format(from_date, end_date, exp_date))
+        print('[index, futures]                 = {}'.format(index, futures, stock))
+        print('[option_type, strike_price]      = {}'.format(option_type, strike_price))
+    # endif
+
+    return nsepy.get_history(symbol=symbol, start=from_date, end=to_date, index=index, futures=futures,
+            option_type=option_type, expiry_date=exp_date)
 # enddef
