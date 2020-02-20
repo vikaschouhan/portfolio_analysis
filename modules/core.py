@@ -22,6 +22,7 @@ from   colorama import Fore, Back, Style
 import datetime as datetime
 import dateutil
 import calendar
+import dateparser
 import numpy as np
 import logging
 from   subprocess import call, check_call
@@ -123,8 +124,8 @@ def g_bsurl(soc_idf):
 def g_surl(soc_idf):
     return g_burlb() + "/{}/1/1/8/search?".format(soc_idf)
 
-def strdate_to_unixdate(str_date):
-    return int(time.mktime(datetime.datetime.strptime(str_date, '%d/%m/%Y').timetuple()))
+def strdate_to_unixdate(str_date, settings=None):
+    return int(time.mktime(dateparser.parse(str_date, settings=settings).timetuple()))
 # enddef
 
 def unixdate_now():
@@ -135,12 +136,11 @@ def strdate_now():
 # enddef
 
 # Fetch from investing.com
-def fetch_data(ticker, resl, t_from=None, t_timeout=4):
-    if t_from == None:
-        t_from = strdate_to_unixdate("01/01/2000")
-    else:
-        t_from = strdate_to_unixdate(t_from)
-    # endif
+def fetch_data(ticker, resl, t_from=None, t_timeout=4, date_settings=None):
+    # From date
+    t_from    = "01/01/2000" if t_from is None else t_from
+    t_from    = strdate_to_unixdate(t_from, settings=date_settings)
+    ##
     ftch_tout = 5
     t_indx    = 0
 
@@ -427,15 +427,16 @@ def g_burlb_kite():
     return "https://kitecharts-aws.zerodha.com/api/chart"
 
 # Fetch from Zerodha Kite
-def fetch_data_kite(ticker, resl, public_token, t_from=None, range_days=400, t_timeout=25, sleep_time=14, verbose=False):
-    if t_from == None:
-        t_from = "2000-01-01"
-    # endif
+def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400, t_timeout=25,
+        sleep_time=14, verbose=False, date_settings=None):
+    idate_fmt = '%Y-%m-%d'
     ftch_tout = 15
     t_indx    = 0
 
-    t_to      = datetime.datetime.now().strftime('%Y-%m-%d')
-    dt_range  = split_date_range_into_chunks((t_from, t_to), date_fmt="%Y-%m-%d", range_days=range_days, order='dec')
+    # Start date, end date and ranges
+    t_from    = dateparser.parse(t_from, settings=date_settings).strftime(idate_fmt) if t_from else "2000-01-01"
+    t_to      = datetime.datetime.now().strftime(idate_fmt)
+    dt_range  = split_date_range_into_chunks((t_from, t_to), date_fmt=idate_fmt, range_days=interval_limit, order='dec')
 
     assert(resl in res_tbl_zk.keys())
 
@@ -444,6 +445,7 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, range_days=400, t_t
     for drange_t in dt_range:
         while t_indx < ftch_tout:
             try:
+                # Get partial data for this date range
                 this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker,
                         res_tbl_zk[resl], drange_t[0], drange_t[1], public_token)
 
@@ -451,8 +453,15 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, range_days=400, t_t
                 if verbose:
                     print('Fetching {}'.format(this_url))
                 # endif
+
+                # Parse response to json
                 response = requests.get(this_url, timeout=t_timeout, headers=headers)
                 j_data   = json.loads(response.text)
+
+                # Check for various error conditions
+                if j_data['status'] == 'error':
+                    raise TypeError(j_data['message'])
+                # endif
                 if not bool(j_data):
                     logging.debug("{} : Not able to fetch.".format(strdate_now()))
                     logging.debug("{} : Returned {}".format(strdate_now(), j_data))

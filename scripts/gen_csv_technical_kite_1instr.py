@@ -23,7 +23,7 @@ coloritf   = invs_utils.coloritf
 coloritb   = invs_utils.coloritb
 
 # CSV report generator
-def run_csv_gen(sym_list, instr_file, kis_res, pub_tok, output_dir, verbose=False):
+def run_csv_gen(sym_list, instr_file, kis_res, pub_tok, output_dir, ilimit=200, verbose=False):
     assert output_dir != None
 
     output_dir = invs_utils.rp(output_dir)
@@ -43,7 +43,7 @@ def run_csv_gen(sym_list, instr_file, kis_res, pub_tok, output_dir, verbose=Fals
         # endif
 
         # Fetch data
-        d_this   = invs_core.fetch_data_kite(ticker_this, kis_res, pub_tok, verbose=verbose)
+        d_this   = invs_core.fetch_data_kite(ticker_this, kis_res, pub_tok, interval_limit=ilimit, verbose=verbose)
 
         # If dataframe is empty, continue
         if d_this.empty:
@@ -80,6 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--sym',     help='Security symbol(s).', type=str, default=None)
     parser.add_argument('--odir',    help='Output directory where csvs are stored.', type=str, default=None)
     parser.add_argument('--ptok',    help='Public token key.', type=str, default=None)
+    parser.add_argument('--ilimit',  help='Interval limit for kite api.', type=int, default=200)
     parser.add_argument('--verbose', help='Verbose mode', action='store_true')
     args    = parser.parse_args()
 
@@ -112,6 +113,7 @@ if __name__ == '__main__':
     out_dir    = args.__dict__['odir']
     pub_tok    = args.__dict__['ptok']
     verbose    = args.__dict__['verbose']
+    ilimit     = args.__dict__['ilimit']
 
-    run_csv_gen(sym_list, kis_db_f, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'], verbose=verbose)
+    run_csv_gen(sym_list, kis_db_f, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'], ilimit=ilimit, verbose=verbose)
 # endif
