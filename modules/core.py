@@ -9,7 +9,6 @@ import urllib, json
 from   urllib.request import urlopen, Request
 from   urllib.error import URLError
 import socket
-import datetime
 import pandas
 import argparse
 import copy
@@ -21,6 +20,8 @@ import contextlib, warnings
 import shutil
 from   colorama import Fore, Back, Style
 import datetime as datetime
+import dateutil
+import calendar
 import numpy as np
 import logging
 from   subprocess import call, check_call
@@ -251,44 +252,13 @@ def scan_security_by_name(name, exchg_list=['NS', 'BO', 'MCX', 'NCDEX']):
 
 ##############################################################################################
 # Option chain
-# This is pretty hacked up code. Need to clean it up !!
 def last_thu(month_incr=0):
-    if month_incr > 2:
-        print('month_incr should be between 0 & 2')
-        sys.exit(-1)
-    # endif
-    todayte = datetime.datetime.today()
-    if (todayte.month + month_incr) % 12 == 0:
-        cmon = 12
-        cyear = todayte.year
-    else:
-        cmon    = (todayte.month + month_incr) % 12
-        if cmon < todayte.month:
-            cyear = todayte.year + 1
-        else:
-            cyear = todayte.year
-        # endif
-    # endif
-    #print 'cmon = {}'.format(cmon)
-    t = None
-    
-    for i in range(1, 24):
-        t = todayte + relativedelta(weekday=TH(i))
-        #print 't = {}'.format(t)
-        #print 't.mon = {}'.format(t.month)
-        #print 'cmon = {}'.format(cmon)
-        if datetime.datetime(t.year, t.month, 1) > datetime.datetime(cyear, cmon, 1):
-            # since t is exceeded we need last one  which we can get by subtracting -2 since it is already a Thursday.
-            t = t + relativedelta(weekday=TH(-2))
-            break
-        # endif
-    # endfor
-    return t
-# enddef
-
-# Miniaturized version of last_thu
-def last_thu2(month_incr=0):
-    return  datetime.date.today() + relativedelta(day=1, months=+1, days=-1) + relativedelta(months=month_incr) + relativedelta(weekday=TH(-1))
+    ndate     = datetime.date.today() + dateutil.relativedelta.relativedelta(months=month_incr)
+    cal       = calendar.Calendar()
+    cal_list  = cal.monthdatescalendar(year=ndate.year, month=ndate.month)
+    last_thu  = cal_list[-1][calendar.THURSDAY]
+    slast_thu = cal_list[-2][calendar.THURSDAY]
+    return  last_thu if last_thu.day > slast_thu.day else slast_thu
 # enddef
 
 def last_thu_opt_tbl(month_incr=0):
@@ -296,12 +266,12 @@ def last_thu_opt_tbl(month_incr=0):
         print('month_incr should be between 0 to 2.')
         sys.exit(-1)
     # endif
-    return last_thu2(month_incr)
+    return last_thu(month_incr)
 # enddef
 
 def last_thu_str(month_incr=0, historical=False):
     mon_l   = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-    exp_day = last_thu2(month_incr) if historical else last_thu_opt_tbl(month_incr)
+    exp_day = last_thu(month_incr) if historical else last_thu_opt_tbl(month_incr)
     return '{}{}{}'.format(exp_day.day, mon_l[exp_day.month-1], exp_day.year)
 # enddef
     
@@ -408,7 +378,7 @@ def option_historical(symbol, option_type, month=0, instrument=None, verbose=Fal
             sys.exit(-1)
         # endif
     # endif
-    exp_date = last_thu2(month).strftime('%d-%m-%Y')
+    exp_date = last_thu(month).strftime('%d-%m-%Y')
     url_act = url_this.format(instrument, symbol, exp_date, option_type, date_range)
 
     vprint('Fetching from {}'.format(url_act), verbose)
