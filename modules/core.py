@@ -582,11 +582,32 @@ def fetch_data_nsepy(symbol, t_from=None, t_to=None, index=False, futures=False,
     exp_date  = sorted(list(exp_list))[-1]
 
     if verbose:
-        print('[start_date, end_date, exp_date] = {}'.format(from_date, end_date, exp_date))
-        print('[index, futures]                 = {}'.format(index, futures, stock))
-        print('[option_type, strike_price]      = {}'.format(option_type, strike_price))
+        print('[start_date, end_date, exp_date] = [{}, {}, {}]'.format(from_date, to_date, exp_date))
+        print('[index, futures]                 = [{}, {}]'.format(index, futures, not index))
+        print('[option_type, strike_price]      = [{}, {}]'.format(option_type, strike_price))
     # endif
 
     return nsepy.get_history(symbol=symbol, start=from_date, end=to_date, index=index, futures=futures,
             option_type=option_type, expiry_date=exp_date)
+# enddef
+
+def fetch_spot_and_future_nsepy(symbol, expiry, index=False, date_settings=None, verbose=False):
+    # Get spot data
+    spot_data = fetch_data_nsepy(symbol, t_expiry=expiry, index=index, futures=False, date_settings=date_settings, verbose=verbose)
+    # Get futures data
+    fut_data  = fetch_data_nsepy(symbol, t_expiry=expiry, index=index, futures=True, date_settings=date_settings, verbose=verbose)
+
+    # Drop non matching dates
+    dates_nm  = list(set(spot_data.index) - set(fut_data.index))
+    spot_data = spot_data.drop(index=dates_nm)
+
+    # Add type category
+    spot_data['Type'] = 'SPOT'
+    fut_data['Type']  = 'FUT'
+
+    # Concatenate and reset index
+    merged_data = pandas.concat([fut_data, spot_data])
+    merged_data = merged_data.reset_index().set_index(['Type', 'Date'])
+
+    return merged_data
 # enddef
