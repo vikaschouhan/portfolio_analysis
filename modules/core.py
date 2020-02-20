@@ -439,6 +439,10 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400,
     dt_range  = split_date_range_into_chunks((t_from, t_to), date_fmt=idate_fmt, range_days=interval_limit, order='dec')
 
     assert(resl in res_tbl_zk.keys())
+    if verbose:
+        print('>> Accessing {} for {} timeframe with public token {}'.format(ticker, resl, public_token))
+        print('>> Interval limit {}, timeout {}, sleep time {}'.format(interval_limit, t_timeout, sleep_time))
+    # endif
 
     data_list = []
     finish    = False
