@@ -13,8 +13,9 @@ from .utils import *
 #                    'long' means long only positions
 #                    'short' means short only positions
 #      slippage   -> slippage as percentage of close price
-#
-def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any', slippage: float=0.0):
+#      ret_pos    -> if True, also returns position vector. Useful for debugging
+def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any',
+        slippage: float=0.0, ret_pos: bool=False):
     signals = strat_fn(prices, **strat_params)
 
     # Select appropriate signals first
@@ -50,11 +51,13 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
 
     print('>> Using signal mask {}.'.format(smask))
     pos     = signals_to_positions(signals, mode=run_mode, mask=smask)
-    pos     = apply_slippage(pos, slippage)
     rets    = np.log(prices['close']).diff()
-    nrets   = rets * pos
-    nrets   = sanitize_datetime(rets * pos)
+    nrets   = apply_slippage(pos, rets, slippage, ret_type='log')
+    nrets   = sanitize_datetime(nrets)
 
+    if ret_pos:
+        return nrets, pos
+    # endif
     return nrets
 # enddef
 

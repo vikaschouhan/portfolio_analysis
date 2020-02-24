@@ -255,12 +255,37 @@ def calculate_portfolio_returns(returns, weights_list, log_returns=True):
 
 ########################################################
 # Slippage calculator
-def apply_slippage(pos, slip_perc=0):
+# NOTES:
+# If nrets is of type log then :-
+#     r = ln(y/x), without any slippage
+# For slippage s, we have
+#     r = ln(y/x(1+s)) for long and
+#     r = ln(y/x(1-s)) for short, thus
+#     r = ln(y/x) - ln(1+s) for long
+#     r = ln(y/x) - ln(1-s) for short
+# @args :-
+#     pos        -> array of positions, 1 for long, -1 for short, 0 for out of market
+#     rets       -> per bar returns of closing prices (daily returns if timeframe is daily)
+#     slip_perc  -> Slippage percentage as % of closing prices
+#     ret_type   -> specify whether rets is normal returns or log returns
+def apply_slippage(pos, rets, slip_perc=0, ret_type='log'):
+    # Create new pandas df of rets and pos
+    _df = pd.DataFrame(index=pos.index)
+    _df['pos']   = pos
+    _df['rets']  = rets
+    _df['pos_d'] = pos.diff()
+
     # Apply slippage
-    pos_slip = (1-0.01*slip_perc)
-    neg_slip = (1+0.01*slip_perc)
-    new_pos  = pos * pos.diff().apply(lambda x : pos_slip if x>0 else neg_slip if x<0 else 1)
-    return new_pos
+    if ret_type == 'log':
+        pos_slip = -np.log(1+slip_perc*0.01)
+        neg_slip = -np.log(1-slip_perc*0.01)
+        retss    = pos * _df.apply(lambda x: x.rets + pos_slip if x.pos_d > 0 else x.rets + neg_slip if x.pos_d < 0 else x.rets, axis=1)
+    else:
+        raise ValueError('ERROR:: Only ret_type="log" is supported !!')
+        #slip_u   = 0.01 * slip_perc
+        #retss    = pos * _df.apply(lambda x: (x.rets - slip_u)/(1 + slip_u) if x.pos_d > 0 else (x.rets + slip_u)/(1 - slip_u) if x.pos_d < 0 else x.rets, axis=1)
+    # endif
+    return retss
 # enddef
 
 #########################################################
