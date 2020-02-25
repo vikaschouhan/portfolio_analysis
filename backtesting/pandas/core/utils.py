@@ -165,22 +165,19 @@ def _take_position_short(sig, pos, short_en, short_ex):
     return pos
 # enddef
 
-def _check_signals_to_positions_args(mode, pos_type, mask):
+def _check_signals_to_positions_args(mode, mask):
     mode_list = ['long', 'short', 'any']
-    pos_types = ['full', 'sparse']
 
     assert mode in mode_list, 'ERROR:: mode should be one of {}'.format(mode_list)
-    assert pos_type in pos_types, 'ERROR:: pos_type should be one of {}'.format(pos_types)
     if mode == 'any':
         assert len(mask) == 4 , 'ERROR:: in "any" mode, mask should be of 4 keys.'
     # endif
     assert len(mask) == 2 or len(mask) == 4, 'ERROR:: mask should be of 2 or 4 keys.'
 # enddef
 
-def signals_to_positions(signals, init_pos=0, mode='any',
-        mask=SIGNAL_MASK, pos_type='full'):
+def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK):
     # Checks
-    _check_signals_to_positions_args(mode, pos_type, mask)
+    _check_signals_to_positions_args(mode, mask)
 
     pos = init_pos
     ps  = pd.Series(0., index=signals.index)
@@ -204,8 +201,8 @@ def signals_to_positions(signals, init_pos=0, mode='any',
             ps[t] = pos
         # endfor
     # endif
-    ps = ps.shift()
-    return ps[ps != ps.shift()] if pos_type == 'sparse' else ps
+
+    return ps.shift()
 # enddef
 
 ########################################################
