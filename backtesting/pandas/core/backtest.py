@@ -13,9 +13,7 @@ from .utils import *
 #                    'long' means long only positions
 #                    'short' means short only positions
 #      slippage   -> slippage as percentage of close price
-#      ret_pos    -> if True, also returns position vector. Useful for debugging
-def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any',
-        slippage: float=0.0, ret_pos: bool=False):
+def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any', slippage: float=0.0):
     signals = strat_fn(prices, **strat_params)
 
     # Select appropriate signals first
@@ -55,10 +53,14 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
     nrets   = apply_slippage(pos, rets, slippage, ret_type='log')
     nrets   = sanitize_datetime(nrets)
 
-    if ret_pos:
-        return nrets, pos
-    # endif
-    return nrets
+    return {
+               KEY_RETURNS     : nrets,
+               KEY_POSITIONS   : pos,
+               KEY_SIGNALS     : signals,
+               KEY_PRICES      : prices,
+               KEY_RUNMODE     : run_mode,
+               KEY_SLIPPAGE    : slippage,
+           }
 # enddef
 
 ############################################################################
@@ -92,10 +94,18 @@ def backtest_single(strategy: str,
     print('>> Preparing price data.')
     _prices    = Price(prices[_o], prices[_h], prices[_l], prices[_c], prices[_v])
     print('>> Running strategy "{}" on price data.'.format(strategy))
-    returns    = run_strategy_single(strat_fn, strat_params, _prices, run_mode, slippage)
+    ret_data   = run_strategy_single(strat_fn, strat_params, _prices, run_mode, slippage)
     if report_file:
         print('>> Writing tearsheet to {}'.format(report_file))
-        generate_tearsheet(returns, report_file)
+        generate_tearsheet(ret_data[KEY_RETURNS], report_file)
     # endif
-    return returns
+
+    ext_data   = {
+            KEY_PRICES            : _prices,
+            KEY_STRATEGY          : strategy,
+            KEY_STRATPARAMS       : strat_params,
+            KEY_RUNMODE           : run_mode,
+            KEY_SLIPPAGE          : slippage,
+        }
+    return {**ret_data, **ext_data}
 # enddef

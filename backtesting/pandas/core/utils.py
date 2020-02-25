@@ -23,6 +23,16 @@ SIGNAL_MASK_LONG   = (SIGNAL.BUY, SIGNAL.SELL)
 SIGNAL_MASK_SHORT  = (SIGNAL.SHORT, SIGNAL.COVER)
 SIGNAL_MASK_SHORT2 = (SIGNAL.SELL, SIGNAL.BUY)
 
+# Some keys
+KEY_SIGNALS     = 'signals'
+KEY_POSITIONS   = 'positions'
+KEY_SLIPPAGE    = 'slippage'
+KEY_RUNMODE     = 'run_mode'
+KEY_PRICES      = 'prices'
+KEY_RETURNS     = 'returns'
+KEY_STRATEGY    = 'strategy'
+KEY_STRATPARAMS = 'strategy_params'
+
 #############################################################
 # Signal utility functions
 def crossover(s1, s2, lag=1):
@@ -87,6 +97,14 @@ class Price(object):
         else:
             raise ValueError('Unsupported key {} in Price[]. Supported keys are = {}'.format(key, self.keys_list))
         # endif
+    # enddef
+
+    def __repr__(self):
+        return self.data.__repr__()
+    # enddef
+
+    def __str__(self):
+        return self.data.__str__()
     # enddef
 # endclass
 
