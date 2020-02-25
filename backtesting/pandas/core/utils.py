@@ -43,21 +43,24 @@ def crossunder(s1, s2, lag=1):
     return (s1 < s2) & (s1.shift(lag) > s2.shift(lag))
 # enddef
 
-def set_buy(s):
+# shift parameter takes into account that we always buy or sell
+# (i.e. take positions) on next bar
+def set_buy(s, shift=True):
+    s = s.shift().fillna(False) if shift else s
     s.name = SIGNAL.BUY
     return s
 # enddef
-
-def set_sell(s):
+def set_sell(s, shift=True):
+    s = s.shift().fillna(False) if shift else s
     s.name = SIGNAL.SELL
     return s
 # enddef
-
-def set_short(s):
+def set_short(s, shift=True):
+    s = s.shift().fillna(False) if shift else s
     s.name = SIGNAL.SHORT
 # enddef
-
-def set_cover(s):
+def set_cover(s, shift=True):
+    s = s.shift().fillna(False) if shift else s
     s.name = SIGNAL.COVER
 # enddef
 
@@ -175,7 +178,7 @@ def _check_signals_to_positions_args(mode, mask):
     assert len(mask) == 2 or len(mask) == 4, 'ERROR:: mask should be of 2 or 4 keys.'
 # enddef
 
-def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK):
+def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shift=False):
     # Checks
     _check_signals_to_positions_args(mode, mask)
 
@@ -202,7 +205,7 @@ def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK):
         # endfor
     # endif
 
-    return ps.shift()
+    return ps.shift() if shift else ps
 # enddef
 
 ########################################################
