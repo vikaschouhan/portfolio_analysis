@@ -32,6 +32,7 @@ KEY_PRICES      = 'prices'
 KEY_RETURNS     = 'returns'
 KEY_STRATEGY    = 'strategy'
 KEY_STRATPARAMS = 'strategy_params'
+KEY_NPOINTS     = 'points'
 
 #############################################################
 # Signal utility functions
@@ -284,26 +285,70 @@ def calculate_portfolio_returns(returns, weights_list, log_returns=True):
 # @args :-
 #     pos        -> array of positions, 1 for long, -1 for short, 0 for out of market
 #     rets       -> per bar returns of closing prices (daily returns if timeframe is daily)
-#     slip_perc  -> Slippage percentage as % of closing prices
+#     slip       -> Slippage value (in %cenatge of closing prices if slip_perc=True)
 #     ret_type   -> specify whether rets is normal returns or log returns
-def apply_slippage(pos, rets, slip_perc=0, ret_type='log'):
+#     slip_perc  -> if True, slip is assumed as a %, else a fixed value in points
+#     price      -> closig prices (only used when slippage is fixed.)
+def apply_slippage(pos, rets, slip, ret_type='log', slip_perc=True, price=None):
+    # Some checks
+    if slip_perc == False:
+        assert price is not None, 'ERROR:: price should not be None when slippage type is fixed.'
+    # endif
+
+    # Print information about how slippage is being calculated
+    print('>> Using slippage {}{}'.format(slip, '%' if slip_perc else 'pts'))
+
     # Create new pandas df of rets and pos
     _df = pd.DataFrame(index=pos.index)
     _df['pos']   = pos
     _df['rets']  = rets
     _df['pos_d'] = pos.diff()
+    if not price.empty:
+        _df['price'] = price
+    # endif
 
     # Apply slippage
     if ret_type == 'log':
-        pos_slip = -np.log(1+slip_perc*0.01)
-        neg_slip = -np.log(1-slip_perc*0.01)
-        retss    = pos * _df.apply(lambda x: x.rets + pos_slip if x.pos_d > 0 else x.rets + neg_slip if x.pos_d < 0 else x.rets, axis=1)
+        if slip_perc:
+            pos_slip = -np.log(1 + slip*0.01)
+            neg_slip = -np.log(1 - slip*0.01)
+            retss    = pos * _df.apply(lambda x: x.rets + pos_slip if x.pos_d > 0 else \
+                           x.rets + neg_slip if x.pos_d < 0 else x.rets, axis=1)
+        else:
+            retss    = pos * _df.apply(lambda x: x.rets - np.log(1 + slip/x.price) if x.pos_d > 0 else \
+                           x.rets - np.log(1 - slip/x.price) if x.pos_d < 0 else x.rets, axis=1)
+        # endif
     else:
         raise ValueError('ERROR:: Only ret_type="log" is supported !!')
-        #slip_u   = 0.01 * slip_perc
+        #slip_u   = 0.01 * slip
         #retss    = pos * _df.apply(lambda x: (x.rets - slip_u)/(1 + slip_u) if x.pos_d > 0 else (x.rets + slip_u)/(1 - slip_u) if x.pos_d < 0 else x.rets, axis=1)
     # endif
     return retss
+# enddef
+
+# Wrapper over apply_slippage. It accepts slippage in compact string form.
+# Either in 'X', 'X%' or 'Xpts'
+def apply_slippage_v2(pos, rets, slip, ret_type='log', price=None):
+    slippage, slip_perc = extract_slippage(slip)
+    return apply_slippage(pos, rets, slippage, ret_type, slip_perc, price)
+# enddef
+
+# Some utils
+def extract_slippage(slip):
+    assert isstring(slip), 'slippage={} should be of type string in form of X, X% or Xpts, where x is a float.'.format(slip)
+    slip = slip.replace(' ', '')
+    
+    if slip[-1] == '%':
+        return (float(slip[:-1]), True)
+    elif slip[-3:].lower() == 'pts':
+        return (float(slip[:-3]), False)
+    else:
+        try:
+            return (float(slip), False)
+        except:
+            raise ValueError('slippage={} not in desired format X, X% or Xpts where X is a float'.format(slip))
+        # endtry
+    # endif
 # enddef
 
 #########################################################

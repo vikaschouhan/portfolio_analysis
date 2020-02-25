@@ -12,8 +12,8 @@ from .utils import *
 #      run_mode   -> 'any' means run both long and short.
 #                    'long' means long only positions
 #                    'short' means short only positions
-#      slippage   -> slippage as percentage of close price
-def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any', slippage: float=0.0):
+#      slippage   -> slippage
+def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any', slippage: str='0.0%'):
     signals = strat_fn(prices, **strat_params)
 
     # Select appropriate signals first
@@ -50,8 +50,9 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
     print('>> Using signal mask {}.'.format(smask))
     pos     = signals_to_positions(signals, mode=run_mode, mask=smask)
     rets    = np.log(prices['close']).diff()
-    nrets   = apply_slippage(pos, rets, slippage, ret_type='log')
+    nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices['close'])
     nrets   = sanitize_datetime(nrets)
+    points  = (np.exp(nrets.sum()) - 1) * prices['close'][0]
 
     return {
                KEY_RETURNS     : nrets,
@@ -60,6 +61,7 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
                KEY_PRICES      : prices,
                KEY_RUNMODE     : run_mode,
                KEY_SLIPPAGE    : slippage,
+               KEY_NPOINTS     : points,
            }
 # enddef
 
@@ -73,14 +75,14 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
 #        column_map       -> A dictionary of column mappings
 #        run_mode         -> 'any' for both long and short, 'long' for long only
 #                            'short' for short only
-#        slippage         -> slippage in %centage
+#        slippage         -> slippage
 def backtest_single(strategy: str,
         strat_params: dict,
         prices: pd.DataFrame,
         report_file: str=None,
         column_map: dict={'close': 'c', 'low': 'l', 'high': 'h', 'open': 'o', 'volume': 'v'},
         run_mode: str='any',
-        slippage: float=0.0):
+        slippage: str='0.0%'):
     assert strategy in strat_map, 'ERROR:: Supported strategies = {}'.format(strat_map.keys())
     strat_fn   = strat_map[strategy]
 
