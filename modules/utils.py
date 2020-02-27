@@ -455,7 +455,8 @@ def search_for(dir_t, file_ext_list=None, full_path=False):
 col_map    = {'Open':'o', 'High':'h', 'Low':'l', 'Close':'c', 'Volume':'v'}
 col_close  = 'Close'
 
-def read_asset_csv(csv_file, columns_map=None, resample_period=None):
+def read_asset_csv(csv_file, columns_map=col_map, resample_period=None):
+    assert isdict(columns_map), 'columns_map is mandatory'
     # Reverse
     columns_map = rev_map(columns_map)
     # Read
