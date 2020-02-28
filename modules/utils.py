@@ -539,7 +539,7 @@ def static(varname, value):
 ####################################################
 # Multiprocessing helpers
 # Create single manager
-mp_manager = multiprocessing.Manager()
+#mp_manager = multiprocessing.Manager()
 
 def split_chunks(l, n_chunks):
     n = int(len(l)/n_chunks)
@@ -600,7 +600,7 @@ def spawn_workers(worker_fn, num_threads, sanitize_results=True, **kwargs):
     # Deploy
     result_list  = []
     process_list = []
-    return_dict  = mp_manager.dict()
+    return_dict  = multiprocessing.Manager().dict()
     for i in range(num_threads):
         # Populate kwargs
         for data_key_t in chunk_map:
