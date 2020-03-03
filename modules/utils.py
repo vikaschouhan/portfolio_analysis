@@ -22,6 +22,7 @@ import pandas as pd
 import multiprocessing
 import itertools
 import xlsxwriter
+import pickle
 
 def islist(x):
     return isinstance(x, list)
@@ -201,6 +202,14 @@ def parse_opt_args(arg_string):
         # endfor
     # endif
     return opt_args
+# enddef
+
+def load_pickle(pickle_file):
+    return pickle.load(open(pickle_file, 'rb')) if os.path.isfile(pickle_file) else None
+# enddef
+
+def save_pickle(pickle_obj, pickle_file):
+    pickle.dump(pickle_obj, open(pickle_file, 'wb'))
 # enddef
 
 ################################################
