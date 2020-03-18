@@ -49,8 +49,8 @@ def analyse_rets_data(rets, topn=5, last_candles=10):
         rets_topn = rets_mat.iloc[-indx_t-1].sort_values(ascending=False)[:topn].to_dict()
         rets_botn = rets_mat.iloc[-indx_t-1].sort_values()[:topn].to_dict()
         # add volume
-        rets_topn = __sort_rd({k:(precision(v), '{:.2E}'.format(vol_mat.iloc[-indx_t-1][k])) for k,v in rets_topn.items()})
-        rets_botn = __sort_rd({k:(precision(v), '{:.2E}'.format(vol_mat.iloc[-indx_t-1][k])) for k,v in rets_botn.items()})
+        rets_topn = __sort_rd({k:precision(v) for k,v in rets_topn.items()})
+        rets_botn = __sort_rd({k:precision(v) for k,v in rets_botn.items()})
         # Append
         rets_g.append(rets_topn)
         rets_l.append(rets_botn)
@@ -59,7 +59,7 @@ def analyse_rets_data(rets, topn=5, last_candles=10):
     def __rd_str(x):
         p_str = ''
         for k,v in x.items():
-            p_str += '{} ({}%, {}-V)\n'.format(k, v[0]*100, v[1])
+            p_str += '{} ({}%)\n'.format(k, v*100)
         # endfor
         return p_str
     # enddef
