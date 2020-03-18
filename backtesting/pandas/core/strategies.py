@@ -17,9 +17,9 @@ def __select_ma_fn(ma_type):
 def __ma_crossover(ma_type: str, prices: Price, **params):
     print_params(params)
 
-    short_period = params.get('short_period')
-    long_period  = params.get('long_period')
-    price_key    = params.get('price_key', 'close')
+    short_period = params_get(params, 'short_period')
+    long_period  = params_get(params, 'long_period')
+    price_key    = params_get(params, 'price_key', 'close')
     ma_fn        = __select_ma_fn(ma_type)
 
     short_ma = ma_fn(prices[price_key], short_period)
@@ -52,11 +52,11 @@ def ema_crossover(prices: Price, **params):
 def supertrend_crossover(prices: Price, **params):
     print_params(params)
 
-    atr_period     = params.get('atr_period')
-    atr_multiplier = params.get('atr_multiplier')
-    ema_length     = params.get('ema_length', None)
-    atr_max        = params.get('atr_max', None)
-    price_key      = params.get('price_key', 'close')
+    atr_period     = params_get(params, 'atr_period')
+    atr_multiplier = params_get(params, 'atr_multiplier')
+    ema_length     = params_get(params, 'ema_length', None)
+    atr_max        = params_get(params, 'atr_max', None)
+    price_key      = params_get(params, 'price_key', 'close')
 
     if ema_length:
         print('>> Using EMA Smooth variant of supertrend_crossover.')

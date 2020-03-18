@@ -212,6 +212,19 @@ def save_pickle(pickle_obj, pickle_file):
     pickle.dump(pickle_obj, open(pickle_file, 'wb'))
 # enddef
 
+def params_get(d, key, defval='NULL'):
+    if defval == 'NULL':
+        assert key in d, '{} not found in {}'.format(key, d)
+    # endif
+
+    if key in d:
+        return d[key]
+    else:
+        print('>> INFO:: Using default value of "{}"={}'.format(key, defval))
+        return defval
+    # endif
+# enddef
+
 ################################################
 # Pandas functions
 # Get data at index in pandas frame
