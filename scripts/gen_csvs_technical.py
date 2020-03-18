@@ -21,7 +21,7 @@ coloritf   = invs_utils.coloritf
 coloritb   = invs_utils.coloritb
 
 # CSV report generator
-def run_csv_gen(sec_dict, invs_res, output_dir):
+def run_csv_gen(sec_dict, invs_res, output_dir, verbose=False):
     ctr = 0
     assert output_dir != None
 
@@ -35,7 +35,7 @@ def run_csv_gen(sec_dict, invs_res, output_dir):
     # Iterate over all security dict
     for sec_code in sec_dict.keys():
         # Fetch data
-        d_this   = invs_core.fetch_data(sec_dict[sec_code]['ticker'], invs_res)
+        d_this   = invs_core.fetch_data(sec_dict[sec_code]['ticker'], invs_res, verbose=verbose)
         sec_name = sec_dict[sec_code]['name']
 
         # If dataframe is empty, continue
@@ -75,6 +75,7 @@ if __name__ == '__main__':
     parser.add_argument('--res',     help='Resolution', type=str, default='1W')
     parser.add_argument('--sfile',   help='Security csv file. Can be list file or bhavcopy file.', type=str, default=None)
     parser.add_argument('--odir',    help='Output directory where csvs are stored.', type=str, default=None)
+    parser.add_argument('--verbose', help='Enable verbose mode', action='store_true')
     args    = parser.parse_args()
 
     if not args.__dict__['invs']:
@@ -103,7 +104,8 @@ if __name__ == '__main__':
     sec_file   = args.__dict__['sfile']
     invs_res   = args.__dict__['res']
     out_dir    = args.__dict__['odir']
+    verbose    = args.__dict__['verbose']
 
     sec_tick_d = invs_parsers.populate_sym_list_from_sec_file(invs_db_f, sec_file)
-    run_csv_gen(sec_tick_d, invs_res=invs_res, output_dir=args.__dict__['odir'])
+    run_csv_gen(sec_tick_d, invs_res=invs_res, output_dir=args.__dict__['odir'], verbose=verbose)
 # endif

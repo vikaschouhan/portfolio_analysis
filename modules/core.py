@@ -103,6 +103,18 @@ res_tbl = {
               "1W"     : "W",
               "1M"     : "M",
           }
+res_tbl_epochs = {
+              "1m"     : 60,
+              "5m"     : 300,
+              "15m"    : 900,
+              "30m"    : 1800,
+              "1h"     : 3600,
+              "4h"     : 14400,
+              "5h"     : 18000,
+              "1D"     : 86400,
+              "1W"     : 604800,
+              "1M"     : 2419200
+          }
 
 def g_sock():
     urlt = g_burlb()
@@ -137,47 +149,22 @@ def strdate_now():
 # enddef
 
 # Fetch from investing.com
-def fetch_data(ticker, resl, t_from=None, t_timeout=4, date_settings=None):
+def fetch_data(ticker, resl, t_from=None, interval_limit_candles=1200, t_timeout=4, sleep_time=14, date_settings=None, verbose=False):
+    #
     # From date
     t_from    = "01/01/2000" if t_from is None else t_from
     t_from    = strdate_to_unixdate(t_from, settings=date_settings)
+    t_to      = unixdate_now()
+    inter_lim = interval_limit_candles * res_tbl_epochs[resl]
+
     ##
     ftch_tout = 5
     t_indx    = 0
+    curr_top  = t_to
 
+    vprint('>> Accessing {} for {} timeframe'.format(ticker, resl), verbose)
+    vprint('>> Interval limit {}, timeout {}, sleep time {}'.format(inter_lim, t_timeout, sleep_time), verbose)
     assert(resl in res_tbl.keys())
-
-    while t_indx < ftch_tout:
-        t_to     = unixdate_now()
-        this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(ticker, res_tbl[resl], t_from, t_to)
-
-        logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
-        try:
-            this_req = Request(this_url, None, headers)
-            response = urlopen(this_req, timeout=t_timeout)
-            j_data   = json.loads(response.read())
-            if not bool(j_data):
-                logging.debug("{} : Not able to fetch.".format(strdate_now()))
-                logging.debug("{} : Returned {}".format(strdate_now(), j_data))
-            else:
-                break
-            # endif
-        except socket.error:
-            # Just try again after a pause if encountered an 104 error
-            logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
-            time.sleep(sleep_time)
-        except URLError:
-            logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
-            time.sleep(sleep_time)
-        # endtry
-        t_indx   = t_indx + 1
-    # endwhile
-
-    if (t_indx >= ftch_tout):
-        logging.debug("{} : Retries exceeded !!".format(strdate_now()))
-        # Exit
-        sys.exit(-1)
-    # endif
 
     # Get basic pb_frame
     def g_pdbase(j_data):
@@ -202,10 +189,67 @@ def fetch_data(ticker, resl, t_from=None, t_timeout=4, date_settings=None):
         return d_frame
     # enddef
 
-    #print "{} : Fetched data. done !!".format(strdate_now())
+    df_list = []
+    finish  = False
+
+    while curr_top > t_from:
+        curr_bot = curr_top - inter_lim
+
+        while t_indx < ftch_tout:
+            t_to     = unixdate_now()
+            this_url = g_burl(sock) + "symbol={}&resolution={}&from={}&to={}".format(ticker, res_tbl[resl], curr_bot, curr_top)
+
+            logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
+            vprint("{} : ({}, {}) -> Fetching {}".format(strdate_now(), curr_bot, curr_top, this_url), verbose)
+            try:
+                this_req = Request(this_url, None, headers)
+                response = urlopen(this_req, timeout=t_timeout)
+                j_data   = json.loads(response.read())
+                if j_data["s"] == "no_data":
+                    finish = True
+                    break
+                # endif
+                if not bool(j_data):
+                    logging.debug("{} : Not able to fetch.".format(strdate_now()))
+                    logging.debug("{} : Returned {}".format(strdate_now(), j_data))
+                else:
+                    break
+                # endif
+            except socket.error:
+                # Just try again after a pause if encountered an 104 error
+                logging.debug('Encountered socket error. Retrying after {} seconds..'.format(sleep_time))
+                time.sleep(sleep_time)
+            except URLError:
+                logging.debug('Encountered timeout error. Retrying after {} seconds..'.format(sleep_time))
+                time.sleep(sleep_time)
+            # endtry
+            t_indx   = t_indx + 1
+        # endwhile
+
+        if (t_indx >= ftch_tout):
+            logging.debug("{} : Retries exceeded !!".format(strdate_now()))
+            # Exit
+            sys.exit(-1)
+        # endif
+
+        # Break out of loop if finished
+        if finish == True:
+            break
+        # endif
+
+        # Convert to dataframe and then add to list 
+        df_list.append(g_pdbase(j_data))
+        # Update ptrs
+        curr_top = curr_bot + 1
+    # endwhile
+
+    # Append dataframe in reverse manner
+    # Since data is downloaded from higher to lower dates
+    dframe = pandas.concat(reversed([x.set_index('t') for x in df_list]), axis=0).reset_index()
+
     # Enclosed within try except block to print the data incase some exception happens
     try:
-        return dropzero(g_pdbase(j_data))
+        return dropzero(dframe)
     except Exception as e:
         # Debug info
         print('** Exception encountered in fetch_data(). Returned j_data = {}'.format(j_data))
