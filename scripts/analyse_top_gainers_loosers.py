@@ -64,20 +64,60 @@ def analyse_rets_data(rets, topn=5, last_candles=10):
         return p_str
     # enddef
 
-    dmat['gainers'] = list(reversed([__rd_str(x) for x in rets_g]))
-    dmat['losers']  = list(reversed([__rd_str(x) for x in rets_l]))
+    dmat['gainers'] = list(reversed(rets_g)) #list(reversed([__rd_str(x) for x in rets_g]))
+    dmat['losers']  = list(reversed(rets_l)) #list(reversed([__rd_str(x) for x in rets_l]))
     # Reverse in decreasing order of dates
     dmat            = dmat.iloc[::-1]
 
     return dmat
 # enddef
 
+def flatten_gl_sheet(data):
+    gainers      = []
+    gainers_perc = []
+    losers       = []
+    losers_perc  = []
+    time_l       = []
+
+    for i in range(len(data)):
+        for k,v in data.iloc[i]['gainers'].items():
+            gainers.append(k)
+            gainers_perc.append(v)
+            if data.index[i] not in time_l:
+                time_l.append(data.index[i])
+            else:
+                time_l.append(np.nan)
+            # endif
+        # endfor
+    # endfor
+
+    for i in range(len(data)):
+        for k,v in data.iloc[i]['losers'].items():
+            losers.append(k)
+            losers_perc.append(v)
+        # endfor
+    # endfor
+
+    pframe = pd.DataFrame(index=range(len(time_l)))
+    pframe['t'] = time_l
+    pframe['gainers'] = gainers
+    pframe['gainers_perc'] = gainers_perc
+    pframe['losers'] = losers
+    pframe['losers_perc'] = losers_perc
+
+    # Reset index
+    pframe = pframe.set_index('t')
+    
+    return pframe
+# enddef
+
 def analyse_for_top_gainers_and_losers(csv_dir, xls_file, topn=5, last_candles=10):
     rets_data = process_csvs(csv_dir)
     gn_data   = analyse_rets_data(rets_data, topn=topn, last_candles=last_candles)
+    gn_data   = flatten_gl_sheet(gn_data)
     # Write to excel sheet
     print('>> Writing historical top gainers and losers data to {}'.format(xls_file))
-    gn_data.to_excel(xls_file)
+    df_to_excel({'sheet1': gn_data}, xls_file)
 # enddef
 
 if __name__ == '__main__':
