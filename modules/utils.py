@@ -477,14 +477,15 @@ def search_for(dir_t, file_ext_list=None, full_path=False):
 col_map    = {'Open':'o', 'High':'h', 'Low':'l', 'Close':'c', 'Volume':'v'}
 col_close  = 'Close'
 
-def read_asset_csv(csv_file, columns_map=col_map, resample_period=None):
+def read_asset_csv(csv_file, columns_map=col_map, resample_period=None,
+        resample_map={'Open':'first', 'High':'max', 'Low':'min', 'Close': 'last', 'Volume': 'sum' }):
     assert isdict(columns_map), 'columns_map is mandatory'
     # Reverse
     columns_map = rev_map(columns_map)
     # Read
     df = pd.read_csv(csv_file, index_col=0, infer_datetime_format=True, parse_dates=True)
     df = df.rename(columns=columns_map) if columns_map else df
-    df = df.resample(resample_period).mean().dropna() if resample_period else df
+    df = df.resample(resample_period).agg(resample_map) if resample_period else df
     return df
 # enddef
 
@@ -524,14 +525,15 @@ def read_all_asset_csvs(csv_dir, files_list=None, column_map=col_map, resample_p
     return df_map
 # enddef
 
-def resample_asset_data(dmap, resample_period=None):
+def resample_asset_data(dmap, resample_period=None,
+        resample_map={'Open':'first', 'High':'max', 'Low':'min', 'Close': 'last', 'Volume': 'sum' }):
     if resample_period is None:
         return None
     # endif
 
     dmap_t = {}
     for key_t in dmap.keys():
-        dmap_t[key_t] = dmap[key_t].resample(resample_period).mean().dropna()
+        dmap_t[key_t] = dmap[key_t].resample(resample_period).agg(resample_map)
     # endfor
     return dmap_t
 # enddef
