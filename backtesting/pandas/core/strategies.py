@@ -19,7 +19,7 @@ def __ma_crossover(ma_type: str, prices: Price, **params):
 
     short_period = params_get(params, 'short_period')
     long_period  = params_get(params, 'long_period')
-    price_key    = params_get(params, 'price_key', 'close')
+    price_key    = params_get(params, 'price_key', Price.CLOSE)
     ma_fn        = __select_ma_fn(ma_type)
 
     short_ma = ma_fn(prices[price_key], short_period)
@@ -56,15 +56,15 @@ def supertrend_crossover(prices: Price, **params):
     atr_multiplier = params_get(params, 'atr_multiplier')
     ema_length     = params_get(params, 'ema_length', None)
     atr_max        = params_get(params, 'atr_max', None)
-    price_key      = params_get(params, 'price_key', 'close')
+    price_key      = params_get(params, 'price_key', Price.CLOSE)
 
     if ema_length:
         print('>> Using EMA Smooth variant of supertrend_crossover.')
-        phigh      = ema(prices['high'], ema_length)
-        plow       = ema(prices['low'], ema_length)
+        phigh      = ema(prices[Price.HIGH], ema_length)
+        plow       = ema(prices[Price.LOW], ema_length)
     else:
-        phigh      = prices['high']
-        plow       = prices['low']
+        phigh      = prices[Price.HIGH]
+        plow       = prices[Price.LOW]
     # endif
 
     # Choose atr calculation function

@@ -81,25 +81,34 @@ def sanitize_datetime(df):
 ################################################################
 # For handling price data
 class Price(object):
-    keys_list = ['open', 'high', 'low', 'close', 'volume', 'all']
+    OPEN     = 'open'
+    CLOSE    = 'close'
+    HIGH     = 'high'
+    LOW      = 'low'
+    VOLUME   = 'volume'
+    OHLC     = [OPEN, HIGH, LOW, CLOSE]
+    OHLCV    = OHLC + [VOLUME]
+    LIST_ALL = OHLCV + ['all']
 
     def __init__(self, open: pd.Series, high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series = None):
         volume      = pd.Series(0, index=close.index) if volume is None else volume
-        open.name   = 'open'
-        close.name  = 'close'
-        high.name   = 'high'
-        low.name    = 'low'
-        volume.name = 'volume'
+        open.name   = self.OPEN
+        close.name  = self.CLOSE
+        high.name   = self.HIGH
+        low.name    = self.LOW
+        volume.name = self.VOLUME
         self.data = pd.DataFrame([close, open, high, low, volume]).T
+        # Change index to datetime
+        self.data.index = pd.to_datetime(self.data.index)
     # enddef
 
     def __getitem__(self, key):
-        if key in ['open', 'high', 'low', 'close', 'volume']:
+        if key in self.OHLCV:
             return self.data[key]
         elif key == 'all':
             return self.data
         else:
-            raise ValueError('Unsupported key {} in Price[]. Supported keys are = {}'.format(key, self.keys_list))
+            raise ValueError('Unsupported key {} in Price[]. Supported keys are = {}'.format(key, self.OHLCV))
         # endif
     # enddef
 
@@ -109,6 +118,25 @@ class Price(object):
 
     def __str__(self):
         return self.data.__str__()
+    # enddef
+
+    @classmethod
+    def from_df(cls, df, columns=['o', 'h', 'l', 'c', 'v']):
+        return cls(df[columns[0]], df[columns[1]], df[columns[2]], df[columns[3]], df[columns[4]])
+    # enddef
+
+    @classmethod
+    def from_csv_file(cls, csv_file, columns=['o', 'h', 'l', 'c', 'v']):
+        return cls.from_df(pd.read_csv(csv_file, index_col=0), columns=columns)
+    # enddef
+
+    def resample(self, time_frame):
+        return Price.from_df(self.data.resample(time_frame).agg({
+            self.OPEN  : 'first',
+            self.HIGH  : 'max',
+            self.LOW   : 'min',
+            self.CLOSE : 'last',
+            self.VOLUME: 'sum' }), columns=self.OHLCV)
     # enddef
 # endclass
 

@@ -49,10 +49,10 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
 
     print('>> Using signal mask {}.'.format(smask))
     pos     = signals_to_positions(signals, mode=run_mode, mask=smask)
-    rets    = np.log(prices['close']).diff()
-    nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices['close'])
+    rets    = np.log(prices[Price.CLOSE]).diff()
+    nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices[Price.CLOSE])
     nrets   = sanitize_datetime(nrets)
-    points  = (np.exp(nrets.sum()) - 1) * prices['close'][0]
+    points  = (np.exp(nrets.sum()) - 1) * prices[Price.CLOSE][0]
 
     return {
                KEY_RETURNS     : nrets,
@@ -80,18 +80,20 @@ def backtest_single(strategy: str,
         strat_params: dict,
         prices: pd.DataFrame,
         report_file: str=None,
-        column_map: dict={'close': 'c', 'low': 'l', 'high': 'h', 'open': 'o', 'volume': 'v'},
+        ohlcv_columns: list=['o', 'h', 'l', 'c', 'v'],
         run_mode: str='any',
         slippage: str='0.0%'):
     assert strategy in strat_map, 'ERROR:: Supported strategies = {}'.format(strat_map.keys())
     strat_fn   = strat_map[strategy]
 
-    # Get appropriate columns in prirce data
-    _o = column_map['open']
-    _h = column_map['high']
-    _l = column_map['low']
-    _c = column_map['close']
-    _v = column_map['volume']
+    # Check if ohlcv columns are correct
+    for col_t in ohlcv_columns:
+        assert col_t in prices.columns, 'column "{}" not found in prices dataframe with columns {}"'.format(col_t,
+            prices.columns)
+    # endfor
+
+    # Get columns
+    _o, _h, _l, _c, _v = ohlcv_columns[0], ohlcv_columns[1], ohlcv_columns[2], ohlcv_columns[3], ohlcv_columns[4]
 
     print('>> Preparing price data.')
     _prices    = Price(prices[_o], prices[_h], prices[_l], prices[_c], prices[_v])
