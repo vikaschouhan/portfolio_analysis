@@ -80,23 +80,14 @@ def backtest_single(strategy: str,
         strat_params: dict,
         prices: pd.DataFrame,
         report_file: str=None,
-        ohlcv_columns: list=['o', 'h', 'l', 'c', 'v'],
+        columns: str='ohlcv',
         run_mode: str='any',
         slippage: str='0.0%'):
     assert strategy in strat_map, 'ERROR:: Supported strategies = {}'.format(strat_map.keys())
     strat_fn   = strat_map[strategy]
 
-    # Check if ohlcv columns are correct
-    for col_t in ohlcv_columns:
-        assert col_t in prices.columns, 'column "{}" not found in prices dataframe with columns {}"'.format(col_t,
-            prices.columns)
-    # endfor
-
-    # Get columns
-    _o, _h, _l, _c, _v = ohlcv_columns[0], ohlcv_columns[1], ohlcv_columns[2], ohlcv_columns[3], ohlcv_columns[4]
-
     print('>> Preparing price data.')
-    _prices    = Price(prices[_o], prices[_h], prices[_l], prices[_c], prices[_v])
+    _prices    = Price(prices, columns)
     print('>> Running strategy "{}" on price data.'.format(strategy))
     ret_data   = run_strategy_single(strat_fn, strat_params, _prices, run_mode, slippage)
     if report_file:

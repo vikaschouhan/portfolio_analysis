@@ -89,15 +89,33 @@ class Price(object):
     OHLC     = [OPEN, HIGH, LOW, CLOSE]
     OHLCV    = OHLC + [VOLUME]
     LIST_ALL = OHLCV + ['all']
+    COL_MAP  = {'o': OPEN, 'h': HIGH, 'l': LOW, 'c':CLOSE, 'v':VOLUME}
 
-    def __init__(self, open: pd.Series, high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series = None):
-        volume      = pd.Series(0, index=close.index) if volume is None else volume
-        open.name   = self.OPEN
-        close.name  = self.CLOSE
-        high.name   = self.HIGH
-        low.name    = self.LOW
-        volume.name = self.VOLUME
-        self.data = pd.DataFrame([close, open, high, low, volume]).T
+    def __c_columns_to_keys(self, columns):
+        cols = list(columns)
+        assert len(set(cols) - set(self.COL_MAP.keys())) == 0, 'Invalid columns "{}"'.format(columns)
+        return [self.COL_MAP[k] for k in cols]
+    # enddef
+
+    def __c_columns_heur1_match(self, columns, df, en=True):
+        if en:
+            cols_assumed = [x.lower() for x in list(columns)]
+            cols_passed  = [x[0].lower() for x in df.columns.to_list()]
+            assert cols_assumed == cols_passed, '>> Passed columns="{}" doesnot seem to match dataframe columns="{}"'.format(columns, df.columns)
+        # endif
+    # enddef
+
+    def __init__(self, df: pd.DataFrame, columns: str='ohlcv', match_cols: bool=True):
+        # Run a heuristic check on columns
+        self.__c_columns_heur1_match(columns, df, match_cols)
+        # Print some info
+        print('>> Assumed columns="{}", CSV columns="{}". Please change if not applicable !!'.format(list(columns), df.columns.to_list()))
+        # Assign data
+        self.data = df
+        # New column map
+        new_cols = self.__c_columns_to_keys(columns)
+        # Rename columns
+        self.data.set_axis(new_cols, axis='columns', inplace=True)
         # Change index to datetime
         self.data.index = pd.to_datetime(self.data.index)
     # enddef
@@ -121,12 +139,12 @@ class Price(object):
     # enddef
 
     @classmethod
-    def from_df(cls, df, columns=['o', 'h', 'l', 'c', 'v']):
-        return cls(df[columns[0]], df[columns[1]], df[columns[2]], df[columns[3]], df[columns[4]])
+    def from_df(cls, df, columns='ohlcv'):
+        return cls(df, columns=columns)
     # enddef
 
     @classmethod
-    def from_csv_file(cls, csv_file, columns=['o', 'h', 'l', 'c', 'v']):
+    def from_csv_file(cls, csv_file, columns='ohlcv'):
         return cls.from_df(pd.read_csv(csv_file, index_col=0), columns=columns)
     # enddef
 
