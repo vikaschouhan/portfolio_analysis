@@ -4,6 +4,7 @@ import quantstats as qs
 import re
 import matplotlib.pyplot as plt
 from   typing import AnyStr, Callable
+import copy
 from   modules.utils import *
 
 ############################################################
@@ -353,12 +354,13 @@ def apply_slippage(pos, rets, slip, ret_type='log', slip_perc=True, price=None):
     _df['pos']   = pos
     _df['rets']  = rets
     _df['pos_d'] = pos.diff()
+    pos_d        = _df['pos_d']
     if not price.empty:
         _df['price'] = price
     # endif
 
     # Get col maps. We moved from df.apply() to df.itertuples() due to speed issues.
-    colm = {k:i+1 for i,k in enumerate(_df.columns)}
+    colm  = {k:i+1 for i,k in enumerate(_df.columns)}
     retss = []
 
     # Apply slippage
@@ -368,25 +370,48 @@ def apply_slippage(pos, rets, slip, ret_type='log', slip_perc=True, price=None):
             neg_slip = -np.log(1 - slip*0.01)
             #retss    = pos * _df.apply(lambda x: x.rets + pos_slip if x.pos_d > 0 else \
             #               x.rets + neg_slip if x.pos_d < 0 else x.rets, axis=1)
-            for indx_t, tup_t in enumerate(_df.itertuples()):
-                if tup_t[colm['pos_d']] > 0:
-                    retss.append(pos[indx_t] * (tup_t[colm['rets']] + pos_slip))
-                elif tup_t[colm['pos_d']] < 0:
-                    retss.append(pos[indx_t] * (tup_t[colm['rets']] + neg_slip))
-                else:
-                    retss.append(tup_t[colm['rets']])
-                # endif
+            #####
+            # Update : 22nd May 2020.
+            # Fixed it second time. Switched the logic from apply() to itertuples()
+            # since apparently itertuples() is so much faster than apply() for this
+            # sort of logic
+            #
+            #for indx_t, tup_t in enumerate(_df.itertuples()):
+            #    if tup_t[colm['pos_d']] > 0:
+            #        retss.append(pos[indx_t] * (tup_t[colm['rets']] + pos_slip))
+            #    elif tup_t[colm['pos_d']] < 0:
+            #        retss.append(pos[indx_t] * (tup_t[colm['rets']] + neg_slip))
+            #    else:
+            #        retss.append(pos[indx_t] * tup_t[colm['rets']])
+            #    # endif
+            # endfor
+            ##########
+            # Update : 22nd May 2020.
+            # Fixed it the 3rd time
+            # Converted the above logic to full vectorized calculation.
+            retss = pos * ((rets + pos_slip) * (pos_d > 0).astype('int') +  \
+                           (rets + neg_slip) * (pos_d < 0).astype('int') +  \
+                           rets * (pos_d == 0).astype('int'))
         else:
             #retss    = pos * _df.apply(lambda x: x.rets - np.log(1 + slip/x.price) if x.pos_d > 0 else \
             #               x.rets - np.log(1 - slip/x.price) if x.pos_d < 0 else x.rets, axis=1)
-            for indx_t, tup_t in enumerate(_df.itertuples()):
-                if tup_t[colm['pos_d']] > 0:
-                    retss.append(pos[indx_t] * (tup_t[colm['rets']] - np.log(1 + slip/tup_t[colm['price']])))
-                elif tup_t[colm['pos_d']] < 0:
-                    retss.append(pos[indx_t] * (tup_t[colm['rets']] - np.log(1 - slip/tup_t[colm['price']])))
-                else:
-                    retss.append(tup_t[colm['rets']])
-                # endif
+            ######
+            # Update 22nd May 2020. Same as above reason
+            #for indx_t, tup_t in enumerate(_df.itertuples()):
+            #    if tup_t[colm['pos_d']] > 0:
+            #        retss.append(pos[indx_t] * (tup_t[colm['rets']] - np.log(1 + slip/tup_t[colm['price']])))
+            #    elif tup_t[colm['pos_d']] < 0:
+            #        retss.append(pos[indx_t] * (tup_t[colm['rets']] - np.log(1 - slip/tup_t[colm['price']])))
+            #    else:
+            #        retss.append(pos[indx_t] * tup_t[colm['rets']])
+            #    # endif
+            ## endfor
+            # Update 22nd May 2020. Same as above reason
+            # FIXME: FIXME
+            # TODO: This implementation is not tested yet !!!
+            retss = ((rets - np.log(1 + slip/_df['price'])) * (pos_d > 0).astype('int') + \
+                     (rets - np.log(1 - slip/_df['price'])) * (pos_d < 0).astype('int') + \
+                     rets * (pos_d == 0).astype('int'))
         # endif
     else:
         raise ValueError('ERROR:: Only ret_type="log" is supported !!')
