@@ -231,24 +231,28 @@ def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shif
 
     pos = init_pos
     ps  = pd.Series(0., index=signals.index)
+    tdi = {k:i for i,k in enumerate(signals.columns)}
+    
+    # Change string based mask to index mask (since we moved to itertuples() instead of iterrows()
+    mask = [tdi[x] for x in mask]
 
     if mode == 'any':
         long_en, long_ex, short_en, short_ex = mask
-        for t, sig in signals.iterrows():
-            pos   = _take_position_any(sig, pos, long_en, long_ex, short_en, short_ex)
-            ps[t] = pos
+        for tup_t in signals.itertuples():
+            pos   = _take_position_any(tup_t[1:], pos, long_en, long_ex, short_en, short_ex)
+            ps[tup_t[0]] = pos
         # endfor
     elif mode == 'long':
         long_en, long_ex = mask
-        for t, sig in signals.iterrows():
-            pos   = _take_position_long(sig, pos, long_en, long_ex)
-            ps[t] = pos
+        for tup_t in signals.itertuples():
+            pos   = _take_position_long(tup_t[1:], pos, long_en, long_ex)
+            ps[tup_t[0]] = pos
         # endfor
     elif mode == 'short':
         short_en, short_ex = mask
-        for t, sig in signals.iterrows():
-            pos   = _take_position_short(sig, pos, short_en, short_ex)
-            ps[t] = pos
+        for tup_t in signals.itertuples():
+            pos   = _take_position_short(tup_t[1:], pos, short_en, short_ex)
+            ps[tup_t[0]] = pos
         # endfor
     # endif
 
@@ -353,24 +357,46 @@ def apply_slippage(pos, rets, slip, ret_type='log', slip_perc=True, price=None):
         _df['price'] = price
     # endif
 
+    # Get col maps. We moved from df.apply() to df.itertuples() due to speed issues.
+    colm = {k:i+1 for i,k in enumerate(_df.columns)}
+    retss = []
+
     # Apply slippage
     if ret_type == 'log':
         if slip_perc:
             pos_slip = -np.log(1 + slip*0.01)
             neg_slip = -np.log(1 - slip*0.01)
-            retss    = pos * _df.apply(lambda x: x.rets + pos_slip if x.pos_d > 0 else \
-                           x.rets + neg_slip if x.pos_d < 0 else x.rets, axis=1)
+            #retss    = pos * _df.apply(lambda x: x.rets + pos_slip if x.pos_d > 0 else \
+            #               x.rets + neg_slip if x.pos_d < 0 else x.rets, axis=1)
+            for indx_t, tup_t in enumerate(_df.itertuples()):
+                if tup_t[colm['pos_d']] > 0:
+                    retss.append(pos[indx_t] * (tup_t[colm['rets']] + pos_slip))
+                elif tup_t[colm['pos_d']] < 0:
+                    retss.append(pos[indx_t] * (tup_t[colm['rets']] + neg_slip))
+                else:
+                    retss.append(tup_t[colm['rets']])
+                # endif
         else:
-            retss    = pos * _df.apply(lambda x: x.rets - np.log(1 + slip/x.price) if x.pos_d > 0 else \
-                           x.rets - np.log(1 - slip/x.price) if x.pos_d < 0 else x.rets, axis=1)
+            #retss    = pos * _df.apply(lambda x: x.rets - np.log(1 + slip/x.price) if x.pos_d > 0 else \
+            #               x.rets - np.log(1 - slip/x.price) if x.pos_d < 0 else x.rets, axis=1)
+            for indx_t, tup_t in enumerate(_df.itertuples()):
+                if tup_t[colm['pos_d']] > 0:
+                    retss.append(pos[indx_t] * (tup_t[colm['rets']] - np.log(1 + slip/tup_t[colm['price']])))
+                elif tup_t[colm['pos_d']] < 0:
+                    retss.append(pos[indx_t] * (tup_t[colm['rets']] - np.log(1 - slip/tup_t[colm['price']])))
+                else:
+                    retss.append(tup_t[colm['rets']])
+                # endif
         # endif
     else:
         raise ValueError('ERROR:: Only ret_type="log" is supported !!')
         #slip_u   = 0.01 * slip
         #retss    = pos * _df.apply(lambda x: (x.rets - slip_u)/(1 + slip_u) if x.pos_d > 0 else (x.rets + slip_u)/(1 - slip_u) if x.pos_d < 0 else x.rets, axis=1)
     # endif
+    retss = pd.Series(retss, index=_df.index)
     return retss
 # enddef
+
 
 # Wrapper over apply_slippage. It accepts slippage in compact string form.
 # Either in 'X', 'X%' or 'Xpts'
