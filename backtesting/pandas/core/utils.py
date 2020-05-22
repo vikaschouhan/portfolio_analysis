@@ -7,6 +7,9 @@ from   typing import AnyStr, Callable
 import copy
 from   modules.utils import *
 
+# Disable chain assignment
+pd.options.mode.chained_assignment = None
+
 ############################################################
 # Constants
 class SIGNAL:
@@ -160,7 +163,9 @@ class Price(object):
 # endclass
 
 ############################################################
-# Singnals to Position Generator
+# Singnals to Position Generators using For loops
+############################################################
+# For loop based position generator for "any" mode
 def _take_position_any(sig, pos, long_en, long_ex, short_en, short_ex):
     # check exit signals
     if pos != 0:  # if in position
@@ -182,6 +187,7 @@ def _take_position_any(sig, pos, long_en, long_ex, short_en, short_ex):
     return pos
 # enddef
 
+# For loop based position generator for "long" mode
 def _take_position_long(sig, pos, long_en, long_ex):
     # check exit signals
     if pos != 0:  # if in position
@@ -199,6 +205,7 @@ def _take_position_long(sig, pos, long_en, long_ex):
     return pos
 # enddef
 
+# For loop based position ggenerator for "short" mode
 def _take_position_short(sig, pos, short_en, short_ex):
     # check exit signals
     if pos != 0:  # if in position
@@ -216,6 +223,62 @@ def _take_position_short(sig, pos, short_en, short_ex):
     return pos
 # enddef
 
+############################################################
+# Singnals to Position Generators using Vectorization
+############################################################
+# Vectorized positions generator
+def _take_position_any_vec(sig, long_en, long_ex, short_en, short_ex):
+    # Duplicate signals according to mask
+    bs_sc_sigs = copy.copy(sig)[[long_en, long_ex, short_en, short_ex]].astype('int')
+    bs_sc_sigs.columns = ['Buy', 'Sell', 'Short', 'Cover']
+    bs_sigs   = bs_sc_sigs[['Buy', 'Sell']]
+    sc_sigs   = bs_sc_sigs[['Short', 'Cover']]
+
+    # Only start from the row where either we can take a long entry or a short entry.
+    # Set all before rows to 0
+    bs_sigs.loc[bs_sigs.index[0:bs_sigs.index.get_loc(bs_sigs[bs_sigs['Buy'] > 0].index[0])]] = 0
+    sc_sigs.loc[sc_sigs.index[0:sc_sigs.index.get_loc(sc_sigs[sc_sigs['Short'] > 0].index[0])]] = 0
+
+    # Generate positions
+    long_pos_t  = (bs_sigs['Buy'] - bs_sigs['Sell']).cumsum()
+    short_pos_t = (sc_sigs['Cover'] - sc_sigs['Short']).cumsum()
+    return long_pos_t + short_pos_t
+# enddef
+
+# Vectorized positions generator
+def _take_position_long_vec(sig, long_en, long_ex):
+    # Duplicate signals according to mask
+    bs_sc_sigs = copy.copy(sig)[[long_en, long_ex]].astype('int')
+    bs_sc_sigs.columns = ['Buy', 'Sell']
+    bs_sigs   = bs_sc_sigs
+
+    # Only start from the row where either we can take a long entry or a short entry.
+    # Set all before rows to 0
+    bs_sigs.loc[bs_sigs.index[0:bs_sigs.index.get_loc(bs_sigs[bs_sigs['Buy'] > 0].index[0])]] = 0
+
+    # Generate positions
+    long_pos_t  = (bs_sigs['Buy'] - bs_sigs['Sell']).cumsum()
+    return long_pos_t
+# enddef
+
+# Vectorized positions generator
+def _take_position_short_vec(sig, short_en, short_ex):
+    # Duplicate signals according to mask
+    bs_sc_sigs = copy.copy(sig)[[short_en, short_ex]].astype('int')
+    bs_sc_sigs.columns = ['Short', 'Cover']
+    sc_sigs   = bs_sc_sigs
+
+    # Only start from the row where either we can take a long entry or a short entry.
+    # Set all before rows to 0
+    sc_sigs.loc[sc_sigs.index[0:sc_sigs.index.get_loc(sc_sigs[sc_sigs['Short'] > 0].index[0])]] = 0
+
+    # Generate positions
+    short_pos_t  = (sc_sigs['Cover'] - sc_sigs['Short']).cumsum()
+    return short_pos_t
+# enddef
+
+######################################
+# Just arguments checking
 def _check_signals_to_positions_args(mode, mask):
     mode_list = ['long', 'short', 'any']
 
@@ -226,7 +289,9 @@ def _check_signals_to_positions_args(mode, mask):
     assert len(mask) == 2 or len(mask) == 4, 'ERROR:: mask should be of 2 or 4 keys.'
 # enddef
 
-def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shift=False):
+####################################################
+# Signals to position generator
+def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shift=False, use_vec=True):
     # Checks
     _check_signals_to_positions_args(mode, mask)
 
@@ -234,27 +299,39 @@ def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shif
     ps  = pd.Series(0., index=signals.index)
     tdi = {k:i for i,k in enumerate(signals.columns)}
     
-    # Change string based mask to index mask (since we moved to itertuples() instead of iterrows()
-    mask = [tdi[x] for x in mask]
+    # Change string based mask to index mask for itertuples() when use_vec=True
+    mask = [tdi[x] for x in mask] if not use_vec else mask
 
     if mode == 'any':
         long_en, long_ex, short_en, short_ex = mask
-        for tup_t in signals.itertuples():
-            pos   = _take_position_any(tup_t[1:], pos, long_en, long_ex, short_en, short_ex)
-            ps[tup_t[0]] = pos
-        # endfor
+        if use_vec:
+            ps = _take_position_any_vec(signals, long_en, long_ex, short_en, short_ex)
+        else:
+            for tup_t in signals.itertuples():
+                pos   = _take_position_any(tup_t[1:], pos, long_en, long_ex, short_en, short_ex)
+                ps[tup_t[0]] = pos
+            # endfor
+        # endif
     elif mode == 'long':
         long_en, long_ex = mask
-        for tup_t in signals.itertuples():
-            pos   = _take_position_long(tup_t[1:], pos, long_en, long_ex)
-            ps[tup_t[0]] = pos
-        # endfor
+        if use_vec:
+            ps = _take_position_long_vec(signals, long_en, long_ex)
+        else:
+            for tup_t in signals.itertuples():
+                pos   = _take_position_long(tup_t[1:], pos, long_en, long_ex)
+                ps[tup_t[0]] = pos
+            # endfor
+        # endif
     elif mode == 'short':
         short_en, short_ex = mask
-        for tup_t in signals.itertuples():
-            pos   = _take_position_short(tup_t[1:], pos, short_en, short_ex)
-            ps[tup_t[0]] = pos
-        # endfor
+        if use_vec:
+            ps = _take_position_short_vec(signals, short_en, short_ex)
+        else:
+            for tup_t in signals.itertuples():
+                pos   = _take_position_short(tup_t[1:], pos, short_en, short_ex)
+                ps[tup_t[0]] = pos
+            # endfor
+        # endif
     # endif
 
     return ps.shift() if shift else ps

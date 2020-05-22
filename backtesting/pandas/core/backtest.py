@@ -48,7 +48,7 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
     # endif
 
     print('>> Using signal mask {}.'.format(smask))
-    pos     = signals_to_positions(signals, mode=run_mode, mask=smask)
+    pos     = signals_to_positions(signals, mode=run_mode, mask=smask, use_vec=True)
     rets    = np.log(prices[Price.CLOSE]).diff()
     nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices[Price.CLOSE])
     nrets   = sanitize_datetime(nrets)
