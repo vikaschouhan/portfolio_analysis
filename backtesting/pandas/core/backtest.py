@@ -6,14 +6,14 @@ from .utils import *
 # Run backtest strategy on single instrument.
 #
 # @args 
-#      strat_fn   -> strategy fn of format (prices, **params) where prices is of Price type
+#      strat_fn   -> strategy fn of format (prices, **params) where prices is of Ohlcv type
 #      strat_params -> params for strategy_fn (python dictionary)
-#      prices     -> price data of "Price" type
+#      prices     -> price data of "Ohlcv" type
 #      run_mode   -> 'any' means run both long and short.
 #                    'long' means long only positions
 #                    'short' means short only positions
 #      slippage   -> slippage
-def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, run_mode: str='any', slippage: str='0.0%'):
+def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Ohlcv, run_mode: str='any', slippage: str='0.0%'):
     signals = strat_fn(prices, **strat_params)
 
     # Select appropriate signals first
@@ -49,10 +49,10 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Price, r
 
     print('>> Using signal mask {}.'.format(smask))
     pos     = signals_to_positions(signals, mode=run_mode, mask=smask, use_vec=True)
-    rets    = np.log(prices[Price.CLOSE]).diff()
-    nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices[Price.CLOSE])
+    rets    = np.log(prices[Ohlcv.CLOSE]).diff()
+    nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices[Ohlcv.CLOSE])
     nrets   = sanitize_datetime(nrets)
-    points  = (np.exp(nrets.sum()) - 1) * prices[Price.CLOSE][0]
+    points  = (np.exp(nrets.sum()) - 1) * prices[Ohlcv.CLOSE][0]
 
     return {
                KEY_RETURNS     : nrets,
@@ -87,7 +87,7 @@ def backtest_single(strategy: str,
     strat_fn   = strat_map[strategy]
 
     print('>> Preparing price data.')
-    _prices    = Price(prices, columns)
+    _prices    = Ohlcv(prices, columns)
     print('>> Running strategy "{}" on price data.'.format(strategy))
     ret_data   = run_strategy_single(strat_fn, strat_params, _prices, run_mode, slippage)
     if report_file:

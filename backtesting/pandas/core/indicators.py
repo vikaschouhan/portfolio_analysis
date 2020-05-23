@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 import talib
+from   memoization import cached
 from   typing import AnyStr, Callable
+from   modules.utils import *
 
 #######################################
 # Derivatives
@@ -14,17 +16,20 @@ def vatr1_fn(atr_max):
 
 #######################################
 # Moving average based signals
-def ema(s: pd.Series, window: int) -> pd.Series:
+@cached
+def ind_ema(s: pd.Series, window: int) -> pd.Series:
     return s.ewm(span=window, adjust=False).mean()
 # enddef
 
-def sma(s: pd.Series, window: int) -> pd.Series:
+@cached
+def ind_sma(s: pd.Series, window: int) -> pd.Series:
     return s.rolling(window).mean()
 # enddef
 
 ########################################
-# 
-def supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
+#
+@cached
+def ind_supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
         atr_period: int, atr_multiplier: float, atr_fn: Callable=None) -> pd.Series:
     # To numpy
     index  = close.index
@@ -52,4 +57,3 @@ def supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
 
     return pd.Series(strend, index=index)
 # endclass
-

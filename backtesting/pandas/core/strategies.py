@@ -1,32 +1,35 @@
 import pandas as pd
 from   .indicators import *
 from   .utils import *
+from   .lines import *
+from   .signals import *
+from   .ops import *
 
 #####################################################################
 # MA CrossOvers
 def __select_ma_fn(ma_type):
     if ma_type == 'ema':
-        return ema
+        return ind_ema
     elif ma_type == 'sma':
-        return sma
+        return ind_sma
     else:
         raise ValueError('ERROR:: Unsupported ma_type = {}'.format(ma_type))
     # endif
 # enddef
 
-def __ma_crossover(ma_type: str, prices: Price, **params):
+def __ma_crossover(ma_type: str, prices: Ohlcv, **params):
     print_params(params)
 
     short_period = params_get(params, 'short_period')
     long_period  = params_get(params, 'long_period')
-    price_key    = params_get(params, 'price_key', Price.CLOSE)
+    price_key    = params_get(params, 'price_key', Ohlcv.CLOSE)
     ma_fn        = __select_ma_fn(ma_type)
 
     short_ma = ma_fn(prices[price_key], short_period)
     long_ma  = ma_fn(prices[price_key], long_period)
 
-    buy_sig  = crossover(short_ma, long_ma)
-    sell_sig = crossunder(short_ma, long_ma)
+    buy_sig  = op_crossover(short_ma, long_ma)
+    sell_sig = op_crossunder(short_ma, long_ma)
 
     buy_sig  = set_buy(buy_sig)
     sell_sig = set_sell(sell_sig)
@@ -39,32 +42,32 @@ def __ma_crossover(ma_type: str, prices: Price, **params):
     return signals
 # enddef
 
-def sma_crossover(prices: Price, **params):
+def strat_sma_crossover(prices: Ohlcv, **params):
     return __ma_crossover('sma', prices, **params)
 # enddef
 
-def ema_crossover(prices: Price, **params):
+def strat_ema_crossover(prices: Ohlcv, **params):
     return __ma_crossover('ema', prices, **params)
 # enddef
 
 #########################################################################
 # Supertrend based
-def supertrend_crossover(prices: Price, **params):
+def strat_supertrend_crossover(prices: Ohlcv, **params):
     print_params(params)
 
     atr_period     = params_get(params, 'atr_period')
     atr_multiplier = params_get(params, 'atr_multiplier')
     ema_length     = params_get(params, 'ema_length', None)
     atr_max        = params_get(params, 'atr_max', None)
-    price_key      = params_get(params, 'price_key', Price.CLOSE)
+    price_key      = params_get(params, 'price_key', Ohlcv.CLOSE)
 
     if ema_length:
         print('>> Using EMA Smooth variant of supertrend_crossover.')
-        phigh      = ema(prices[Price.HIGH], ema_length)
-        plow       = ema(prices[Price.LOW], ema_length)
+        phigh      = ind_ema(prices[Ohlcv.HIGH], ema_length)
+        plow       = ind_ema(prices[Ohlcv.LOW], ema_length)
     else:
-        phigh      = prices[Price.HIGH]
-        plow       = prices[Price.LOW]
+        phigh      = prices[Ohlcv.HIGH]
+        plow       = prices[Ohlcv.LOW]
     # endif
 
     # Choose atr calculation function
@@ -75,8 +78,8 @@ def supertrend_crossover(prices: Price, **params):
     # endif
 
     strend_sig     = supertrend(phigh, plow, prices[price_key], atr_period, atr_multiplier, atr_fn=atr_fn)
-    buy_sig        = crossover(prices[price_key], strend_sig)
-    sell_sig       = crossunder(prices[price_key], strend_sig)
+    buy_sig        = op_crossover(prices[price_key], strend_sig)
+    sell_sig       = op_crossunder(prices[price_key], strend_sig)
 
     buy_sig        = set_buy(buy_sig)
     sell_sig       = set_sell(sell_sig)
@@ -90,7 +93,7 @@ def supertrend_crossover(prices: Price, **params):
 #####################################################################
 # Strat map
 strat_map = {
-        'ema_crossover'            : ema_crossover,
-        'sma_crossover'            : sma_crossover,
-        'supertrend_crossover'     : supertrend_crossover,
+        'ema_crossover'            : strat_ema_crossover,
+        'sma_crossover'            : strat_sma_crossover,
+        'supertrend_crossover'     : strat_supertrend_crossover,
     }
