@@ -3,7 +3,7 @@ import numpy as np
 import talib
 from   memoization import cached
 from   typing import AnyStr, Callable
-from   modules.utils import *
+from   .utils import Cached
 
 #######################################
 # Derivatives
@@ -16,19 +16,19 @@ def vatr1_fn(atr_max):
 
 #######################################
 # Moving average based signals
-@cached
+@Cached
 def ind_ema(s: pd.Series, window: int) -> pd.Series:
     return s.ewm(span=window, adjust=False).mean()
 # enddef
 
-@cached
+@Cached
 def ind_sma(s: pd.Series, window: int) -> pd.Series:
     return s.rolling(window).mean()
 # enddef
 
 ########################################
 #
-@cached
+@Cached
 def ind_supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
         atr_period: int, atr_multiplier: float, atr_fn: Callable=None) -> pd.Series:
     # To numpy

@@ -2,6 +2,23 @@ import pandas as pd
 import numpy as np
 import quantstats as qs
 from   modules.utils import *
+from   memoization import cached
+
+##########################################################
+# Decorators
+# @Cached decorator captures return values of functions decorated with
+# and also caches them
+def Cached(f):
+    Cached.data = {}
+    @cached
+    def _d(*args, **kwargs):
+        value = f(*args, **kwargs)
+        Cached.data[f.__name__] = value
+        return value
+    # enddef
+    return _d
+# enddef
+
 
 #############################################################
 # Pandas utility functions
