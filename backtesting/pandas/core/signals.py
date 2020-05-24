@@ -187,7 +187,7 @@ def _check_signals_to_positions_args(mode, mask):
 
 ####################################################
 # Signals to position generator
-def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shift=False, use_vec=True):
+def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, use_vec=True):
     # Checks
     _check_signals_to_positions_args(mode, mask)
 
@@ -230,7 +230,9 @@ def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, shif
         # endif
     # endif
 
-    return ps.shift() if shift else ps
+    # shift positions by 1, since the current position can only be liquidated on
+    # next bar and vice-versa
+    return ps.shift()
 # enddef
 
 ########################################################
