@@ -1,5 +1,5 @@
 default:
-	python setup.py build_ext
+	python setup.py build_ext --build-lib .
 
 clean:
-	rm -rf build*
+	rm -rf build* numpy_ext*.so
