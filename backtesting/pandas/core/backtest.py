@@ -51,6 +51,7 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Ohlcv, r
     pos     = signals_to_positions(signals, mode=run_mode, mask=smask, use_vec=True)
     rets    = np.log(prices[Ohlcv.CLOSE]).diff()
     nrets   = apply_slippage_v2(pos, rets, slippage, ret_type='log', price=prices[Ohlcv.CLOSE])
+    pavgp   = positions_to_avg_position_size(pos, price=prices[Ohlcv.OPEN], mode=run_mode)
     nrets   = sanitize_datetime(nrets)
     points  = (np.exp(nrets.sum()) - 1) * prices[Ohlcv.CLOSE][0]
 
@@ -62,6 +63,7 @@ def run_strategy_single(strat_fn: Callable, strat_params: dict, prices: Ohlcv, r
                KEY_RUNMODE     : run_mode,
                KEY_SLIPPAGE    : slippage,
                KEY_NPOINTS     : points,
+               KEY_PAVG_PRICE  : pavgp
            }
 # enddef
 

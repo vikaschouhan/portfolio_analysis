@@ -36,6 +36,7 @@ KEY_RETURNS     = 'returns'
 KEY_STRATEGY    = 'strategy'
 KEY_STRATPARAMS = 'strategy_params'
 KEY_NPOINTS     = 'points'
+KEY_PAVG_PRICE  = 'position_avg_price'
 
 # shift parameter takes into account that we always buy or sell
 # (i.e. take positions) on next bar
@@ -420,5 +421,41 @@ def extract_slippage(slip):
         except:
             raise ValueError('slippage={} not in desired format X, X% or Xpts where X is a float'.format(slip))
         # endtry
+    # endif
+# enddef
+
+###################################################################################
+# Signals to position average price
+###################################################################################
+def __calc_avg_position_size_vec(pos, price, pos_type):
+    assert pos_type in ['long', 'short'], 'pos_type can be one of [long, short].'
+
+    pos_this = copy.copy(pos).fillna(0)
+    if pos_type == 'long':
+        pos_this[pos_this <= 0] = 0.0
+    else:
+        pos_this[pos_this >= 0] = 0.0
+        pos_this[pos_this < 0]  *= -1.0
+    # endif
+
+    # Take negative of either long only or short only positions
+    neg_pos = (~pos_this.astype('bool')).astype('float')
+    # shift neg pos
+    neg_pos_shift = neg_pos.shift().fillna(0)
+    # Or neg pos with shifted neg pos
+    final_neg_pos = ((neg_pos.astype('bool') | neg_pos_shift.astype('bool')).astype('float')).astype('float')
+
+    # Calculate position price
+    pos_avg_price = (final_neg_pos * price).replace(to_replace=0, method='ffill') * pos_this
+    return pos_avg_price
+# enddef
+
+def positions_to_avg_position_size(pos, price, mode='any'):
+    if mode == 'long':
+        return __calc_avg_position_size_vec(pos, price, 'long')
+    elif mode == 'short':
+        return __calc_avg_position_size_vec(pos, price, 'short')
+    else:
+        return __calc_avg_position_size_vec(pos, price, 'long') + __calc_avg_position_size_vec(pos, price, 'short')
     # endif
 # enddef
