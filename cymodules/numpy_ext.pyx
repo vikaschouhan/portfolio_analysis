@@ -7,9 +7,7 @@ ctypedef np.float64_t DTYPE_t
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-cpdef np.ndarray np_trail_fixed_loss(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] price, x: double):
-    cdef np.ndarray[DTYPE_t, ndim=1] _loss = np.zeros_like(price)
-    cdef double rn_pos  = 0.0 # Running position
+cdef __np_trail_fixed_loss(DTYPE_t[:] pos, DTYPE_t[:] price, double x, DTYPE_t[:] _loss):
     cdef int rn_indx    = 0   # Running first index
     cdef double rn_max  = 0.0 # Running maximum
     cdef double rn_min  = 0.0 # Running minium
@@ -40,6 +38,15 @@ cpdef np.ndarray np_trail_fixed_loss(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray
             _loss[indx] = rn_min - pos[indx]*x
         # endif
     # endfor
+# enddef 
+
+cpdef np.ndarray np_trail_fixed_loss(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] price, x: double):
+    cdef np.ndarray[DTYPE_t, ndim=1] _loss = np.zeros_like(price)
+    cdef DTYPE_t[:] __loss = _loss
+    cdef DTYPE_t[:] __pos  = pos
+    cdef DTYPE_t[:] __price = price
+
+    __np_trail_fixed_loss(__pos, __price, x,  __loss)
 
     return _loss
 # enddef
