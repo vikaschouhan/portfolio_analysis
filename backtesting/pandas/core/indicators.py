@@ -14,8 +14,13 @@ def vatr1_fn(atr_max):
     return __catr
 # enddef
 
-#######################################
-# Moving average based signals
+######################################
+# Indicators
+@Cached
+def ind_atr(high: pd.Series, low: pd.Series, close: pd.Series, window: int) -> pd.Series:
+    return pd.Series(talib.ATR(high.to_numpy(), low.to_numpy(), close.to_numpy(), window), index=high.index)
+# enddef
+
 @Cached
 def ind_ema(s: pd.Series, window: int) -> pd.Series:
     return s.ewm(span=window, adjust=False).mean()
@@ -26,8 +31,6 @@ def ind_sma(s: pd.Series, window: int) -> pd.Series:
     return s.rolling(window).mean()
 # enddef
 
-########################################
-#
 @Cached
 def ind_supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
         atr_period: int, atr_multiplier: float, atr_fn: Callable=None) -> pd.Series:
