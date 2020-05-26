@@ -40,6 +40,8 @@ class Ohlcv(object):
         self.data.set_axis(new_cols, axis='columns', inplace=True)
         # Change index to datetime
         self.data.index = pd.to_datetime(self.data.index)
+        # Store columns
+        self.columns = columns
     # enddef
 
     def __getitem__(self, key):
@@ -70,12 +72,19 @@ class Ohlcv(object):
         return cls.from_df(pd.read_csv(csv_file, index_col=0), columns=columns)
     # enddef
 
-    def resample(self, time_frame):
-        return Ohlcv.from_df(self.data.resample(time_frame).agg({
-            self.OPEN  : 'first',
-            self.HIGH  : 'max',
-            self.LOW   : 'min',
-            self.CLOSE : 'last',
-            self.VOLUME: 'sum' }), columns=self.OHLCV)
+    # TODO: FIXME:
+    # This resamples as is. Doesnot upsamples to original time frame !!
+    # We need to fix it !!
+    def resample(self, time_frame=None):
+        if time_frame:
+            return Ohlcv.from_df(self.data.resample(time_frame).agg({
+                self.OPEN  : 'first',
+                self.HIGH  : 'max',
+                self.LOW   : 'min',
+                self.CLOSE : 'last',
+                self.VOLUME: 'sum' }), columns='ohlcv')
+        else:
+            return self
+        # endif
     # enddef
 # endclass

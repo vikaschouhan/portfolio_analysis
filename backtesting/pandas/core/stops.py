@@ -22,3 +22,7 @@ def ind_trail_fixed_stop(pos: pd.Series, price: pd.Series, x: float) -> pd.Serie
 def ind_trail_perc_stop(pos: pd.Series, price: pd.Series, x: float) -> pd.Series:
     return pd.Series(np_trail_perc_stop(pos.to_numpy(), price.to_numpy(), x), index=pos.index)
 # enddef
+
+def ind_atr_perc_stop(pos: pd.Series, price: pd.Series, atr: pd.Series, mult: float=1.0) -> pd.Series:
+    return price + pos*atr*mult
+# enddef
