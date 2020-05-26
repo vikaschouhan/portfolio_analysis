@@ -4,18 +4,18 @@ cimport cython
 
 ctypedef np.float64_t DTYPE_t
 
-cdef double __calc_loss_fixed(double p, double l, double x):
+cdef double __calc_stop_fixed(double p, double l, double x):
     return p - l*x
 # enddef
 
-cdef double __calc_loss_perc(double p, double l, double x):
+cdef double __calc_stop_perc(double p, double l, double x):
     return p * (1 - l*x/100)
 # enddef
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-cdef __np_trail_loss(DTYPE_t[:] pos, DTYPE_t[:] price, double x, DTYPE_t[:] _loss, int perc_loss=0):
+cdef __np_trail_stop(DTYPE_t[:] pos, DTYPE_t[:] price, double x, DTYPE_t[:] _loss, int perc_loss=0):
     cdef int rn_indx    = 0   # Running first index
     cdef double rn_max  = 0.0 # Running maximum
     cdef double rn_min  = 0.0 # Running minium
@@ -23,9 +23,9 @@ cdef __np_trail_loss(DTYPE_t[:] pos, DTYPE_t[:] price, double x, DTYPE_t[:] _los
     cdef double (*loss_fn)(double, double, double)
 
     if perc_loss:
-        loss_fn = __calc_loss_perc
+        loss_fn = __calc_stop_perc
     else:
-        loss_fn = __calc_loss_fixed
+        loss_fn = __calc_stop_fixed
     # endif
 
     # Iterate over all elements
@@ -68,24 +68,24 @@ cdef __np_trail_loss(DTYPE_t[:] pos, DTYPE_t[:] price, double x, DTYPE_t[:] _los
     # endfor
 # enddef 
 
-cpdef np.ndarray np_trail_fixed_loss(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] price, x: double):
+cpdef np.ndarray np_trail_fixed_stop(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] price, x: double):
     cdef np.ndarray[DTYPE_t, ndim=1] _loss = np.zeros_like(price)
     cdef DTYPE_t[:] __loss = _loss
     cdef DTYPE_t[:] __pos  = pos
     cdef DTYPE_t[:] __price = price
 
-    __np_trail_loss(__pos, __price, x,  __loss, 0)
+    __np_trail_stop(__pos, __price, x,  __loss, 0)
 
     return _loss
 # enddef
 
-cpdef np.ndarray np_trail_perc_loss(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] price, x: double):
+cpdef np.ndarray np_trail_perc_stop(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] price, x: double):
     cdef np.ndarray[DTYPE_t, ndim=1] _loss = np.zeros_like(price)
     cdef DTYPE_t[:] __loss = _loss
     cdef DTYPE_t[:] __pos  = pos
     cdef DTYPE_t[:] __price = price
 
-    __np_trail_loss(__pos, __price, x,  __loss, 1)
+    __np_trail_stop(__pos, __price, x,  __loss, 1)
 
     return _loss
 # enddef
