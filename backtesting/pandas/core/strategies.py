@@ -58,7 +58,6 @@ def strat_supertrend_crossover(prices: Ohlcv, **params):
     atr_period     = params_get(params, 'atr_period')
     atr_multiplier = params_get(params, 'atr_multiplier')
     ema_length     = params_get(params, 'ema_length', None)
-    atr_max        = params_get(params, 'atr_max', None)
     price_key      = params_get(params, 'price_key', Ohlcv.CLOSE)
 
     if ema_length:
@@ -70,14 +69,7 @@ def strat_supertrend_crossover(prices: Ohlcv, **params):
         plow       = prices[Ohlcv.LOW]
     # endif
 
-    # Choose atr calculation function
-    atr_fn         = None
-    if atr_max:
-        atr_fn     = vatr1_fn(atr_max)
-        print('>> Using Vol adjusted ATR fn {} for atr_max={}'.format(atr_fn, atr_max))
-    # endif
-
-    strend_sig     = ind_supertrend(phigh, plow, prices[price_key], atr_period, atr_multiplier, atr_fn=atr_fn)
+    strend_sig     = ind_supertrend(phigh, plow, prices[price_key], atr_period, atr_multiplier)
     buy_sig        = op_crossover(prices[price_key], strend_sig)
     sell_sig       = op_crossunder(prices[price_key], strend_sig)
 

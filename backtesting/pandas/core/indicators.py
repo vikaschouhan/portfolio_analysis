@@ -2,38 +2,32 @@ import pandas as pd
 import numpy as np
 import talib
 from   memoization import cached
-from   typing import AnyStr, Callable
+from   typing import AnyStr
 from   .utils import Cached
-
-#######################################
-# Derivatives
-def vatr1_fn(atr_max):
-    def __catr(high, low, close, timeperiod):
-        return 2*atr_max - talib.ATR(high, low, close, timeperiod=timeperiod)
-    # endef
-    return __catr
-# enddef
 
 ######################################
 # Indicators
 @Cached
 def ind_atr(high: pd.Series, low: pd.Series, close: pd.Series, window: int) -> pd.Series:
-    return pd.Series(talib.ATR(high.to_numpy(), low.to_numpy(), close.to_numpy(), window), index=high.index)
+    return pd.Series(talib.ATR(high.to_numpy(), low.to_numpy(), close.to_numpy(), window), index=high.index).fillna(0.0)
 # enddef
 
 @Cached
 def ind_ema(s: pd.Series, window: int) -> pd.Series:
-    return s.ewm(span=window, adjust=False).mean()
+    return s.ewm(span=window, adjust=False).mean().fillna(0.0)
 # enddef
 
 @Cached
 def ind_sma(s: pd.Series, window: int) -> pd.Series:
-    return s.rolling(window).mean()
+    return s.rolling(window).mean().fillna(0.0)
 # enddef
 
 @Cached
 def ind_supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
-        atr_period: int, atr_multiplier: float, atr_fn: Callable=None) -> pd.Series:
+        atr_period: int, atr_multiplier: float) -> pd.Series:
+    # Calculate atr
+    atr_t  = ind_atr(high, low, close, atr_period)
+
     # To numpy
     index  = close.index
     high   = high.to_numpy()
@@ -41,8 +35,6 @@ def ind_supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
     close  = close.to_numpy()
 
     # Base signals
-    atr_fn = atr_fn if atr_fn else talib.ATR
-    atr_t  = atr_fn(high, low, close, timeperiod=atr_period)
     avg_t  = (high + low)/2
     bas_u  = avg_t - atr_multiplier * atr_t
     bas_l  = avg_t + atr_multiplier * atr_t
@@ -58,5 +50,5 @@ def ind_supertrend(high: pd.Series, low: pd.Series, close: pd.Series,
         strend[i]  = f_up[i] if tpos[i] == 1.0 else f_down[i] if tpos[i] == -1.0 else strend[i-1]
     # endfor
 
-    return pd.Series(strend, index=index)
+    return pd.Series(strend, index=index).fillna(0.0)
 # endclass
