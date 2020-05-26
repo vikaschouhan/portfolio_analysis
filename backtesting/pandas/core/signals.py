@@ -41,21 +41,21 @@ KEY_PAVG_PRICE  = 'position_avg_price'
 # shift parameter takes into account that we always buy or sell
 # (i.e. take positions) on next bar
 def set_buy(s, shift=True):
-    s = s.shift().fillna(False) if shift else s
+    s = s.shift().fillna(0) if shift else s
     s.name = SIGNAL.BUY
     return s
 # enddef
 def set_sell(s, shift=True):
-    s = s.shift().fillna(False) if shift else s
+    s = s.shift().fillna(0) if shift else s
     s.name = SIGNAL.SELL
     return s
 # enddef
 def set_short(s, shift=True):
-    s = s.shift().fillna(False) if shift else s
+    s = s.shift().fillna(0) if shift else s
     s.name = SIGNAL.SHORT
 # enddef
 def set_cover(s, shift=True):
-    s = s.shift().fillna(False) if shift else s
+    s = s.shift().fillna(0) if shift else s
     s.name = SIGNAL.COVER
 # enddef
 

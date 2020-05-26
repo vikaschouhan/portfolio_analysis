@@ -1,6 +1,7 @@
 from .lines import *
 from .indicators import *
 from .stops import *
+from .ops import *
 
 ###################################################################################
 # Utils. State maintaining functions/classes
@@ -68,7 +69,7 @@ def get_signal(k):
 # enddef
 
 ####################################################################################
-# All algos
+# All Indicator algos
 def close(time_frame=None):
     return add_signal(cstr('close', time_frame),  SignalCache.get_ohlcv(time_frame)[Ohlcv.CLOSE])
 # enddef
@@ -98,4 +99,14 @@ def sma(period, line=None):
 def supertrend(period, mult, time_frame=None):
     high_t, low_t, close_t = high(time_frame), low(time_frame), close(time_frame)
     return add_signal(cstr('supertrend', time_frame), ind_supertrend(high_t, low_t, close_t, period, mult))
+# enddef
+
+#########################################################################
+# All strategy algos
+def crossover(x, y):
+    return op_crossover(x, y)
+# enddef
+
+def crossunder(x, y):
+    return op_crossunder(x, y)
 # enddef
