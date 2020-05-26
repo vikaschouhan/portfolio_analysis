@@ -1,3 +1,6 @@
+# Author : Vikas Chouhan (presentisgood@gmail.com)
+# 2020
+
 import  numpy as np
 cimport numpy as np
 cimport cython
