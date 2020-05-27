@@ -42,6 +42,8 @@ class Ohlcv(object):
         self.data.index = pd.to_datetime(self.data.index)
         # Store columns
         self.columns = columns
+        # Store frequency
+        self.freq_mins = int(self.data.index.to_series().diff().median().seconds/60)
     # enddef
 
     def __getitem__(self, key):
@@ -72,9 +74,8 @@ class Ohlcv(object):
         return cls.from_df(pd.read_csv(csv_file, index_col=0), columns=columns)
     # enddef
 
-    # TODO: FIXME:
-    # This resamples as is. Doesnot upsamples to original time frame !!
-    # We need to fix it !!
+    # Resampling function. It first upsamples and then downsamples to match
+    # the source time series frequency
     def resample(self, time_frame=None):
         if time_frame:
             return Ohlcv.from_df(self.data.resample(time_frame).agg({
@@ -82,7 +83,7 @@ class Ohlcv(object):
                 self.HIGH  : 'max',
                 self.LOW   : 'min',
                 self.CLOSE : 'last',
-                self.VOLUME: 'sum' }), columns='ohlcv')
+                self.VOLUME: 'sum' }).resample(str(self.freq_mins) + 'min').fillna('ffill'), columns='ohlcv')
         else:
             return self
         # endif
