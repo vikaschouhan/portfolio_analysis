@@ -5,9 +5,10 @@ from .ops import *
 
 ###################################################################################
 # Utils. State maintaining functions/classes
-def cstr(x, y=None):
-    y = '' if y is None else '__{}'.format(y)
-    return x + y
+def cstr(*args):
+    l = list(filter(None.__ne__, args))
+    assert len(l) > 0, '>> ERROR::: At least one string in cstr() should be Non Null !!'
+    return '__'.join([str(x) for x in l])
 # enddef
 
 class SignalCache(object):
@@ -41,6 +42,7 @@ class SignalCache(object):
         else:
             assert 'ohlcv' in cls._signals, '>> ERROR:: Please class add_ohlcv() first !!'
             cls._signals[t_str] = cls._signals['ohlcv'].resample(time_frame)
+            return cls._signals[t_str]
         # endif
     # enddef
     @classmethod
@@ -63,9 +65,12 @@ def disable_signals():
     SignalCache.discard_signals()
 # enddef
 
+def check_signal(k):
+    return True if k in SignalCache.signals() else False
+# enddef
+
 def get_signal(k):
-    assert k in SignalCache.signals(), '>> ERROR:: key={} not found in SignalCache.'.format(k)
-    return SignalCache.signal(k)
+    return SignalCache.signal(k) if k in SignalCache.signals() else None
 # enddef
 
 ####################################################################################
@@ -100,6 +105,68 @@ def supertrend(period, mult, time_frame=None):
     high_t, low_t, close_t = high(time_frame), low(time_frame), close(time_frame)
     return add_signal(cstr('supertrend', time_frame), ind_supertrend(high_t, low_t, close_t, period, mult))
 # enddef
+
+def __pivots_classic(time_frame='1D'):
+    open_t, high_t, low_t, close_t = open(time_frame), high(time_frame), low(time_frame), close(time_frame)
+    pivots_ = add_signal(cstr('pivots_classic', time_frame), ind_pivots_classic(open_t, high_t, low_t, close_t))
+    return pivots_
+# enddef
+
+def __pivot_classic_x(x, time_frame='1D'):
+    pivots_ = get_signal(cstr('pivots_classic', time_frame)) if check_signal(cstr('pivots_classic', time_frame)) \
+        else __pivots_classic(time_frame)
+    return pivots_[x]
+# enddef
+
+def pivot_pi_classic(time_frame='1D'):
+    return __pivot_classic_x('pi', time_frame)
+def pivot_tc_classic(time_frame='1D'):
+    return __pivot_classic_x('tc', time_frame)
+def pivot_bc_classic(time_frame='1D'):
+    return __pivot_classic_x('bc', time_frame)
+def pivot_r1_classic(time_frame='1D'):
+    return __pivot_classic_x('r1', time_frame)
+def pivot_s1_classic(time_frame='1D'):
+    return __pivot_classic_x('s1', time_frame)
+def pivot_r2_classic(time_frame='1D'):
+    return __pivot_classic_x('r2', time_frame)
+def pivot_s2_classic(time_frame='1D'):
+    return __pivot_classic_x('s2', time_frame)
+def pivot_hi_classic(time_frame='1D'):
+    return __pivot_classic_x('hi', time_frame)
+def pivot_lo_classic(time_frame='1D'):
+    return __pivot_classic_x('lo', time_frame)
+
+def __pivots_fib(time_frame='1D'):
+    open_t, high_t, low_t, close_t = open(time_frame), high(time_frame), low(time_frame), close(time_frame)
+    pivots_ = add_signal(cstr('pivots_fib', time_frame), ind_pivots_fib(open_t, high_t, low_t, close_t))
+    return pivots_
+# enddef
+
+def __pivot_fib_x(x, time_frame='1D'):
+    pivots_ = get_signal(cstr('pivots_fib', time_frame)) if check_signal(cstr('pivots_fib', time_frame)) \
+        else __pivots_fib(time_frame)
+    return pivots_[x]
+# enddef
+
+def pivot_pi_fib(time_frame='1D'):
+    return __pivot_fib_x('pi', time_frame)
+def pivot_r1_fib(time_frame='1D'):
+    return __pivot_fib_x('r1', time_frame)
+def pivot_s1_fib(time_frame='1D'):
+    return __pivot_fib_x('s1', time_frame)
+def pivot_r2_fib(time_frame='1D'):
+    return __pivot_fib_x('r2', time_frame)
+def pivot_s2_fib(time_frame='1D'):
+    return __pivot_fib_x('s2', time_frame)
+def pivot_r3_fib(time_frame='1D'):
+    return __pivot_fib_x('r3', time_frame)
+def pivot_s3_fib(time_frame='1D'):
+    return __pivot_fib_x('s3', time_frame)
+def pivot_hi_fib(time_frame='1D'):
+    return __pivot_fib_x('hi', time_frame)
+def pivot_lo_fib(time_frame='1D'):
+    return __pivot_fib_x('lo', time_frame)
 
 #########################################################################
 # All strategy algos

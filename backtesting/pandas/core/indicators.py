@@ -58,8 +58,9 @@ def ind_pivots_fib(open: pd.Series, high: pd.Series, low: pd.Series, close: pd.S
 
     return pd.DataFrame({
         'pi' : PP,
-        'r1' : R1, 's1' : S1,
-        'r2' : R2, 's2' : S2,
-        'r3' : R3, 's3' : S3
+        'r1' : R1,   's1' : S1,
+        'r2' : R2,   's2' : S2,
+        'r3' : R3,   's3' : S3,
+        'hi' : high, 'lo' : low,
     })
 # enddef
