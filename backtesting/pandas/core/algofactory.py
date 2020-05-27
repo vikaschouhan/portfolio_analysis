@@ -32,6 +32,9 @@ class SignalCache(object):
     # enddef
     @classmethod
     def add_ohlcv(cls, ohlcv):
+        assert isinstance(ohlcv, Ohlcv), '>> ERROR:: Passed value is not an instance of Ohlcv !!'
+        # Clear cache
+        cls._signals = {}
         cls._signals['ohlcv'] = ohlcv
     # enddef
     @classmethod
@@ -52,7 +55,6 @@ class SignalCache(object):
 # endclass
 
 def add_ohlcv(v):
-    assert isinstance(v, Ohlcv), '>> ERROR:: Passed value is not an instance of Ohlcv !!'
     SignalCache.add_ohlcv(v)
 # enddef
 
