@@ -220,9 +220,9 @@ def orb_low(time_frame='15min'):
 #########################################################################
 # All strategy algos
 def crossover(x, y):
-    return op_crossover(x, y)
+    return add_signal(cstr('crossover', x.name, y.name), op_crossover(x, y))
 # enddef
 
 def crossunder(x, y):
-    return op_crossunder(x, y)
+    return add_signal(cstr('crossunder', x.name, y.name), op_crossunder(x, y))
 # enddef
