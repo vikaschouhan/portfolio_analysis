@@ -41,22 +41,24 @@ KEY_PAVG_PRICE  = 'position_avg_price'
 # shift parameter takes into account that we always buy or sell
 # (i.e. take positions) on next bar
 def set_buy(s, shift=True):
-    s = s.shift().fillna(0) if shift else s
+    s = s.shift().fillna(0) if shift else s.fillna(0)
     s.name = SIGNAL.BUY
     return s
 # enddef
 def set_sell(s, shift=True):
-    s = s.shift().fillna(0) if shift else s
+    s = s.shift().fillna(0) if shift else s.fillna(0)
     s.name = SIGNAL.SELL
     return s
 # enddef
 def set_short(s, shift=True):
-    s = s.shift().fillna(0) if shift else s
+    s = s.shift().fillna(0) if shift else s.fillna(0)
     s.name = SIGNAL.SHORT
+    return s
 # enddef
 def set_cover(s, shift=True):
-    s = s.shift().fillna(0) if shift else s
+    s = s.shift().fillna(0) if shift else s.fillna(0)
     s.name = SIGNAL.COVER
+    return s
 # enddef
 
 ############################################################
@@ -188,7 +190,7 @@ def _check_signals_to_positions_args(mode, mask):
 
 ####################################################
 # Signals to position generator
-def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, use_vec=True):
+def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, use_vec=True, shift=False):
     # Checks
     _check_signals_to_positions_args(mode, mask)
 
@@ -233,7 +235,7 @@ def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, use_
 
     # shift positions by 1, since the current position can only be liquidated on
     # next bar and vice-versa
-    return ps.shift()
+    return ps.shift() if shift else ps
 # enddef
 
 ########################################################
