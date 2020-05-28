@@ -2,6 +2,8 @@ from .lines import *
 from .indicators import *
 from .stops import *
 from .ops import *
+from .signals import *
+from .stops import *
 
 ###################################################################################
 # Utils. State maintaining functions/classes
@@ -216,6 +218,36 @@ def orb_high(time_frame='15min'):
     return __orb_x('high', time_frame)
 def orb_low(time_frame='15min'):
     return __orb_x('low', time_frame)
+
+#########################################################################
+# All stop loss algos
+def __pos_avg_price(pos):
+    pap__ = get_signal(cstr('pos_avg_price')) if check_signal(cstr('pos_avg_price')) \
+        else add_signal(cstr('pos_avg_price'), positions_to_avg_position_price(pos, open()))
+    return pap__
+# enddef
+
+def stop_fixed(pos, stop_value=0.0):
+    pos_avg_price = __pos_avg_price(pos)
+    return add_signal(cstr('stop_fixed', stop_value), ind_fixed_stop(pos_avg_price, pos, stop_value))
+# enddef
+
+def stop_perc(pos, stop_value=0.0):
+    pos_avg_price = __pos_avg_price(pos)
+    return add_signal(cstr('stop_perc', stop_value), ind_fixed_perc_stop(pos_avg_price, pos, stop_value))
+# enddef
+
+def stop_trail_fixed(pos, stop_value=0.0):
+    return add_signal(cstr('stop_trail_fixed', stop_value), ind_trail_fixed_stop(pos, open(), stop_value))
+# enddef
+
+def stop_trail_perc(pos, stop_value=0.0):
+    return add_signal(cstr('stop_trail_perc', stop_value), ind_trail_perc_stop(pos, open(), stop_value))
+# enddef
+
+def stop_atr_perc(pos, stop_value=0.0, atr_mult=1.0, atr_period=14):
+    return add_signal(cstr('stop_atr_perc', stop_value), ind_atr_perc_stop(pos, open(), ind_atr(high(), low(), close(), atr_period), atr_mult))
+# enddef
 
 #########################################################################
 # All strategy algos

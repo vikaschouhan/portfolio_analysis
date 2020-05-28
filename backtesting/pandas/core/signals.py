@@ -452,7 +452,7 @@ def __calc_avg_position_size_vec(pos, price, pos_type):
     return pos_avg_price
 # enddef
 
-def positions_to_avg_position_size(pos, price, mode='any'):
+def positions_to_avg_position_price(pos, price, mode='any'):
     if mode == 'long':
         return __calc_avg_position_size_vec(pos, price, 'long')
     elif mode == 'short':

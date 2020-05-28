@@ -8,11 +8,11 @@ from   cymodules.numpy_ext import *
 
 #######################################
 def ind_fixed_stop(pos_avg_price: pd.Series, pos: pd.Series, x: float) -> pd.Series:
-    return pos_avg_price + pos*x
+    return pos_avg_price - pos*x
 # enddef
 
-def ind_fixed_perc_stop(pos_avg_price:pd.Series, pos:pd.Series, x: float) -> pd.Series:
-    return pos_avg_price * (1 + pos*x/100)
+def ind_fixed_perc_stop(pos_avg_price: pd.Series, pos: pd.Series, x: float) -> pd.Series:
+    return pos_avg_price * (1 - pos*x/100)
 # enddef
 
 def ind_trail_fixed_stop(pos: pd.Series, price: pd.Series, x: float) -> pd.Series:
