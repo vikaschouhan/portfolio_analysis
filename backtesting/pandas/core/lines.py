@@ -51,6 +51,8 @@ class Ohlcv(object):
             return self.data[key]
         elif key == 'all':
             return self.data
+        elif key in ['date', 'time']:
+            return self.data.index
         else:
             raise ValueError('Unsupported key {} in Ohlcv[]. Supported keys are = {}'.format(key, self.OHLCV))
         # endif

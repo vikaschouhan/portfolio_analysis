@@ -170,6 +170,53 @@ def pivot_hi_fib(time_frame='1D'):
 def pivot_lo_fib(time_frame='1D'):
     return __pivot_fib_x('lo', time_frame)
 
+def day_change():
+    l_chng = SignalCache.get_ohlcv()['date'].day.to_series().diff()
+    l_chng[l_chng != 0] = 1.0
+    return add_signal(cstr('day_change'), pd.Series(l_chng.values, index=SignalCache.get_ohlcv()['date']))
+# enddef
+
+def __orb(time_frame='15min'):
+    # day_change signal
+    d_chng_ = day_change()
+    # Advance day_change signal by number of minutes in orb timeframe
+    d_chng_.index += pd.to_timedelta(time_frame)
+    
+    # Get new orb timeframe high low
+    high_ntf_ = high(time_frame)
+    low_ntf_  = low(time_frame)
+    
+    # Create new empty series (just to get the old index)
+    empty_series = pd.DataFrame(np.zeros(len(high_ntf_)), index=high_ntf_.index)
+    
+    # Merge the day_change advance with the old index to get combined index.
+    # Due to datetime shifting, some of the beginning dates have been lost and next few dates
+    # added to the end of d_chng_
+    d_chng_ = pd.concat([d_chng_, empty_series], axis=1).fillna(0)
+    d_chng_ = d_chng_[d_chng_.columns[0]]
+    
+    # Only retain old index throwing out newly created date values at the end
+    d_chng_ = d_chng_.loc[high_ntf_.index]
+    
+    high_ntf__ = (d_chng_ * high_ntf_).replace(to_replace=0, method='ffill')
+    low_ntf__  = (d_chng_ * low_ntf_).replace(to_replace=0, method='ffill')
+
+    high_low_orb = pd.DataFrame({'high': high_ntf__, 'low': low_ntf__})
+
+    return add_signal(cstr('orb', time_frame), high_low_orb)
+# enddef
+
+def __orb_x(x, time_frame='15min'):
+    orb__ = get_signal(cstr('orb', time_frame)) if check_signal(cstr('orb', time_frame)) \
+        else __orb(time_frame)
+    return orb__[x]
+# enddef
+
+def orb_high(time_frame='15min'):
+    return __orb_x('high', time_frame)
+def orb_low(time_frame='15min'):
+    return __orb_x('low', time_frame)
+
 #########################################################################
 # All strategy algos
 def crossover(x, y):
