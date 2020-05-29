@@ -271,7 +271,15 @@ def _split_signals(signals, plot_map):
     return OrderedDict(sig_cdata)
 # enddef
 
-def plot_signals(signals, sig_attr_map, sharex='all', dec_sig_ratio=0.2):
+# Plot Signals
+# signals -> dataframe of signals with datetime as index
+# sig_attr_map -> signal attributes map
+#                 in form of {signal_name: 'xy'}
+#                 where signal_name is the name of the signal (should match in signals dataframe)
+#                 to be plotted. 'x' is the subplot number (as in 0,1,2 etc) and 'y' is either 'S' or 'L'
+#                 'S' means that the plot is small in size, whereas 'L' means plot is large in size
+def plot_signals(signals, sig_attr_map, sharex='all', dec_sig_ratio=0.2, remove_dates=False, date_name='Date'):
+    signals     = signals.reset_index().drop(columns=[date_name]) if remove_dates else signals
     sigs_map    = _split_signals(signals, sig_attr_map)
 
     plots_len   = len(sigs_map.keys())
