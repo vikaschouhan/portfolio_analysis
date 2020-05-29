@@ -97,17 +97,17 @@ def volume(time_frame=None):
 
 def ema(period, line=None):
     line_t = close() if line is None else line
-    return add_signal(cstr('ema', line_t.name), ind_ema(line_t, period))
+    return add_signal(cstr('ema', line_t.name, period), ind_ema(line_t, period))
 # enddef
 
 def sma(period, line=None):
     line_t = close() if line is None else line
-    return add_signal(cstr('sma', line_t.name), ind_sma(line_t, period))
+    return add_signal(cstr('sma', line_t.name, period), ind_sma(line_t, period))
 # enddef
 
 def supertrend(period, mult, time_frame=None):
     high_t, low_t, close_t = high(time_frame), low(time_frame), close(time_frame)
-    return add_signal(cstr('supertrend', time_frame), ind_supertrend(high_t, low_t, close_t, period, mult))
+    return add_signal(cstr('supertrend', time_frame, period, mult), ind_supertrend(high_t, low_t, close_t, period, mult))
 # enddef
 
 def __pivots_classic(time_frame='1D'):
