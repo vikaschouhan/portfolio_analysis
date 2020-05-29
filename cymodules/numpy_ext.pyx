@@ -144,3 +144,45 @@ cpdef np.ndarray np_ind_supertrend(np.ndarray[DTYPE_t, ndim=1] high, np.ndarray[
 
     return _strend
 # enddef
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+cdef __np_combine_pos_and_sl_signals(DTYPE_t[:] __pos, DTYPE_t[:] __sl_sigs, DTYPE_t[:] __final_pos):
+    cdef double __curr_pos = 0.0
+    cdef double __run_pos  = 0.0
+    cdef int __switch      = 0
+
+    for i in range(len(__pos)):
+        __curr_pos    = __pos[i]
+        # If index is not first index and current position is not same as last position
+        # change run position to current position
+        if i > 0 and __curr_pos != __pos[i-1]:
+            __run_pos = __curr_pos
+            __switch  = 1
+        else:
+            __switch  = 0
+        # endif
+        # If stop loss was triggered and current position is same as run position, change
+        # run position to zero
+        # Also we make sure that if stop loss signal is triggered on the very first instance when
+        # positions are switched, we ignore that. That may be due to old stop loss being triggered
+        # along with the apppropriate sell or cover signals
+        if __switch == 0 and __curr_pos == __run_pos and __sl_sigs[i] > 0:
+            __run_pos = 0.0
+        # endif
+        # Record running position to final position
+        __final_pos[i] = __run_pos
+    # endfor
+# enddef
+
+cpdef np.ndarray np_combine_pos_and_sl_signals(np.ndarray[DTYPE_t, ndim=1] pos, np.ndarray[DTYPE_t, ndim=1] sl_sigs):
+    cdef np.ndarray[DTYPE_t, ndim=1] _final_pos = np.zeros_like(pos)
+    cdef DTYPE_t[:] __pos       = pos
+    cdef DTYPE_t[:] __sl_sigs   = sl_sigs
+    cdef DTYPE_t[:] __final_pos = _final_pos
+
+    __np_combine_pos_and_sl_signals(__pos, __sl_sigs, __final_pos)
+
+    return _final_pos
+# enddef

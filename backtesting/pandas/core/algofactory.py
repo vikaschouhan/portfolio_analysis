@@ -245,8 +245,8 @@ def stop_trail_perc(pos, stop_value=0.0):
     return add_signal(cstr('stop_trail_perc', stop_value), ind_trail_perc_stop(pos, open(), stop_value))
 # enddef
 
-def stop_atr_perc(pos, stop_value=0.0, atr_mult=1.0, atr_period=14):
-    return add_signal(cstr('stop_atr_perc', stop_value), ind_atr_perc_stop(pos, open(), ind_atr(high(), low(), close(), atr_period), atr_mult))
+def stop_atr_perc(pos, atr_mult=1.0, atr_period=14):
+    return add_signal(cstr('stop_atr_perc', atr_mult, atr_period), ind_atr_perc_stop(pos, open(), ind_atr(high(), low(), close(), atr_period), atr_mult))
 # enddef
 
 #########################################################################
@@ -257,4 +257,11 @@ def crossover(x, y):
 
 def crossunder(x, y):
     return add_signal(cstr('crossunder', x.name, y.name), op_crossunder(x, y))
+# enddef
+
+def apply_stop_loss(pos, sl_price):
+    pos        = add_signal(cstr('raw positions'), pos)
+    sl_sigs    = add_signal(cstr('stop_loss_signals'), generate_sl_signals(pos, close(), sl_price))
+    final_pos  = add_signal(cstr('final_positions'), combine_pos_with_sl_signals(pos, sl_sigs))
+    return final_pos
 # enddef
