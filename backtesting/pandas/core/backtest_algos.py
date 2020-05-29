@@ -52,3 +52,28 @@ def raw_positions(
 
     return pos
 # enddef
+
+def execute_positions(
+    close      : pd.Series,             # close signals (for returns calculation)
+    buy        : pd.Series = None,      # Buy signals
+    sell       : pd.Series = None,      # Sell signals
+    short      : pd.Series = None,      # Short signals
+    cover      : pd.Series = None,      # Cover signals
+    stop       : pd.Series = None,      # Stop loss signals
+    slippage   : str       = '0.0%'     # Slippage
+):
+    raw_pos__ = raw_positions(buy, sell, short, cover)
+    final_pos = raw_pos__ if stop is None else apply_stop_loss(raw_pos__, stop)
+
+    rets    = np.log(close).diff()
+    nrets   = apply_slippage_v2(final_pos, rets, slippage, ret_type='log', price=close)
+    nrets   = sanitize_datetime(nrets)
+    points  = (np.exp(nrets.sum()) - 1) * close[0]
+
+    return {
+               KEY_RETURNS     : nrets,
+               KEY_POSITIONS   : final_pos,
+               KEY_SLIPPAGE    : slippage,
+               KEY_NPOINTS     : points,
+           }
+# enddef
