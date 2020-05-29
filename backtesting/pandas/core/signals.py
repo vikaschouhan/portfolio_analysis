@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 import matplotlib.pyplot as plt
+from   collections import OrderedDict
 from   typing import AnyStr, Callable
 import copy
 from   modules.utils import *
@@ -240,53 +241,50 @@ def signals_to_positions(signals, init_pos=0, mode='any', mask=SIGNAL_MASK, use_
 
 ########################################################
 # Signals visualization
-def _extract_decision_signals(signals):
-    sig_columns = signals.columns
-    aux_sigcols = list(set(sig_columns) - set(SIGNAL_MASK))
-    psig_list   = list(set(sig_columns) - set(aux_sigcols))
-    psigs       = signals[psig_list]
-    auxsigs     = signals[aux_sigcols]
-    return psigs, auxsigs
+# check if all keys in plot_map are present in signals
+def _check_plot_map_signals(signals, plot_map):
+    not_present_keys = set(plot_map.keys()) - set(signals.columns)
+    assert len(not_present_keys) == 0, '>> ERROR:: keys "{}" from plot_map not found in signals.'.format(not_present_keys)
 # enddef
 
-def _split_auxiliary_signals(aux_signals):
-    asig_cols   = aux_signals.columns
-    # Search for unique signals to be plotted on same plane
-    sigs_dict   = {'ext': []}
-    for asig_t in asig_cols:
-        _m = re.search("^([\d]+)_", asig_t )
-        if _m:
-            _m = int(_m.groups()[0])
-            if _m not in sigs_dict:
-                sigs_dict[_m] = []
-            # endif
-            sigs_dict[_m].append(asig_t)
-        else:
-            sigs_dict['ext'].append(asig_t)
+def _split_signals(signals, plot_map):
+    # Check plot signals
+    _check_plot_map_signals(signals, plot_map)
+
+    sig_cols   = plot_map.keys()
+    sig_cdata  = {}
+    for sig_t in sig_cols:
+        prow, ptype  = int(plot_map[sig_t][:-1]), plot_map[sig_t][-1]
+        assert ptype in ['S', 'L'], '>> ERROR:: ptype should be one of "S, L"'
+        if (prow, ptype) not in sig_cdata:
+            sig_cdata[(prow, ptype)] = {}
         # endif
+        # Take out the signal and add to it's appropriate category
+        sig_cdata[(prow, ptype)][sig_t] = signals[sig_t]
     # endfor
 
-    sigs_dict = {k: aux_signals[v] for k,v in sigs_dict.items() if len(v) !=0}
-    return list(sigs_dict.values())
+    # Combine all series to dataframes
+    for k,v in sig_cdata.items():
+        sig_cdata[k] = pd.DataFrame(v)
+    # endfor
+
+    return OrderedDict(sig_cdata)
 # enddef
 
-def plot_signals(signals, sharex='all', dec_sig_ratio=0.2):
-    psigs, aux_sigs = _extract_decision_signals(signals)
-    aux_sig_cols    = aux_sigs.columns
-    aux_sigs_list   = _split_auxiliary_signals(aux_sigs)
-    psigs           = psigs.applymap(lambda x: 1 if x is True else 0)
+def plot_signals(signals, sig_attr_map, sharex='all', dec_sig_ratio=0.2):
+    sigs_map    = _split_signals(signals, sig_attr_map)
 
-    plots_len   = 1 + len(aux_sigs_list)
-    oth_ax_rs   = (1-dec_sig_ratio)/(plots_len-1)
-    ratios      = [oth_ax_rs] * (plots_len-1) + [dec_sig_ratio]
+    plots_len   = len(sigs_map.keys())
+    ratios      = [dec_sig_ratio if x[1] == 'S' else (1-dec_sig_ratio) for x in sigs_map.keys()]
     fig, axes   = plt.subplots(plots_len, sharex=sharex, gridspec_kw={'height_ratios' : ratios})
+    axes        = axes if isinstance(axes, np.ndarray) else np.array([axes])
     ax_ctr      = 0
 
-    for aux_sig_t in aux_sigs_list:
-        aux_sig_t.plot(ax=axes[ax_ctr])
+    for sig_t in sigs_map:
+        sigs_map[sig_t].plot(ax=axes[ax_ctr])
         ax_ctr += 1
     # endfor
-    psigs.plot(ax=axes[ax_ctr])
+
     return fig
 # enddef
 
