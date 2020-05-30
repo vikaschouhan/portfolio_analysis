@@ -29,6 +29,7 @@ SIGNAL_MASK_SHORT2 = (SIGNAL.SELL, SIGNAL.BUY)
 
 # Some keys
 KEY_SIGNALS     = 'signals'
+KEY_RPOSITIONS  = 'raw_positions'
 KEY_POSITIONS   = 'positions'
 KEY_SLIPPAGE    = 'slippage'
 KEY_RUNMODE     = 'run_mode'
@@ -294,6 +295,16 @@ def plot_signals(signals, sig_attr_map, sharex='all', dec_sig_ratio=0.2, remove_
     # endfor
 
     return fig
+# enddef
+
+# A wrapper for plot_signals which simplifies the api. In this plot,
+# only two panes are plottted, Top one is larger one and plots price type signals
+# Bottom one is smaller and plots oscillator type signals
+def plot_signals_easy(psignals, osignals, remove_dates=False, rng=None):
+    signals = pd.concat(psignals + osignals, axis=1)
+    signals = signals.iloc[rng[0]:rng[1]] if rng else signals
+    sig_attr_map = {**{k.name: '0L' for k in psignals}, **{k.name: '1S' for k in osignals}}
+    plot_signals(signals, sig_attr_map, remove_dates=remove_dates)
 # enddef
 
 ########################################################

@@ -48,7 +48,7 @@ def raw_positions(
     # endif
 
     print('>> Using signal mask {}.'.format(smask))
-    pos     = signals_to_positions(all_df, mode=run_mode, mask=smask, use_vec=True).astype('float')
+    pos     = add_signal(cstr('raw_positions'), signals_to_positions(all_df, mode=run_mode, mask=smask, use_vec=True).astype('float'))
 
     return pos
 # enddef
@@ -63,7 +63,7 @@ def execute_positions(
     slippage   : str       = '0.0%'     # Slippage
 ):
     raw_pos__ = raw_positions(buy, sell, short, cover)
-    final_pos = raw_pos__ if stop is None else apply_stop_loss(raw_pos__, stop)
+    final_pos = add_signal(cstr('final_positions'), raw_pos__ if stop is None else apply_stop_loss(raw_pos__, stop))
 
     rets    = np.log(close).diff()
     nrets   = apply_slippage_v2(final_pos, rets, slippage, ret_type='log', price=close)
@@ -73,6 +73,7 @@ def execute_positions(
     return {
                KEY_RETURNS     : nrets,
                KEY_POSITIONS   : final_pos,
+               KEY_RPOSITIONS  : raw_positions__,
                KEY_SLIPPAGE    : slippage,
                KEY_NPOINTS     : points,
            }
