@@ -76,17 +76,21 @@ class Ohlcv(object):
         return cls.from_df(pd.read_csv(csv_file, index_col=0), columns=columns)
     # enddef
 
+    def resample_simple(self, time_frame=None):
+        return self.data.resample(time_frame).agg({
+               self.OPEN  : 'first',
+               self.HIGH  : 'max',
+               self.LOW   : 'min',
+               self.CLOSE : 'last',
+               self.VOLUME: 'sum' })
+    # enddef
+
     # Resampling function. It first upsamples and then downsamples to match
     # the source time series frequency
     def resample(self, time_frame=None, shift=1):
         if time_frame:
             # First upsample
-            tf_new = self.data.resample(time_frame).agg({
-                self.OPEN  : 'first',
-                self.HIGH  : 'max',
-                self.LOW   : 'min',
-                self.CLOSE : 'last',
-                self.VOLUME: 'sum' })
+            tf_new = self.resample_simple(time_frame)
             # Duplicate last row with timestamp of last + time_frame_freq_interval
             tf_new_last_row = tf_new.iloc[-1]
             tf_new_last_row.name = tf_new.index[-1] + pd.to_timedelta(time_frame)
