@@ -280,6 +280,10 @@ def _split_signals(signals, plot_map):
 #                 to be plotted. 'x' is the subplot number (as in 0,1,2 etc) and 'y' is either 'S' or 'L'
 #                 'S' means that the plot is small in size, whereas 'L' means plot is large in size
 def plot_signals(signals, sig_attr_map, sharex='all', dec_sig_ratio=0.2, remove_dates=False, date_name='Date'):
+    # Change index name
+    signals.index.name = date_name
+
+    # Drop index if required
     signals     = signals.reset_index().drop(columns=[date_name]) if remove_dates else signals
     sigs_map    = _split_signals(signals, sig_attr_map)
 

@@ -59,10 +59,12 @@ def execute_positions(
     sell       : pd.Series = None,      # Sell signals
     short      : pd.Series = None,      # Short signals
     cover      : pd.Series = None,      # Cover signals
-    stop       : pd.Series = None,      # Stop loss signals
-    slippage   : str       = '0.0%'     # Slippage
+    slippage   : str       = '0.0%',    # Slippage
+    stop_fn    : Callable  = None,      # Stop loss function
+    stop_args  : dict      = {}
 ):
     raw_pos__ = raw_positions(buy, sell, short, cover)
+    stop      = stop_fn(raw_pos__, **stop_args) if stop_fn else None
     final_pos = add_signal(cstr('final_positions'), raw_pos__ if stop is None else apply_stop_loss(raw_pos__, stop))
 
     rets    = np.log(close).diff()
@@ -73,7 +75,7 @@ def execute_positions(
     return {
                KEY_RETURNS     : nrets,
                KEY_POSITIONS   : final_pos,
-               KEY_RPOSITIONS  : raw_positions__,
+               KEY_RPOSITIONS  : raw_pos__,
                KEY_SLIPPAGE    : slippage,
                KEY_NPOINTS     : points,
            }
