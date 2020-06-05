@@ -1,4 +1,3 @@
-from   backtesting.pandas.core.lines import *
 import pandas as pd
 import copy
 import argparse
