@@ -1,3 +1,6 @@
+# Author  : Vikas Chouhan (presentisgood@gmail.com)
+# Year    : 2020
+# License : GPLv2
 import pandas as pd
 import copy
 import argparse
@@ -154,6 +157,43 @@ def flatten_gl_sheet(data):
     pframe = pframe.set_index('t')
     
     return pframe
+# enddef
+
+# rets_dmat is what we get after calling analyse_returns()
+def analyse_fc_performers_vs_overall_performers(rets_dmat):
+    # Derive topn value with which rets_dmat was generated.
+    topn = rets_dmat['gainers'].apply(lambda x: len(x)).max()
+
+    gainers_intersec  = []
+    losers_intersec   = []
+    gainers_isec_list = []
+    losers_isec_list  = []
+    gainers_rat_list  = []
+    losers_rat_list   = []
+    for i in range(len(rets_dmat)):
+        g_isecs = set(rets_dmat.iloc[i]['gainers'].keys()).intersection(set(rets_dmat.iloc[i]['fc_gainers'].keys()))
+        l_isecs = set(rets_dmat.iloc[i]['losers'].keys()).intersection(set(rets_dmat.iloc[i]['fc_losers'].keys()))
+
+        gainers_intersec.append(len(g_isecs))
+        losers_intersec.append(len(l_isecs))
+        gainers_isec_list.append(g_isecs)
+        losers_isec_list.append(l_isecs)
+        try:
+            gainers_rat_list.append(np.average([rets_dmat.iloc[i]['gainers'][x]/rets_dmat.iloc[i]['fc_gainers'][x] for x in g_isecs]))
+        except ZeroDivisionError:
+            gainers_rat_list.append(np.nan)
+        # endtry
+        try:
+            losers_rat_list.append(np.average([rets_dmat.iloc[i]['losers'][x]/rets_dmat.iloc[i]['fc_losers'][x] for x in l_isecs]))
+        except ZeroDivisionError:
+            losers_rat_list.append(np.nan)
+        # endtry
+    # endfor
+
+    rets_dmat['gainers_intersec'] = gainers_intersec
+    rets_dmat['losers_intersec']  = losers_intersec
+    rets_dmat['gainers_avg_rets_ratio'] = gainers_rat_list
+    rets_dmat['losers_avg_rets_ratio']  = losers_rat_list
 # enddef
 
 def analyse_for_top_gainers_and_losers_from_intraday_charts(csv_dir, xls_file, topn=5, last_candles=10):
