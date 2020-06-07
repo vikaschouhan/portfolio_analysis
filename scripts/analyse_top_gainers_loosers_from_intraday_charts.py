@@ -12,17 +12,26 @@ from   modules.utils import *
 from   tabulate import tabulate
 ##
 
-def resample_df(df, tf='1D'):
-    return df.resample(tf).agg({'Open':'first', 'High':'max', 'Low':'min', 'Close': 'last', 'Volume': 'sum' }).dropna()
+def resample_df(df, tf='1D', base=0):
+    return df.resample(tf, base=base).agg({'Open':'first', 'High':'max', 'Low':'min', 'Close': 'last', 'Volume': 'sum' }).dropna()
 # enddef
 
-def process_csvs(csv_dir):
+def process_csvs(csv_dir, tf_iday=None, tf_iday_base=0):
     asset_data = read_all_asset_csvs(csv_dir)
     # Iterate over all data, calculate % rets
     rets_data    = {}
+    pdone        = False
     for ticker_t in asset_data:
-        data_t    = asset_data[ticker_t]
+        data_t    = asset_data[ticker_t] if tf_iday is None else resample_df(asset_data[ticker_t], tf_iday, tf_iday_base)
         data_1D_t = resample_df(data_t)
+        if pdone == False:
+            print('>> Using intraday time frame "{}" with intraday base "{}"'.format(tf_iday, tf_iday_base))
+            print('>> Session start time inital = {}'.format(pd.to_datetime(asset_data[ticker_t].index[0]).time()))
+            print('>> Session end time initial  = {}'.format(pd.to_datetime(asset_data[ticker_t].index[1]).time()))
+            print('>> Session start time after  = {}'.format(pd.to_datetime(data_t.index[0]).time()))
+            print('>> Session end time after    = {}'.format(pd.to_datetime(data_t.index[1]).time()))
+            pdone = True
+        # endif
 
         data_copy       = copy.copy(data_t)
         data_copy.index = data_copy.index.date
@@ -196,8 +205,8 @@ def analyse_fc_performers_vs_overall_performers(rets_dmat):
     rets_dmat['losers_avg_rets_ratio']  = losers_rat_list
 # enddef
 
-def analyse_for_top_gainers_and_losers_from_intraday_charts(csv_dir, xls_file, topn=5, last_candles=10):
-    rets_data = process_csvs(csv_dir)
+def analyse_for_top_gainers_and_losers_from_intraday_charts(csv_dir, xls_file, topn=5, last_candles=10, tf_iday=None, tf_iday_base=0):
+    rets_data = process_csvs(csv_dir, tf_iday, tf_iday_base)
     gn_data   = analyse_returns(rets_data, topn=topn, last_candles=last_candles)
     gn_data   = flatten_gl_sheet(gn_data)
     # Write to excel sheet
@@ -211,17 +220,21 @@ if __name__ == '__main__':
     parser.add_argument('--xls',         help='Output xls file', type=str, default=None)
     parser.add_argument('--topn',        help='Number of securities to select for top gainers/losers.', type=int, default=5)
     parser.add_argument('--sessions',    help='Only generate data for last n sessions', type=int, default=10)
+    parser.add_argument('--tf_iday',     help='Intraday time frame for the analysis.', type=str, default=None)
+    parser.add_argument('--tf_iday_base',help='Base for Intraday time frame. Use only if you know what you are doing.', type=int, default=0)
     args    = parser.parse_args()
 
     csv_dir = args.__dict__['csv_dir']
     xls_f   = args.__dict__['xls']
     topn    = args.__dict__['topn']
     sess_s  = args.__dict__['sessions']
+    tf_iday = args.__dict__['tf_iday']
+    tf_base = args.__dict__['tf_iday_base']
 
     if csv_dir is None or xls_f is None:
         print('--csv_dir & --xls are mandatory.')
         sys.exit(-1)
     # endif
 
-    analyse_for_top_gainers_and_losers_from_intraday_charts(csv_dir, xls_f, topn, sess_s)
+    analyse_for_top_gainers_and_losers_from_intraday_charts(csv_dir, xls_f, topn, sess_s, tf_iday, tf_base)
 # endif

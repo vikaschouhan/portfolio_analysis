@@ -19,13 +19,14 @@ def analyse_mean_returns(csv_dir):
     for ticker_t in asset_data:
         data_t = asset_data[ticker_t]
         rets   = np.log(data_t['Close']) - np.log(data_t['Close'].shift())
-        r_mean = rets.mean()
-        r_std  = rets.std()
+        rngs   = np.log(data_t['Close']) - np.log(data_t['Open'])
 
         # Create new dataframe joining returns and volume
         # Store
-        rets_data[ticker_t] = {'r_mean' : r_mean,
-                               'r_std'  : r_std,
+        rets_data[ticker_t] = {'r_mean'     : rets.mean(),
+                               'r_std'      : rets.std(),
+                               'rng_mean'   : rngs.mean(),
+                               'rng_std'    : rngs.std(),
                               }
     # endfor
 
@@ -34,8 +35,8 @@ def analyse_mean_returns(csv_dir):
     # Add columns
     rets_data['abs_r_mean'] = abs(logr_to_r(rets_data['r_mean']))
     rets_data['abs_r_std']  = abs(logr_to_r(rets_data['r_std']))
-    rets_data['abs_1std']   = abs(logr_to_r(rets_data['r_mean'])) + abs(logr_to_r(rets_data['r_std']))
-    rets_data['abs_2std']   = abs(logr_to_r(rets_data['r_mean'])) + 2*abs(logr_to_r(rets_data['r_std']))
+    rets_data['abs_rng_mean'] = abs(logr_to_r(rets_data['rng_mean']))
+    rets_data['abs_rng_std']  = abs(logr_to_r(rets_data['rng_std']))
 
     return rets_data
 # enddef
