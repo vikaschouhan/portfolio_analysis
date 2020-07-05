@@ -506,6 +506,8 @@ def fetch_data_kite(ticker, resl, t_from=None, interval_limit=30, t_timeout=25,
                 logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
                 if verbose:
                     print('Fetching {}'.format(this_url))
+                else:
+                    print('>> Fetching date {}'.format(drange_t[0]), end='\r')
                 # endif
 
                 # Parse response to json
