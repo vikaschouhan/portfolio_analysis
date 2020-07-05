@@ -7,9 +7,7 @@ import argparse
 import sys
 
 def scrape_kite_public_token(clientid, passwd, pin, headless=True):
-    base_url   = 'https://kite.zerodha.com'
-    mwatch_url = 'https://kite.zerodha.com/marketwatch'
-    twofa_url  = 'https://kite.zerodha.com/api/twofa'
+    base_url   = 'https://kite.zerodha.com/'
 
     options = webdriver.ChromeOptions()
     if headless:
@@ -29,25 +27,23 @@ def scrape_kite_public_token(clientid, passwd, pin, headless=True):
     der_inp.send_keys(pin)
     der_button = driver.find_element_by_tag_name('button')
     der_button.click()
-    
-    # Go to marketwatch
-    driver.get(mwatch_url)
+
+    # Again load main page and sleep
+    driver.get(base_url)
     time.sleep(2)
     
     reqs_all = driver.requests
-    req_tok  = None
+    req_toks = []
     for indx,req_t in enumerate(reqs_all):
-        if req_t.path == twofa_url:
-            req_tok = indx
-            break
+        if req_t.path == base_url:
+            req_toks.append(indx)
         # endif
     # endfor
     
-    assert req_tok is not None, 'FATAL::: This assertion should never happen !!'
+    assert len(req_toks) != 0, 'FATAL::: No Request token found !!'
     
-    public_token=reqs_all[req_tok].response.headers['Set-Cookie'].split(';')[0].split('=')[1]
-    print('>> public token = ', public_token)
-
+    cookie_info = reqs_all[req_toks[-1]].headers['Cookie'].split(';') # Remove __cfduid
+    print('>> Extra info = {}'.format(cookie_info))
     driver.close()
 # enddef
 
