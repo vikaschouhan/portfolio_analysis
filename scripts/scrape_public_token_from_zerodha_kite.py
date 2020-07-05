@@ -8,6 +8,7 @@ import sys
 
 def scrape_kite_public_token(clientid, passwd, pin, headless=True):
     base_url   = 'https://kite.zerodha.com/'
+    demo_chart_url = 'https://kite.zerodha.com/chart/web/tvc/INDICES/NIFTY%2050/256265'
 
     options = webdriver.ChromeOptions()
     if headless:
@@ -28,8 +29,8 @@ def scrape_kite_public_token(clientid, passwd, pin, headless=True):
     der_button = driver.find_element_by_tag_name('button')
     der_button.click()
 
-    # Again load main page and sleep
-    driver.get(base_url)
+    # Load a demo chart and sleep
+    driver.get(demo_chart_url)
     time.sleep(2)
     
     reqs_all = driver.requests
