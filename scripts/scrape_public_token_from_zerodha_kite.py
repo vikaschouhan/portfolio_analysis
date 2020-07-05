@@ -115,7 +115,7 @@ if __name__ == '__main__':
         print('>> Writing all info to {}'.format(args.__dict__['pyfile']))
         with open(rp(args.__dict__['pyfile']), 'w') as f_out:
             f_out.write('headers = {}\n'.format(headers))
-            f_out.write('headers_curl = {}\n'.format(cheaders))
+            f_out.write('headers_curl = "{}"\n'.format(cheaders))
             f_out.write('params = {}\n'.format(params))
         # endwith
     # endif

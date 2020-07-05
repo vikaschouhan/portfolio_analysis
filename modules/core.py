@@ -469,14 +469,17 @@ res_tbl_zk = {
           }
 
 def g_burlb_kite():
-    return "https://kitecharts-aws.zerodha.com/api/chart"
+    return "https://kite.zerodha.com/oms/instruments/historical"
+# enddef
 
 # Fetch from Zerodha Kite
-def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400, t_timeout=25,
-        sleep_time=14, verbose=False, date_settings=None):
+def fetch_data_kite(ticker, resl, t_from=None, interval_limit=30, t_timeout=25,
+        sleep_time=14, verbose=False, date_settings=None, headers=headers, params=None):
     idate_fmt = '%Y-%m-%d'
     ftch_tout = 15
     t_indx    = 0
+    headers   = {} if headers is None else headers
+    params    = [] if params is None else params
 
     # Start date, end date and ranges
     t_from    = dateparser.parse(t_from, settings=date_settings).strftime(idate_fmt) if t_from else "2000-01-01"
@@ -485,8 +488,10 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400,
 
     assert(resl in res_tbl_zk.keys())
     if verbose:
-        print('>> Accessing {} for {} timeframe with public token {}'.format(ticker, resl, public_token))
+        print('>> Accessing {} for {} timeframe'.format(ticker, resl))
         print('>> Interval limit {}, timeout {}, sleep time {}'.format(interval_limit, t_timeout, sleep_time))
+        print('>> Using headers {}'.format(headers))
+        print('>> Using base params {}'.format(params))
     # endif
 
     data_list = []
@@ -495,8 +500,8 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400,
         while t_indx < ftch_tout:
             try:
                 # Get partial data for this date range
-                this_url = g_burlb_kite() + "/{}/{}?from={}&to={}&oi=1&public_token={}&access_token=".format(ticker,
-                        res_tbl_zk[resl], drange_t[0], drange_t[1], public_token)
+                this_url = g_burlb_kite() + "/{}/{}".format(ticker, res_tbl_zk[resl])
+                params_t = params + [('from', drange_t[0]), ('to', drange_t[1])]
 
                 logging.debug("{} : Fetching {}".format(strdate_now(), this_url))
                 if verbose:
@@ -504,8 +509,13 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400,
                 # endif
 
                 # Parse response to json
-                response = requests.get(this_url, timeout=t_timeout, headers=headers)
+                response = requests.get(this_url, timeout=t_timeout, headers=headers, params=params_t)
+                r_url    = response.url
                 j_data   = json.loads(response.text)
+
+                if verbose:
+                    print('Fetched {}'.format(r_url))
+                # endif
 
                 # Check for various error conditions
                 if j_data['status'] == 'error':
@@ -539,6 +549,9 @@ def fetch_data_kite(ticker, resl, public_token, t_from=None, interval_limit=400,
                 #print('ERROR:: Incomplete Read Error.', flush=True)
                 logging.debug('Encountered IncompleteRead error. Retrying after {} seconds..'.format(sleep_time))
                 time.sleep(sleep_time)
+            except Exception as e:
+                print('>> ERROR:: {}'.format(str(e)))
+                raise ValueError(str(e))
             # endtry
             t_indx   = t_indx + 1
         # endwhile

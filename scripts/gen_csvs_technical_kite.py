@@ -11,6 +11,7 @@ import sys
 import shutil
 import csv
 import time
+import importlib.util
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
 from   modules import core as invs_core
@@ -22,7 +23,7 @@ coloritf   = invs_utils.coloritf
 coloritb   = invs_utils.coloritb
 
 # CSV report generator
-def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir, sleep_secs=5, interval_limit=400, verbose=False):
+def run_csv_gen(sec_dict, kis_res, auth_file, output_dir, sleep_secs=5, interval_limit=30, verbose=False):
     ctr = 0
     assert output_dir != None
 
@@ -33,10 +34,16 @@ def run_csv_gen(sec_dict, kis_res, pub_tok, output_dir, sleep_secs=5, interval_l
     # endif
     print('Output dir = {}'.format(output_dir))
 
+    # Read authentication file
+    spec = importlib.util.spec_from_file_location("module.name", auth_file)
+    auth = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(auth)
+
     # Iterate over all security dict
     for sec_code in sec_dict.keys():
         # Fetch data
-        d_this   = invs_core.fetch_data_kite(sec_dict[sec_code]['ticker'], kis_res, pub_tok, interval_limit=interval_limit, verbose=verbose)
+        d_this   = invs_core.fetch_data_kite(sec_dict[sec_code]['ticker'], kis_res, interval_limit=interval_limit, verbose=verbose,
+                       headers=auth.headers, params=auth.params)
         sec_name = sec_dict[sec_code]['name']
 
         # If dataframe is empty, continue
@@ -79,9 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('--res',     help='Resolution', type=str, default='1W')
     parser.add_argument('--sfile',   help='Security csv file. Can be list file or bhavcopy file.', type=str, default=None)
     parser.add_argument('--odir',    help='Output directory where csvs are stored.', type=str, default=None)
-    parser.add_argument('--ptok',    help='Public token key.', type=str, default=None)
+    parser.add_argument('--auth',    help='Authenticaton file.', type=str, default=None)
     parser.add_argument('--sleep',   help='Sleep for this much time.', type=int, default=None)
-    parser.add_argument('--ilimit',  help='Interval limit for zerodha kite api.', type=int, default=400)
+    parser.add_argument('--ilimit',  help='Interval limit for zerodha kite api.', type=int, default=30)
     parser.add_argument('--verbose', help='Verbose mode', action='store_true')
     args    = parser.parse_args()
 
@@ -105,8 +112,8 @@ if __name__ == '__main__':
         print('--sfile is required !! It should be one of supported types : {}'.format(invs_parsers.populate_sec_list(None)))
         sys.exit(-1)
     # endif
-    if not args.__dict__['ptok']:
-        print('--ptok is required !!')
+    if not args.__dict__['auth']:
+        print('--auth is required !!')
         sys.exit(-1)
     # endif
     if not args.__dict__['odir']:
@@ -119,12 +126,12 @@ if __name__ == '__main__':
     sec_file   = args.__dict__['sfile']
     kis_res    = args.__dict__['res']
     out_dir    = args.__dict__['odir']
-    pub_tok    = args.__dict__['ptok']
+    auth_file  = args.__dict__['auth']
     sleep_time = args.__dict__['sleep']
     verbose    = args.__dict__['verbose']
     ilimit     = args.__dict__['ilimit']
 
     sec_tick_d = invs_parsers.populate_sym_list_from_sec_file_kite(kis_db_f, sec_file)
-    run_csv_gen(sec_tick_d, kis_res=kis_res, pub_tok=pub_tok, output_dir=args.__dict__['odir'],
+    run_csv_gen(sec_tick_d, kis_res=kis_res, auth_file=auth_file, output_dir=args.__dict__['odir'],
             interval_limit=ilimit, sleep_secs=sleep_time, verbose=verbose)
 # endif
