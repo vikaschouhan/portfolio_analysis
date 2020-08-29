@@ -82,7 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--sfile',      help='Database security file.',         type=str, default=None)
     parser.add_argument('--out',        help='Output file.',                    type=str, default=None)
     parser.add_argument('--start_year', help='Start year for collecting data',  type=int, default=2019)
-    parser.add_argument('--ncandles',   help='Number of candles to plot.',      type=int, default=130)
+    parser.add_argument('--ncandles',   help='Number of candles to plot.',      type=int, default=100)
     args    = parser.parse_args()
 
     if args.__dict__['sfile'] is None or args.__dict__['out'] is None:
