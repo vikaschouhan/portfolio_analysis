@@ -6,6 +6,9 @@ import mplfinance as mplf
 import sys
 import os
 import shutil
+from   decimal import Decimal
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
 from   modules.utils import *
@@ -20,7 +23,7 @@ def resample_weekly(df):
         loffset = pd.offsets.timedelta(days=-6))
 # enddef
 
-def get_ticker(symbol, start=None, end=None):
+def get_daily_data(symbol, start=None, end=None):
     start = datetime.datetime(2001, 1, 1) if start is None else start
     end   = datetime.datetime.now() if end is None else end
     data  = nsepy.get_history(symbol, start, end)
@@ -28,8 +31,24 @@ def get_ticker(symbol, start=None, end=None):
     return data
 # enddef
 
+def format_price(x, _=None):
+    x = Decimal(x)
+    return x.quantize(Decimal(1)) if x == x.to_integral() else x.normalize()
+# enddef
+
 def plot_candlestick(df, title, savefig):
-    mplf.plot(df, type='candle', ylabel='Price', title=title, savefig=savefig)
+    # Generate log plot. Currently it's not supported by mplf.plot,
+    # so we do it overselves.
+    fig, axlist = mplf.plot(df, type='candle', ylabel='Price', title=title, returnfig=True)
+    ax1 = axlist[0]
+    ax1_minor_yticks = ax1.get_yticks(True)  # save the original ticks because the log ticks are sparse
+    ax1_major_yticks = ax1.get_yticks(False)
+    ax1.set_yscale('log')
+    ax1.set_yticks(ax1_major_yticks, True)
+    ax1.set_yticks(ax1_minor_yticks, False)
+    ax1.yaxis.set_major_formatter(ticker.FuncFormatter(format_price))
+    ax1.yaxis.set_minor_formatter(ticker.FuncFormatter(format_price))
+    plt.savefig(savefig)
 # enddef
 
 def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
@@ -41,7 +60,7 @@ def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
     mkdir(t2_dir)
 
     for indx_t, sym_t in enumerate(sym_list):
-        d_data = get_ticker(sym_t, start=datetime.datetime(start_year, 1, 1))
+        d_data = get_daily_data(sym_t, start=datetime.datetime(start_year, 1, 1))
         w_data = resample_weekly(d_data)
 
         # Save daily and weekly data
