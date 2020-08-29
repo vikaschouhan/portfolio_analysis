@@ -105,5 +105,5 @@ if __name__ == '__main__':
     print('>> sym_list = {}'.format(sym_list))
 
     # Generate candlesticks
-    generate_candlesticks(sym_list[:10], out_file, start_year, n_candles)
+    generate_candlesticks(sym_list, out_file, start_year, n_candles)
 # endif
