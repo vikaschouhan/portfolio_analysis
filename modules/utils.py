@@ -453,6 +453,32 @@ def merge_images(file_list, out_file):
     result.save(os.path.expanduser(out_file))
 # enddef
 
+def merge_images_vertically(file_list, out_file):
+    return merge_images(file_list, out_file)
+# enddef
+
+def merge_images_horizontally(file_list, out_file):
+    im_size_list = []
+
+    for f_this in file_list:
+        im_size_list.append(Image.open(f_this).size)
+    # endfor
+
+    result_width  = sum([x[0] for x in im_size_list])
+    result_height = max([x[1] for x in im_size_list])
+    v_ptr_t = 0
+    result  = Image.new('RGB', (result_width, result_height))
+
+    # Iterate
+    for f_this in file_list:
+        im_this = Image.open(f_this)
+        result.paste(im=im_this, box=(v_ptr_t, 0))
+        v_ptr_t = v_ptr_t + im_this.size[0]
+    # endfor
+
+    result.save(os.path.expanduser(out_file))
+# enddef
+
 def rev_map(x):
     return {v:k for k,v in x.items()}
 # enddef
