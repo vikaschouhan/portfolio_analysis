@@ -90,8 +90,8 @@ if __name__ == '__main__':
         sys.exit(-1)
     # endif
 
-    sec_file   = args.__dict__['sfile']
-    out_file   = args.__dict__['out']
+    sec_file   = rp(args.__dict__['sfile'])
+    out_file   = rp(args.__dict__['out'])
     n_candles  = args.__dict__['ncandles']
     start_year = args.__dict__['start_year']
 
