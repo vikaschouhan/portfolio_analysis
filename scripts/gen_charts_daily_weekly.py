@@ -48,7 +48,9 @@ def plot_candlestick(df, title, savefig):
     ax1.set_yticks(ax1_minor_yticks, False)
     ax1.yaxis.set_major_formatter(ticker.FuncFormatter(format_price))
     ax1.yaxis.set_minor_formatter(ticker.FuncFormatter(format_price))
+    ax1.autoscale()
     plt.savefig(savefig)
+    plt.close('all')
 # enddef
 
 def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
@@ -89,7 +91,7 @@ def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
 
     # Now we will merge all of them
     print('>> Writing final image to {}'.format(out_file))
-    files_list_f = glob.glob(os.path.join(t2_dir, '*.png'))
+    files_list_f = sorted(glob.glob(os.path.join(t2_dir, '*.png')))
     merge_images_vertically(files_list_f, out_file)
 
     # Remove tmp dir
