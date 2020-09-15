@@ -2,3 +2,14 @@ nse_eqlist
 Company Name,Industry,Symbol,Series,ISIN Code
 Nifty 50 Index,INDEX,NIFTY 50,EQ,
 Nifty Bank Index,INDEX,NIFTY BANK,EQ,
+Nifty Pharma Index,INDEX,NIFTY PHARMA,EQ
+Nifty IT Index,INDEX,NIFTY IT,EQ
+Nifty MNC Index,INDEX,NIFTY MNC,EQ
+Nifty PSE Index,INDEX,NIFTY PSE,EQ
+Nifty Metal Index,INDEX,NIFTY METAL,EQ
+Nifty Realty Index,INDEX,NIFTY REALTY,EQ
+Nifty Energy Index,INDEX,NIFTY ENERGY,EQ
+Nifty Auto Index,INDEX,NIFTY AUTO,EQ
+Nifty FMCG Index,INDEX,NIFTY FMCG,EQ
+Nifty Infra Index,INDEX,NIFTY INFRA,EQ
+Nifty Media Index,INDEX,NIFTY MEDIA,EQ

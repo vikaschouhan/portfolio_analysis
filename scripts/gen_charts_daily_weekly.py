@@ -27,6 +27,12 @@ def get_daily_data(symbol, start=None, end=None):
     start = datetime.datetime(2001, 1, 1) if start is None else start
     end   = datetime.datetime.now() if end is None else end
     data  = nsepy.get_history(symbol, start, end)
+    if len(data) == 0:
+        data = nsepy.get_history(symbol, start, end, index=True)
+        if len(data) == 0:
+            raise ValueError('Invalid symbol {}'.format(symbol))
+        # endif
+    # endif
     data.index = pd.to_datetime(data.index)
     return data
 # enddef
@@ -39,7 +45,8 @@ def format_price(x, _=None):
 def plot_candlestick(df, title, savefig):
     # Generate log plot. Currently it's not supported by mplf.plot,
     # so we do it overselves.
-    fig, axlist = mplf.plot(df, type='candle', ylabel='Price', title=title, returnfig=True)
+    kwargs = dict(type='candle', mav=(200), volume=True)
+    fig, axlist = mplf.plot(df, ylabel='Price', title=title, returnfig=True, **kwargs, style='yahoo')
     ax1 = axlist[0]
     ax1_minor_yticks = ax1.get_yticks(True)  # save the original ticks because the log ticks are sparse
     ax1_major_yticks = ax1.get_yticks(False)
@@ -62,7 +69,12 @@ def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
     mkdir(t2_dir)
 
     for indx_t, sym_t in enumerate(sym_list):
-        d_data = get_daily_data(sym_t, start=datetime.datetime(start_year, 1, 1))
+        try:
+            d_data = get_daily_data(sym_t, start=datetime.datetime(start_year, 1, 1))
+        except ValueError as e:
+            print(e)
+            continue
+        # endtry
         w_data = resample_weekly(d_data)
 
         # Save daily and weekly data
