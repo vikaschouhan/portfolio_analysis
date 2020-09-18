@@ -60,7 +60,7 @@ def plot_candlestick(df, title, savefig):
     plt.close('all')
 # enddef
 
-def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
+def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130, weekly=False):
     t_dir    = '/tmp/___tmp_dir' # temporary dir
     t1_dir   = os.path.join(t_dir, 'l0')
     t2_dir   = os.path.join(t_dir, 'l1')
@@ -75,21 +75,25 @@ def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
             print(e)
             continue
         # endtry
-        w_data = resample_weekly(d_data)
 
+        # Make a copy
+        d_data_c = d_data.copy()
+        
         # Save daily and weekly data
         tt_dir = os.path.join(t1_dir, sym_t)
         mkdir(tt_dir)
 
         d_data_f = os.path.join(tt_dir, 'd.png')
-        w_data_f = os.path.join(tt_dir, 'w.png')
-
         # Select only n_candles
         d_data   = d_data[-n_candles:] if n_candles < len(d_data) else d_data
-        w_data   = w_data[-n_candles:] if n_candles < len(w_data) else w_data
-
         plot_candlestick(d_data, sym_t + ' DAILY', d_data_f)
-        plot_candlestick(w_data, sym_t + ' WEEKLY', w_data_f)
+        
+        if weekly:
+            w_data_f = os.path.join(tt_dir, 'w.png')
+            w_data = resample_weekly(d_data_c)
+            w_data   = w_data[-n_candles:] if n_candles < len(w_data) else w_data
+            plot_candlestick(w_data, sym_t + ' WEEKLY', w_data_f)
+        # endf
 
         print('>> [{}/{}]'.format(indx_t+1, len(sym_list)), end='\r')
     # endfor
@@ -97,7 +101,7 @@ def generate_candlesticks(sym_list, out_file, start_year=None, n_candles=130):
     # Done saving individual images, time to combine then
     # Iterate over sym_list
     for indx_t, sym_t in enumerate(sym_list):
-        files_list_t = [os.path.join(t1_dir, sym_t, 'd.png'), os.path.join(t1_dir, sym_t, 'w.png')]
+        files_list_t = [os.path.join(t1_dir, sym_t, 'd.png')] + ([os.path.join(t1_dir, sym_t, 'w.png')] if weekly else [])
         merge_images_horizontally(files_list_t, os.path.join(t2_dir, '{}.png'.format(sym_t)))
     # endfor
 
@@ -116,6 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--out',        help='Output file.',                    type=str, default=None)
     parser.add_argument('--start_year', help='Start year for collecting data',  type=int, default=2019)
     parser.add_argument('--ncandles',   help='Number of candles to plot.',      type=int, default=100)
+    parser.add_argument('--weekly',     help='Generate weekly candles also.',   action='store_true')
     args    = parser.parse_args()
 
     if args.__dict__['sfile'] is None or args.__dict__['out'] is None:
@@ -127,6 +132,7 @@ if __name__ == '__main__':
     out_file   = rp(args.__dict__['out'])
     n_candles  = args.__dict__['ncandles']
     start_year = args.__dict__['start_year']
+    weekly     = args.__dict__['weekly']
 
     # Read security file
     sec_dict = parse_security_file(sec_file, 'dict')
@@ -138,5 +144,5 @@ if __name__ == '__main__':
     print('>> sym_list = {}'.format(sym_list))
 
     # Generate candlesticks
-    generate_candlesticks(sym_list, out_file, start_year, n_candles)
+    generate_candlesticks(sym_list, out_file, start_year, n_candles, weekly=weekly)
 # endif
